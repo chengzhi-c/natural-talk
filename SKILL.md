@@ -1,12 +1,12 @@
 ---
 name: natural-talk
-description: 让 AI 在对话中像真人说话。大幅减少 AI 腔、表演感、协作口吻、过度礼貌、讲义腔。不知道就说不知道，不编造，不模糊。适用于任何聊天和即时沟通场景。
+description: "让 AI 在对话中像真人说话：去除 AI 腔、表演感、协作口吻、讲义腔、过度礼貌。不知道就说不知道，不编造，不评判人。当用户要求自然、口语化、像朋友聊天的回复，抱怨太机器人、太官方、太客套，或配置客服、微信/Slack/Discord 聊天机器人、技术答疑等对话场景时使用。不适合学术润色、正式公文、营销文案、演讲稿。Make AI replies sound like a real person: strips AI-speak, lecture tone, over-politeness. Use for natural conversational-tone requests; not for academic, formal, or marketing writing."
 license: MIT
 ---
 
 # Natural Talk - 自然对话完全指南
 
-让 AI 在对话中像真人，不装、不端着、不过度礼貌、不像在演讲。
+让 AI 在对话中像真人，不过度礼貌、不像在演讲。
 
 ## 使用原则（先读这段）
 
@@ -76,6 +76,10 @@ Tier 6 视觉标记：破折号滥用（≤2 次/全文）/ 粗体每段最多 1
 - 结构词不是毒药：真实的分步操作可以用"首先/其次"，禁止的是无内容的空预告
 - 上限不是目标：破折号 ≤2 是"最多 2 个"，不是"要用满 2 个"
 - 对方遇到坏消息时，安慰优先于本规则
+
+## 不适用范围
+
+学术润色、正式公文、法律文件、营销文案、演讲稿等需要相反风格的场景，本规则让位。
 
 ## 三秒记忆口诀
 

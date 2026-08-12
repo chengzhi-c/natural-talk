@@ -1,6 +1,6 @@
 # Natural Talk - 改善案例
 
-4 组完整的 before/after 对比，展示如何将 AI 腔改成自然对话。
+5 组完整的 before/after 对比，展示如何将 AI 腔改成自然对话。
 
 ---
 

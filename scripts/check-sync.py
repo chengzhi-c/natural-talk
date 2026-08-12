@@ -22,6 +22,7 @@ CORE = [
     "开场白≤1句", "客套收尾≤1次", "协作口吻≤1次", "讲义腔≤1次",
     "路标词≤2次", "破折号≤2次", "感叹号≤3次",
     "直奔主题", "不说作为AI", "会对朋友这样说吗",
+    "不适用范围", "本规则让位",
 ]
 
 RULES = [
@@ -74,6 +75,15 @@ def main():
         for phrase in RULES:
             if norm(phrase) not in texts[rel]:
                 problems.append("{} 缺少规则块：{}".format(rel, phrase))
+
+    # prose 计数断言：examples.md 案例数声明与正文一致
+    ep = ROOT / "docs" / "examples.md"
+    etext = ep.read_text(encoding="utf-8")
+    claim = re.search(r"(\d+)\s*组完整", etext)
+    actual = len(re.findall(r"^## 案例\s*\d+", etext, re.M))
+    if not claim or int(claim.group(1)) != actual:
+        problems.append("examples.md 案例数声明与正文不符（声明 {}，实际 {}）".format(
+            claim.group(1) if claim else "无", actual))
 
     if problems:
         for p in problems:

@@ -69,6 +69,8 @@ natural-talk/
 ├── README.md                        # 项目说明（本文件）
 ├── LICENSE                          # MIT License
 ├── SKILL.md                         # Claude Code Skill 入口（克隆即用）
+├── .github/
+│   └── workflows/ci.yml            # CI：自动跑 check.py + check-sync.py
 ├── assets/
 │   └── natural-talk.png             # 品牌图（README 展示）
 ├── docs/
@@ -97,11 +99,12 @@ natural-talk/
 - Slack / Discord / 微信群的 AI 助手
 - 即时通讯工具
 
-❌ **不推荐使用**：
+❌ **不适用范围（不推荐使用）**：
 - 学术论文润色 → 用其他学术润色工具
 - 长文改写 → 用专门的改写工具
 - 英文博客写作 → 用英文写作优化工具
 - 正式文档、法律文件、营销文案
+- 演讲稿等需要相反风格的场景，本规则让位
 
 ## 三秒记忆口诀
 
@@ -245,9 +248,9 @@ response = client.chat.completions.create(
 
 Natural Talk 可以与其他 skill **同时使用**：
 
-✅ 专注前端 UI 设计的 skill  
 ✅ 学术论文润色的 skill  
 ✅ 代码审查类 skill  
+✅ 客服回复/话术类 skill  
 
 ## 贡献
 

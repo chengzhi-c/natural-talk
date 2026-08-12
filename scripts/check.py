@@ -44,8 +44,10 @@ TIER1_COURTESY = [
 
 HOPE_PATTERN = re.compile(r"希望.{0,12}(帮助|有用|解决|对你)")
 
+NEXT_PATTERN = re.compile(r"接下来\s*[，,]?\s*(?:我|我们)")
+
 TIER2 = [
-    "让我来", "让我为你", "接下来", "下面我们", "综上所述", "由此可见",
+    "让我来", "让我为你", "下面我们", "综上所述", "由此可见",
     "拆一拆", "盘一盘", "划重点", "敲黑板", "捋一捋", "首先", "其次", "让我们",
     "let me break this down", "let's dive in", "in conclusion",
     "without further ado", "here's what you need to know",
@@ -80,7 +82,7 @@ TIER4 = [
 TIER5_WORDS = [
     "数据告诉我们", "问题变成了", "决策浮现了", "体现了", "体现在", "反映了", "彰显了",
     "深刻揭示", "至关重要", "不可或缺", "充满活力", "错综复杂",
-    "通常来说", "很大程度上", "赋能", "抓手", "闭环", "底层逻辑", "打法", "颗粒度",
+    "赋能", "抓手", "闭环", "底层逻辑", "打法", "颗粒度",
     "serves as", "stands as", "crucial", "pivotal", "landscape", "delve",
     "underscore", "showcase", "testament", "tapestry", "vibrant", "profound",
     "groundbreaking", "leverage", "synergy", "paradigm shift", "game-changer",
@@ -88,6 +90,7 @@ TIER5_WORDS = [
 
 TIER5_PATTERNS = [
     re.compile(r"可能.{0,8}(或许|大概|大致)"),
+    re.compile(r"(通常来说|一般来说|通常情况下|很大程度上).{0,24}(可能|或许|大概|大致|也许|应该)"),
 ]
 
 INLINE_TITLE = re.compile(r"^\s*(?:\d+[.、）]\s*)?(?:[-*]\s*)?\*\*.{1,16}\*\*\s*[:：]")
@@ -104,7 +107,7 @@ def run_checks(user, answer):
     scale = max(1, math.ceil(text_len / 300))
 
     identity_q = re.search(r"(你是|你是什么|你是啥)\s*?(AI|ai|人工智能|机器人|语言模型)|你是谁", user, re.I)
-    steps_q = re.search(r"(怎么|如何|步骤|安装|配置)", user)
+    steps_q = re.search(r"(怎么|如何|步骤|安装|配置|排查|修复|报错|流程|部署)", user)
 
     # Tier 1 协作痕迹（固定上限 1；身份询问豁免身份词）
     hits = []
@@ -118,6 +121,7 @@ def run_checks(user, answer):
     # Tier 2 讲义腔（固定上限 1；步骤语义豁免）
     if not steps_q:
         t2 = [w for w in TIER2 if w.lower() in answer.lower()]
+        t2 += NEXT_PATTERN.findall(answer)
         if len(t2) > 1:
             violations.append(("Tier2 讲义腔", "{} 处（上限 1）：{}".format(len(t2), t2[:5])))
 
