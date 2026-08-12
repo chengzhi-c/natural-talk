@@ -1,7 +1,7 @@
 # Natural Talk
 
 <p align="center">
-  <img src="assets/natural-talk.png" alt="Natural Talk" width="640">
+  <img src="assets/natural-talk.png" alt="Natural Talk" width="100%">
 </p>
 
 > **English**: A complete ruleset to make AI conversations sound natural and human-like. Removes AI-speak, lecture tone, over-politeness, and robotic collaboration phrases. Works with Claude, ChatGPT, and all conversational AI. Supports bilingual rules (Chinese & English). | [中文文档见下方 ↓](#这是什么)
