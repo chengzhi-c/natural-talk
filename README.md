@@ -1,5 +1,9 @@
 # Natural Talk
 
+<p align="center">
+  <img src="assets/natural-talk.png" alt="Natural Talk" width="640">
+</p>
+
 > **English**: A complete ruleset to make AI conversations sound natural and human-like. Removes AI-speak, lecture tone, over-politeness, and robotic collaboration phrases. Works with Claude, ChatGPT, and all conversational AI. Supports bilingual rules (Chinese & English). | [中文文档见下方 ↓](#这是什么)
 
 ---
@@ -17,7 +21,7 @@ Natural Talk 是一套完整的对话风格规则，让 AI 的回复更自然、
 ✅ **诚实优先**：不知道就说不知道，不编造，不模糊其辞  
 ✅ **直接表达**：零开场零收尾，直奔主题  
 ✅ **自然对话**：像朋友聊天，不像客服或演讲者  
-✅ **量化标准**：破折号≤2次、路标词≤2次、开场白≤1句，可检查  
+✅ **可自查信号**：破折号≤2次、路标词≤2次、开场白≤1句（自查清单，非精确断言）  
 ✅ **中英双语**：通用规则 + 语言特定规则  
 
 ## 快速开始
@@ -52,6 +56,12 @@ cd ~/.claude/skills/
 git clone https://github.com/chengzhi-c/natural-talk.git
 ```
 
+## 三种用法
+
+1. **作为 System Prompt**：复制 `templates/system-prompt-standard.txt`（日常）或 `templates/system-prompt-lite.txt`（对 token 敏感）到 system prompt / 自定义指令
+2. **作为评估标准**：用 5 个测试检查 AI 输出是否自然——开场测试（删掉第一段，内容是否完整）、收尾测试、朋友测试、诚实测试、节奏测试。详见 [docs/checklist.md](docs/checklist.md)
+3. **作为风格参考**：完整规则见 [docs/full-guide.md](docs/full-guide.md)；检测 AI 输出信号见 [docs/detection.md](docs/detection.md)
+
 ## 目录结构
 
 ```
@@ -59,14 +69,22 @@ natural-talk/
 ├── README.md                        # 项目说明（本文件）
 ├── LICENSE                          # MIT License
 ├── SKILL.md                         # Claude Code Skill 入口（克隆即用）
+├── assets/
+│   └── natural-talk.png             # 品牌图（README 展示）
 ├── docs/
-│   ├── full-guide.md               # 完整指南（8000字，所有规则和案例）
-│   ├── quick-reference.md          # 快速参考（2000字，核心规则）
-│   ├── examples.md                 # 改善案例（4组完整对比）
-│   └── checklist.md                # 自检清单（可打印）
+│   ├── full-guide.md               # 完整指南（规则唯一源）
+│   ├── quick-reference.md          # 快速参考（核心规则）
+│   ├── examples.md                 # 改善案例（5 组完整对比）
+│   ├── checklist.md                # 自检清单（可打印）
+│   └── detection.md                # 检测 AI 生成对话的信号
 ├── templates/
 │   ├── system-prompt-lite.txt      # 轻量版 system prompt（<500字）
-│   └── system-prompt-standard.txt  # 标准版 system prompt（~1500字）
+│   └── system-prompt-standard.txt  # 标准版 system prompt（平文本，无格式）
+├── scripts/
+│   ├── check.py                    # 规则自校验器（正反例 + 边缘用例）
+│   └── check-sync.py               # 多文件规则同步防漂移
+├── tests/
+│   └── cases.json                  # 校验用例（正例/反例/边缘）
 └── CONTRIBUTING.md                  # 贡献指南
 ```
 
@@ -107,6 +125,8 @@ natural-talk/
 1. **不编造**：不知道就说不知道，不模糊，不装懂
 2. **不评判人**：不替对方做心理判断，不给身份认证式夸奖
 3. **不装机器人**：避免暴露 AI 身份的协作痕迹
+
+**身份披露例外**：用户直接问及你的身份、能力边界或知识截止时间时，如实简短作答，不回避。
 
 ### 表达层（弹性规则，有明确上限）
 

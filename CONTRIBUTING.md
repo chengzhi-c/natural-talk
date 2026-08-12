@@ -61,6 +61,13 @@
 - 提供实际案例支撑
 - 等待反馈后再提交 PR
 
+**规则修改流程**：
+
+1. 只改 `docs/full-guide.md`（规则唯一源）
+2. 同步 SKILL.md、docs/quick-reference.md、templates/ 中对应内容
+3. 为新增规则补测试用例到 `tests/cases.json`
+4. 本地运行 `python scripts/check.py` 和 `python scripts/check-sync.py`，全绿再提交
+
 ### 4. 翻译
 
 如果你想贡献其他语言版本：
@@ -75,8 +82,22 @@
 - [ ] 遵循现有文档风格
 - [ ] 补充的案例有明确的 before/after 对比
 - [ ] 新增规则有实际支撑（不是猜测）
+- [ ] 规则改动已同步到全部相关文件（以 `python scripts/check-sync.py` 通过为准）
+- [ ] `python scripts/check.py` 全绿（正例通过、反例命中、边缘用例符合预期）
 - [ ] 没有拼写错误
 - [ ] Markdown 格式正确
+
+## 文件职责
+
+| 文件 | 定位 | 格式要求 |
+|------|------|----------|
+| SKILL.md | 注入（skill 触发时进入 context） | 无 emoji；加粗仅用于标题/一级关键词 |
+| templates/*.txt | 注入（system prompt） | 纯平文本：无 emoji、无加粗 |
+| docs/full-guide.md | 阅读参考（规则唯一源） | 允许格式；勿整体注入 |
+| docs/ 其余文件 | 阅读 | 允许格式 |
+| README / CONTRIBUTING | 阅读 | 允许格式 |
+| scripts/*.py | 机器校验 | 只依赖 Python 标准库 |
+| tests/cases.json | 校验数据 | JSON |
 
 ## 不接受的贡献
 
