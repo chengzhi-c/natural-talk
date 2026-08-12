@@ -1,5 +1,9 @@
 # Natural Talk
 
+> **English**: A complete ruleset to make AI conversations sound natural and human-like. Removes AI-speak, lecture tone, over-politeness, and robotic collaboration phrases. Works with Claude, ChatGPT, and all conversational AI. Supports bilingual rules (Chinese & English). | [中文文档见下方 ↓](#这是什么)
+
+---
+
 **让 AI 像人说话的完整指南**
 
 一套针对对话场景的 AI 腔清理规则。适用于 Claude Code、ChatGPT、Cursor 等所有支持 system prompt 的 AI 工具。
