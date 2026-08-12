@@ -43,8 +43,12 @@ Natural Talk 是一套完整的对话风格规则，让 AI 的回复更自然、
 ### 方式 4：Claude Code Skill
 
 ```bash
-# 克隆仓库到你的项目 .claude/skills/ 目录
+# 项目级：克隆到项目的 .claude/skills/ 目录
 cd /path/to/your/project/.claude/skills/
+git clone https://github.com/chengzhi-c/natural-talk.git
+
+# 全局使用：克隆到用户目录
+cd ~/.claude/skills/
 git clone https://github.com/chengzhi-c/natural-talk.git
 ```
 
@@ -54,6 +58,7 @@ git clone https://github.com/chengzhi-c/natural-talk.git
 natural-talk/
 ├── README.md                        # 项目说明（本文件）
 ├── LICENSE                          # MIT License
+├── SKILL.md                         # Claude Code Skill 入口（克隆即用）
 ├── docs/
 │   ├── full-guide.md               # 完整指南（8000字，所有规则和案例）
 │   ├── quick-reference.md          # 快速参考（2000字，核心规则）
@@ -61,8 +66,7 @@ natural-talk/
 │   └── checklist.md                # 自检清单（可打印）
 ├── templates/
 │   ├── system-prompt-lite.txt      # 轻量版 system prompt（<500字）
-│   ├── system-prompt-standard.txt  # 标准版 system prompt（~1500字）
-│   └── SKILL.md                    # Claude Code Skill 格式
+│   └── system-prompt-standard.txt  # 标准版 system prompt（~1500字）
 └── CONTRIBUTING.md                  # 贡献指南
 ```
 
