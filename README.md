@@ -43,8 +43,9 @@ Natural Talk 是一套完整的对话风格规则，让 AI 的回复更自然、
 ### 方式 4：Claude Code Skill
 
 ```bash
-# 将 natural-talk-release 文件夹放到你的项目 .claude/skills/ 目录
-cp -r natural-talk-release /path/to/your/project/.claude/skills/
+# 克隆仓库到你的项目 .claude/skills/ 目录
+cd /path/to/your/project/.claude/skills/
+git clone https://github.com/chengzhi-c/natural-talk.git
 ```
 
 ## 目录结构
