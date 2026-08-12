@@ -14,3 +14,5 @@ jobs:
         run: python scripts/check.py
       - name: Cross-file sync check
         run: python scripts/check-sync.py
+      - name: Eval script smoke check (no network)
+        run: python scripts/eval-llm.py --list

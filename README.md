@@ -84,7 +84,8 @@ natural-talk/
 │   └── system-prompt-standard.txt  # 标准版 system prompt（平文本，无格式）
 ├── scripts/
 │   ├── check.py                    # 规则自校验器（正反例 + 边缘用例）
-│   └── check-sync.py               # 多文件规则同步防漂移
+│   ├── check-sync.py               # 多文件规则同步防漂移
+│   └── eval-llm.py                 # LLM 级效果评测（带/不带 skill 对比）
 ├── tests/
 │   └── cases.json                  # 校验用例（正例/反例/边缘）
 └── CONTRIBUTING.md                  # 贡献指南
@@ -227,6 +228,17 @@ response = client.chat.completions.create(
 ### Cursor / Continue / Windsurf
 
 将 `templates/system-prompt-standard.txt` 添加到项目的 AI 配置文件。
+
+## 效果评测（可选）
+
+想验证这套规则对真实 LLM 输出的效果，用 [`scripts/eval-llm.py`](scripts/eval-llm.py)：
+
+```bash
+export OPENAI_API_KEY=...   # OpenAI 兼容接口均可（DeepSeek / Moonshot / Ollama 等）
+python scripts/eval-llm.py
+```
+
+它对 5 个容易诱发 AI 腔的提问各调两次 LLM——一次带 natural-talk system prompt、一次带中性 prompt——再用规则表给两边输出数违规，对比零违规率与违规总数。违规计数只测客观信号，"像不像人"仍需人工读输出。
 
 ## 自检清单
 

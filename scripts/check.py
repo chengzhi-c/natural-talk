@@ -9,9 +9,10 @@
 2. 注入产物格式自检：SKILL.md 与 templates/*.txt 无 emoji、无加粗标记
 
 规则表与 docs/full-guide.md 保持一致，scripts/check-sync.py 负责防漂移。
-计数口径：破折号/感叹号/路标词为密度项，按 300 字基准随篇幅折算；
-协作痕迹/讲义腔为近绝对项，固定上限 1 次；步骤语义豁免 Tier 2，
-身份询问豁免 Tier 1 身份词（身份披露例外）。
+计数口径：全部按"出现次数"计（同一词重复出现算多次）；破折号/感叹号/
+路标词为密度项，按 300 字基准随篇幅折算；协作痕迹/讲义腔为近绝对项，
+固定上限 1 次；"首先/其次/最后…"步骤序列整体计 1 次讲义腔（真实分步
+操作允许，见 full-guide"结构词不是毒药"）；身份询问豁免 Tier 1 身份词（身份披露例外）。
 """
 import json
 import math
@@ -48,10 +49,14 @@ NEXT_PATTERN = re.compile(r"接下来\s*[，,]?\s*(?:我|我们)")
 
 TIER2 = [
     "让我来", "让我为你", "下面我们", "综上所述", "由此可见",
-    "拆一拆", "盘一盘", "划重点", "敲黑板", "捋一捋", "首先", "其次", "让我们",
+    "拆一拆", "盘一盘", "划重点", "敲黑板", "捋一捋", "让我们",
     "let me break this down", "let's dive in", "in conclusion",
     "without further ado", "here's what you need to know",
 ]
+
+# 步骤序列词：单独出现不违规（真实分步操作允许）；
+# ≥2 个组成"首先…其次…"式序列时整体计 1 次讲义腔命中。
+STEP_MARKERS = ["首先", "其次", "最后", "接着", "然后"]
 
 SIGNPOSTS = [
     "值得注意的是", "需要强调的是", "更关键的是", "事实上", "实际上",
@@ -107,26 +112,35 @@ def run_checks(user, answer):
     scale = max(1, math.ceil(text_len / 300))
 
     identity_q = re.search(r"(你是|你是什么|你是啥)\s*?(AI|ai|人工智能|机器人|语言模型)|你是谁", user, re.I)
-    steps_q = re.search(r"(怎么|如何|步骤|安装|配置|排查|修复|报错|流程|部署)", user)
+
+    def count_words(words, text):
+        """按出现次数计数：同一词重复出现算多次，规则上限按'次'计。"""
+        hits = []
+        low = text.lower()
+        for w in words:
+            hits.extend([w] * low.count(w.lower()))
+        return hits
 
     # Tier 1 协作痕迹（固定上限 1；身份询问豁免身份词）
     hits = []
     if not identity_q:
-        hits += [w for w in TIER1_IDENTITY if w.lower() in answer.lower()]
-    hits += [w for w in TIER1_COURTESY if w.lower() in answer.lower()]
+        hits += count_words(TIER1_IDENTITY, answer)
+    hits += count_words(TIER1_COURTESY, answer)
     hits += HOPE_PATTERN.findall(answer)
     if len(hits) > 1:
         violations.append(("Tier1 协作痕迹", "{} 处（上限 1）：{}".format(len(hits), hits[:5])))
 
-    # Tier 2 讲义腔（固定上限 1；步骤语义豁免）
-    if not steps_q:
-        t2 = [w for w in TIER2 if w.lower() in answer.lower()]
-        t2 += NEXT_PATTERN.findall(answer)
-        if len(t2) > 1:
-            violations.append(("Tier2 讲义腔", "{} 处（上限 1）：{}".format(len(t2), t2[:5])))
+    # Tier 2 讲义腔（固定上限 1；步骤序列整体计 1 次，不依赖提问词豁免）
+    t2 = count_words(TIER2, answer)
+    t2 += NEXT_PATTERN.findall(answer)
+    seq = [w for w in STEP_MARKERS if w in answer]
+    if len(seq) >= 2:
+        t2.append("步骤序列（{}）".format("、".join(seq)))
+    if len(t2) > 1:
+        violations.append(("Tier2 讲义腔", "{} 处（上限 1）：{}".format(len(t2), t2[:5])))
 
-    # 路标词（密度折算）
-    sp = [w for w in SIGNPOSTS if w.lower() in answer.lower()]
+    # 路标词（密度折算，按出现次数计）
+    sp = count_words(SIGNPOSTS, answer)
     if len(sp) > scale * 2:
         violations.append(("路标词", "{} 处（上限 {}）：{}".format(len(sp), scale * 2, sp[:5])))
 
@@ -146,12 +160,12 @@ def run_checks(user, answer):
             break
 
     # Tier 4 评判越界（命中即违规）
-    t4 = [w for w in TIER4 if w in answer]
+    t4 = count_words(TIER4, answer)
     if t4:
         violations.append(("Tier4 评判越界", "命中：{}".format(t4[:3])))
 
     # Tier 5 语言痕迹（命中即违规）
-    t5 = [w for w in TIER5_WORDS if w.lower() in answer.lower()]
+    t5 = count_words(TIER5_WORDS, answer)
     t5 += [m.group(0) for p in TIER5_PATTERNS for m in p.finditer(answer)]
     if t5:
         violations.append(("Tier5 语言痕迹", "命中：{}".format(t5[:3])))

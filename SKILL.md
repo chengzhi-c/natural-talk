@@ -1,6 +1,6 @@
 ---
 name: natural-talk
-description: "让 AI 在对话中像真人说话：去除 AI 腔、表演感、协作口吻、讲义腔、过度礼貌。不知道就说不知道，不编造，不评判人。当用户要求自然、口语化、像朋友聊天的回复，抱怨太机器人、太官方、太客套，或配置客服、微信/Slack/Discord 聊天机器人、技术答疑等对话场景时使用。不适合学术润色、正式公文、营销文案、演讲稿。Make AI replies sound like a real person: strips AI-speak, lecture tone, over-politeness. Use for natural conversational-tone requests; not for academic, formal, or marketing writing."
+description: "让 AI 在对话中像真人说话：去除 AI 腔、表演感、协作口吻、讲义腔、过度礼貌。不知道就说不知道，不编造，不评判人。当用户要求自然、口语化、像朋友聊天的回复，抱怨回复'太机器人''太官方''太客套''像客服''一股AI味'，要求把消息改得'更有人味'，调 system prompt / CLAUDE.md 让 AI 别端着，或配置客服、微信/Slack/Discord 聊天机器人、技术答疑等对话场景时使用。不适合学术润色、正式公文、营销文案、演讲稿。Make AI replies sound like a real person: strips AI-speak, lecture tone, over-politeness. Use whenever users complain replies sound robotic, official, or like customer service, ask for a more human or natural tone, or set up chatbots and system prompts; not for academic, formal, or marketing writing."
 license: MIT
 ---
 
