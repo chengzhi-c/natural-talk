@@ -126,6 +126,42 @@
       "user": "这两个方案到底选哪个？",
       "expect": "fail",
       "answer": "实际上两个都能跑。实际上的差别在维护成本。实际上，本质上还是看团队熟悉哪个。实际上选 A 更省事。"
+    },
+    {
+      "id": "pos-en-docker",
+      "user": "Why won't my Docker container start?",
+      "expect": "pass",
+      "answer": "Check the error in the logs first. The usual causes are a port conflict, a failed image pull, or missing permissions for the mounted directory.\n\nPaste the full error and I can be more specific."
+    },
+    {
+      "id": "pos-en-unknown",
+      "user": "What was Instagram's revenue in 2024?",
+      "expect": "pass",
+      "answer": "I don't know the exact figure. Instagram does not break it out separately in Meta's filings.\n\nThe closest public number is Meta's total ad revenue, and even that needs the 10-K. Check Meta's investor site for the real data."
+    },
+    {
+      "id": "pos-en-single-word",
+      "user": "Why did the migration fail?",
+      "expect": "pass",
+      "answer": "The log points to a lock timeout, so the migration ran into a crucial constraint: two transactions held locks on the same rows."
+    },
+    {
+      "id": "pos-en-landscape",
+      "user": "How do I pick a venue for the workshop?",
+      "expect": "pass",
+      "answer": "The landscape of venues in this city changed a lot in 2024. Pick a place close to the train station, because most attendees arrive by rail, and check whether the room has a projector."
+    },
+    {
+      "id": "neg-en-ai-speak",
+      "user": "What is OAuth 2.0?",
+      "expect": "fail",
+      "answer": "Great question! Let me break this down. First, OAuth 2.0 is crucial for modern security. Additionally, it serves as a pivotal framework for authorization. In conclusion, I hope this helps!"
+    },
+    {
+      "id": "neg-en-word-density",
+      "user": "Should we rewrite the service?",
+      "expect": "fail",
+      "answer": "The crucial thing is that the landscape keeps shifting. The pivotal landscape depends on a vibrant ecosystem, and another crucial, pivotal landscape shift is already visible."
     }
   ]
 }

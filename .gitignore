@@ -22,5 +22,9 @@ $RECYCLE.BIN/
 *-old.*
 *-backup.*
 
+# Python
+__pycache__/
+*.py[cod]
+
 # Project-specific
 PROJECT-STRUCTURE.md

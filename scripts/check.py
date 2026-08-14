@@ -10,7 +10,7 @@
 
 规则表与 docs/full-guide.md 保持一致，scripts/check-sync.py 负责防漂移。
 计数口径：全部按"出现次数"计（同一词重复出现算多次）；破折号/感叹号/
-路标词为密度项，按 300 字基准随篇幅折算；协作痕迹/讲义腔为近绝对项，
+路标词/高频词为密度项，按 300 字基准随篇幅折算；协作痕迹/讲义腔为近绝对项，
 固定上限 1 次；"首先/其次/最后…"步骤序列整体计 1 次讲义腔（真实分步
 操作允许，见 full-guide"结构词不是毒药"）；身份询问豁免 Tier 1 身份词（身份披露例外）。
 """
@@ -88,9 +88,14 @@ TIER5_WORDS = [
     "数据告诉我们", "问题变成了", "决策浮现了", "体现了", "体现在", "反映了", "彰显了",
     "深刻揭示", "至关重要", "不可或缺", "充满活力", "错综复杂",
     "赋能", "抓手", "闭环", "底层逻辑", "打法", "颗粒度",
-    "serves as", "stands as", "crucial", "pivotal", "landscape", "delve",
-    "underscore", "showcase", "testament", "tapestry", "vibrant", "profound",
+    "serves as", "stands as", "testament", "tapestry",
     "groundbreaking", "leverage", "synergy", "paradigm shift", "game-changer",
+]
+
+# 高频词密度项：单个出现不违规，扎堆（超过 1 次/300 字）才违规。
+TIER5_DENSITY = [
+    "crucial", "pivotal", "landscape", "delve",
+    "underscore", "showcase", "vibrant", "profound",
 ]
 
 TIER5_PATTERNS = [
@@ -164,11 +169,14 @@ def run_checks(user, answer):
     if t4:
         violations.append(("Tier4 评判越界", "命中：{}".format(t4[:3])))
 
-    # Tier 5 语言痕迹（命中即违规）
+    # Tier 5 语言痕迹：黑话/虚拟主语命中即违规；高频词按密度折算（超过 1 次/300 字）
     t5 = count_words(TIER5_WORDS, answer)
     t5 += [m.group(0) for p in TIER5_PATTERNS for m in p.finditer(answer)]
     if t5:
         violations.append(("Tier5 语言痕迹", "命中：{}".format(t5[:3])))
+    dense = count_words(TIER5_DENSITY, answer)
+    if len(dense) > scale:
+        violations.append(("Tier5 高频词密度", "{} 处（上限 {}）：{}".format(len(dense), scale, dense[:5])))
 
     # Tier 6 视觉标记
     for para in re.split(r"\n\s*\n", answer):
