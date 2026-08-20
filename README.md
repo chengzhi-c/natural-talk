@@ -8,7 +8,7 @@
 
 ---
 
-**让 AI 像人说话的完整指南
+**让 AI 像人说话的完整指南**
 
 > **文章版**：去除文章中的 AI 腔（空泛标题、段落同构、强行升华）→ [`article` 分支](https://github.com/chengzhi-c/natural-talk/tree/article)
 
