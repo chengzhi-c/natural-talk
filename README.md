@@ -1,34 +1,33 @@
-# Natural Talk
+# Natural Talk Article - 文章去 AI 味
 
-<p align="center">
-  <img src="assets/natural-talk.png" alt="Natural Talk" width="100%">
-</p>
+> 本仓库 `article` 分支（本文）。对话版见 [`main` 分支](https://github.com/chengzhi-c/natural-talk/tree/main)。
 
-> **English**: A complete ruleset to make AI conversations sound natural and human-like. Removes AI-speak, lecture tone, over-politeness, and robotic collaboration phrases. Works with Claude, ChatGPT, and all conversational AI. Supports bilingual rules (Chinese & English). | [中文文档见下方 ↓](#这是什么)
+让文章读起来像人写的，而不是模板生成的。
 
----
-
-**让 AI 像人说话的完整指南**
-
-一套针对对话场景的 AI 腔清理规则。适用于 Claude Code、ChatGPT、Cursor 等所有支持 system prompt 的 AI 工具。
+> **对话版**：去除对话中的 AI 腔（客服腔、讲义腔、过度礼貌）→ [natural-talk (main 分支)](https://github.com/chengzhi-c/natural-talk/tree/main)
+> **本版**：去除文章中的 AI 腔（空泛标题、空泛引入、模板结构、强行升华）
 
 ## 这是什么
 
-Natural Talk 是一套完整的对话风格规则，让 AI 的回复更自然、更像人。不编造、不装懂、不过度礼貌、不讲义腔。
+Natural Talk Article 是一套针对**书面长文**的风格规则，让文章读起来像人写的。
+不编造、不套模板、不强行升华、不段落同构。
+
+和对话版的区别：文章**需要**标题、开头、结构、收束。所以"零开场零收尾"不适用。
+本版删的是**空洞的、模板化的、表演式的**结构，不是结构本身。
 
 ## 核心价值
 
-✅ **诚实优先**：不知道就说不知道，不编造，不模糊其辞  
-✅ **直接表达**：零开场零收尾，直奔主题  
-✅ **自然对话**：像朋友聊天，不像客服或演讲者  
-✅ **可自查信号**：破折号≤2次、路标词≤2次、开场白≤1句（自查清单，非精确断言）  
-✅ **中英双语**：通用规则 + 语言特定规则  
+✅ **文章特有症状全覆盖**：空泛标题、空泛引入、三点并列凑结构、段落同构、设问钩子、强行升华结尾
+✅ **诚实优先**：不知道就说不知道，不编造。**文章里尤其不编造数据和案例**
+✅ **允许好结构**：删的是空洞和模板，不是标题、开头、层次本身
+✅ **可自查信号**：空泛标题 0 个、空泛引入 0 处、设问钩子 ≤1 次（自查清单，非精确断言）
+✅ **中英双语**：通用规则 + 语言特定规则
 
 ## 快速开始
 
 ### 方式 1：完整版（推荐深度使用）
 
-复制 [`docs/full-guide.md`](docs/full-guide.md) 的内容到你的 system prompt 或 CLAUDE.md。
+复制 [`docs/full-guide.md`](docs/full-guide.md) 的内容到你的写作流程或文章 system prompt。
 
 适合：需要完整理解规则，或作为参考文档查阅。
 
@@ -36,7 +35,7 @@ Natural Talk 是一套完整的对话风格规则，让 AI 的回复更自然、
 
 复制 [`templates/system-prompt-standard.txt`](templates/system-prompt-standard.txt) 到 system prompt。
 
-适合：日常对话、技术答疑、即时沟通。
+适合：日常写文章、技术博客、教程、复盘。
 
 ### 方式 3：轻量版（最小化）
 
@@ -44,41 +43,36 @@ Natural Talk 是一套完整的对话风格规则，让 AI 的回复更自然、
 
 适合：对 token 敏感的场景，或只需核心规则。
 
-### 方式 4：Claude Code Skill
-
-```bash
-# 项目级：克隆到项目的 .claude/skills/ 目录
-cd /path/to/your/project/.claude/skills/
-git clone https://github.com/chengzhi-c/natural-talk.git
-
-# 全局使用：克隆到用户目录
-cd ~/.claude/skills/
-git clone https://github.com/chengzhi-c/natural-talk.git
-```
+> **分级 prompt：** `dist/prompts/` 下有 A0-A3 四个档位，按需选用（linter 优先：写完跑 `python scripts/check.py --article "标题" 文章.md` 零 Token）。
+> - A0 Nano 25tok/54c —— 极轻，工具内嵌
+> - A1 Micro 90tok/199c —— 日常博客常驻（推荐）
+> - A2 Standard 178tok/392c —— 2000字长文深度改
+> - A3 Full 231tok/508c —— 审稿/教学
+> 分级文件由 `core/rules.yaml` 编译，`engine/selector.py` 可按上下文自动选档。
 
 ## 三种用法
 
-1. **作为 System Prompt**：复制 `templates/system-prompt-standard.txt`（日常）或 `templates/system-prompt-lite.txt`（对 token 敏感）到 system prompt / 自定义指令
-2. **作为评估标准**：用 5 个测试检查 AI 输出是否自然——开场测试（删掉第一段，内容是否完整）、收尾测试、朋友测试、诚实测试、节奏测试。详见 [docs/checklist.md](docs/checklist.md)
-3. **作为风格参考**：完整规则见 [docs/full-guide.md](docs/full-guide.md)；检测 AI 输出信号见 [docs/detection.md](docs/detection.md)
+1. **作为 System Prompt**：复制 `templates/system-prompt-standard.txt`（日常）或 `templates/system-prompt-lite.txt`（对 token 敏感）
+2. **作为评估标准**：用文章版测试检查文章是否自然——标题测试、开头测试、读给别人听测试、诚实测试、结构测试。详见 [docs/checklist.md](docs/checklist.md)
+3. **作为风格参考**：完整规则见 [docs/full-guide.md](docs/full-guide.md)；检测 AI 写作信号见 [docs/detection.md]
 
 ## 目录结构
 
 ```
-natural-talk/
+natural-talk-article/
 ├── README.md                        # 项目说明（本文件）
 ├── LICENSE                          # MIT License
-├── SKILL.md                         # Claude Code Skill 入口（克隆即用）
+├── SKILL.md                         # Skill 入口
 ├── .github/
 │   └── workflows/ci.yml            # CI：自动跑 check.py + check-sync.py
 ├── assets/
-│   └── natural-talk.png             # 品牌图（README 展示）
+│   └── natural-talk-article.png     # 品牌图
 ├── docs/
 │   ├── full-guide.md               # 完整指南（规则唯一源）
 │   ├── quick-reference.md          # 快速参考（核心规则）
-│   ├── examples.md                 # 改善案例（5 组完整对比）
+│   ├── examples.md                 # 改善案例（文章版 before/after）
 │   ├── checklist.md                # 自检清单（可打印）
-│   └── detection.md                # 检测 AI 生成对话的信号
+│   └── detection.md                # 检测 AI 写作文章的信号
 ├── templates/
 │   ├── system-prompt-lite.txt      # 轻量版 system prompt（<500字）
 │   └── system-prompt-standard.txt  # 标准版 system prompt（平文本，无格式）
@@ -88,128 +82,137 @@ natural-talk/
 │   └── eval-llm.py                 # LLM 级效果评测（带/不带 skill 对比）
 ├── tests/
 │   └── cases.json                  # 校验用例（正例/反例/边缘）
-└── CONTRIBUTING.md                  # 贡献指南
+└── CONTRIBUTING.md                 # 贡献指南
 ```
 
 ## 适用场景
 
 ✅ **推荐使用**：
-- Claude Code / ChatGPT 的日常对话
-- 技术答疑、代码审查
-- 客服回复、用户沟通
-- Slack / Discord / 微信群的 AI 助手
-- 即时通讯工具
+- 技术博客、教程、文档
+- 项目复盘、工作汇报
+- 观点文、评论
+- 长文、专栏
+- 任何需要结构但不需要 AI 腔的书面场景
 
 ❌ **不适用范围（不推荐使用）**：
 - 学术论文润色 → 用其他学术润色工具
-- 长文改写 → 用专门的改写工具
-- 英文博客写作 → 用英文写作优化工具
-- 正式文档、法律文件、营销文案
+- 正式公文、法律文件 → 用专门的公文工具
+- 营销文案、广告 → 用专门的营销文案工具
 - 演讲稿等需要相反风格的场景，本规则让位
-
-## 三秒记忆口诀
-
-**三不说**：
-- 不说"作为AI"
-- 不说"希望帮助"
-- 不说"好问题"
-
-**三要做**：
-- 直接回答
-- 不知道就说不知道
-- 像人不像机器
-
-**一个标准**：
-- 会对朋友这样说吗？
 
 ## 核心规则速览
 
 ### 原则层（绝对规则，无例外）
 
-1. **不编造**：不知道就说不知道，不模糊，不装懂
+1. **不编造**：不知道就说不知道，不模糊，不装懂。**文章里尤其不要编造数据和案例**
 2. **不评判人**：不替对方做心理判断，不给身份认证式夸奖
 3. **不装机器人**：避免暴露 AI 身份的协作痕迹
 
+**核心原则（6 要素）**
+
+1. 直接 - 不绕弯子，直奔主题。删的是空洞铺垫，不是结构
+2. 诚实 - 不知道就说不知道，不编造
+3. 自然 - 像朋友聊天，像人写的文章，不像机器生成的模板
+4. 克制 - 不夸张，不拔高，不过度渲染
+5. 有边界 - 不替对方做心理判断，不评判人
+6. 保持节奏 - 句子有长有短，段落有呼吸
+
 **身份披露例外**：用户直接问及你的身份、能力边界或知识截止时间时，如实简短作答，不回避。
 
-### 表达层（弹性规则，有明确上限）
+### 文章表达层（弹性规则，有明确上限）
 
 | 规则 | 上限 | 说明 |
 |------|------|------|
-| 开场白 | ≤1句 | 第一句应是实质内容 |
-| 客套收尾 | ≤1次 | 最后一句是事实/建议，不是客套 |
-| 协作口吻 | ≤1次/全文 | "作为AI" / "希望帮助" / "好问题" |
-| 讲义腔 | ≤1次/全文 | "让我来" / "首先其次" / "综上所述" |
-| 路标词 | ≤2次/全文 | "值得注意" / "事实上" / "归根结底" |
-| 破折号 | ≤2次/全文 | em dash (—) 和 en dash (–) |
-| 感叹号 | ≤3次/全文 | 避免过度热情 |
+| 标题 | 0 个空泛词 | 标题应是具体主张或具体场景 |
+| 空泛引入 | 0 处 | 开头 100 字内不得出现"在当今/随着/众所周知" |
+| 设问钩子 | ≤1 次/全文 | "你有没有想过""为什么总是" |
+| 协作口吻 | ≤1 次/全文 | "作为AI" / "希望帮助" / "好问题" |
+| 讲义腔 | ≤1 次/全文 | "让我来" / "首先其次" / "综上所述" |
+| 路标词 | ≤2 次/全文（固定，不随篇幅放宽） | "值得注意" / "事实上" / "归根结底" |
+| 破折号 | ≤2 次/全文（500字基准，更长按比例，仅用于未说完/延长/悬念） | em dash (—) 和 en dash (–) |
+| 感叹号 | ≤3 次/全文 | 避免过度热情 |
+| 强行升华结尾 | 0 处 | 结尾不得出现"让我们" / "共同" / "展望" |
+| 加粗 | 每段 ≤1 处 | — |
+| 动作一句 | 1 句1动作 | `伸手按下按钮`，仅紧张/暧昧/恐惧可慢放 |
+
+### 禁用模式（Tier 1-6）
+
+- **Tier 1 协作痕迹**：作为AI / 根据我的训练 / 希望帮助你 / 好问题 / 感谢提问 / I hope this helps / Great question
+- **Tier 2 讲义腔**：让我来 / 首先其次最后 / 综上所述 / 拆一拆 / 划重点 / Let's dive in / In conclusion
+- **Tier 3 铁律**：`不是…而是 / 与其…不如 / 很久…久到… / 看似…实则` 删否定留肯定，直接说Y（例：`不是优化而是重构→重构`），角色引号内除外；`真正的问题是 / 强制三点并列` 疑似仅提示
+   三点判据：内容本身需要三点（如"三种常见原因"）不算违规；为凑结构硬切三点（如"三个核心维度"）疑似时仅提示，试试删编号读一遍
+- **Tier 4 评判越界**：你有很强的批判性思维 / 你问到了问题的核心 / 我完全理解你的感受
+- **Tier 5 语言痕迹**：数据告诉我们（虚假主语）/ crucial、pivotal、delve / 赋能、抓手、闭环
+- **Tier 6 视觉标记**：破折号滥用（仅悬念/未说完可用） / 粗体每段最多 1 处 / 表情符号；一个动作尽量一句话
+
+### 正确做法（7 支柱）
+
+1. **标题就是主张**：具体主张或具体场景，不是名词短语堆砌
+2. **开头直接进入**：第一段就要有信息量
+3. **段落有呼吸**：长短句交替，段落功能多样（事实、举例、转折、收束）
+4. **具体表达，删除空泛词**：能用"是/有"就不绕，用真实动词
+5. **承认不确定，有边界**
+6. **结尾收在具体处**：具体建议、具体问题、具体画面，或者就此打住
+7. **保持主题，不过度平衡**：可以有明确立场，诚实说明适用边界
+
+### 别过度执行
+
+- 文章不等于零结构：删的是空洞和模板，不是结构本身；文笔=信息密度+节奏呼吸+具体动词，删 `在当今…让我们共同`，不删 `16KB/3-4次IO`
+- 真实的步骤、分点说明可以用"首先/其次"，禁止的是无内容的空预告
+- 上限不是目标：破折号 ≤2 是"最多 2 个"且只用于未说完/延长/悬念，不是"要用满 2 个"
+- 一个动作一句话：`伸手按下按钮` 已足够，别拆三步；仅慢放场景可拆
+- 铁律有例外：角色引号内的 `不是…而是` 不算违规
+- 三点疑似仅提示：长度相近且结构一致时仅提示，不算违规
+- 收尾不是必须删：自然收尾允许，强行升华才违规
+- 小说/故事才开感官化：技术文默认不开启
 
 ## 效果对比
 
-### 示例 1：技术问题
+### 示例 1：技术教程
 
-❌ **AI 腔**：
+❌ **AI 腔：**
 ```
-你好！感谢你的提问。这是一个很好的问题！让我来帮你详细分析一下。
+在当今容器化技术快速发展的背景下，Docker 已经成为开发者必备的工具。
+然而，很多同学在使用 Docker 的过程中经常会遇到容器启动失败的问题。
+本文将为你详细解析排查方法。
 
 首先，值得注意的是，Docker 容器启动失败的原因是多方面的。其次，
 我们需要系统梳理可能的问题点。最后，我会给出具体的排查建议。
 
+事实上，这不仅仅是一个配置问题，而是一个需要深入理解 Docker 底层
+机制的问题。让我们一步步拆解这个问题。
+
+归根结底，问题可能出在以下三个核心维度：
+1. **端口冲突问题**：需要检查端口占用情况
+2. **镜像拉取问题**：必须确认网络和镜像源
+3. **权限配置问题**：应该验证用户组设置
+
 综上所述，建议你按照以上三个方向逐一排查。希望这能帮助你解决问题！
 ```
 
-✅ **自然**：
+✅ **自然：**
 ```
-看下日志里的错误信息。常见的一般有三种情况：
+容器起不来，追了三天，最后是权限问题。
 
+常见的一般有三种情况：
 1. 端口被占用 - 试试改端口或停掉占用的进程
 2. 镜像拉不下来 - 检查网络或换国内镜像源
 3. 权限不够 - 可以用 sudo 或把用户加到 docker 组
 
-要是有完整报错可以贴给我，我看看能不能给更具体的建议。
-```
-
-### 示例 2：不确定时
-
-❌ **AI 腔**：
-```
-虽然我的训练数据截至 2023 年 10 月，没有 2024 年的精确统计数据，
-但根据行业趋势和一般经验来看，Rust 的采用率应该在持续增长。
-
-通常来说，在系统编程领域，Rust 可能已经达到了 15-20% 左右的市场
-份额。当然，这只是一个大致的估算，实际情况可能会有所不同。
-```
-
-✅ **自然**：
-```
-我不知道 2024 年的具体数字。
-
-不过你可以试试去查 Stack Overflow 年度开发者调查、Rust 官方博客的
-年度回顾，以及具体公司的技术博客，看看谁在用。
-
-或者去 r/rust 问，那边可能有人追踪这个。
+先用 `docker logs` 看报错，比猜快。有完整输出贴给我，我帮你看。
 ```
 
 更多案例见 [`docs/examples.md`](docs/examples.md)。
 
 ## 平台使用指南
 
-### Claude Code
+将此仓库作为 skill 添加，或复制 `templates/` 下的文件到你的写作流程。
 
-将此仓库作为 skill 添加：
-
-```bash
-# 复制到项目的 .claude/skills/ 目录
-cp -r natural-talk /your/project/.claude/skills/
-```
-
-或在全局 CLAUDE.md 中引用精简版规则。
-
-### ChatGPT
+### 写作工具
 
 复制 `templates/system-prompt-standard.txt` 到：
-- 自定义指令（Custom Instructions）
-- 或 GPTs 的 Instructions 字段
+- 写作工具的 system prompt / 自定义指令
+- 或文章生成的 Instructions 字段
 
 ### API 调用
 
@@ -217,17 +220,13 @@ cp -r natural-talk /your/project/.claude/skills/
 system_prompt = open('templates/system-prompt-standard.txt').read()
 
 response = client.chat.completions.create(
-    model="gpt-4",
+    model="gpt-4o",
     messages=[
         {"role": "system", "content": system_prompt},
-        {"role": "user", "content": "你的问题"}
-    ]
+        {"role": "user", "content": "写一篇关于 Docker 排查的文章"},
+    ],
 )
 ```
-
-### Cursor / Continue / Windsurf
-
-将 `templates/system-prompt-standard.txt` 添加到项目的 AI 配置文件。
 
 ## 效果评测（可选）
 
@@ -238,55 +237,70 @@ export OPENAI_API_KEY=...   # OpenAI 兼容接口均可（DeepSeek / Moonshot / 
 python scripts/eval-llm.py
 ```
 
-它对 5 个容易诱发 AI 腔的提问各调两次 LLM——一次带 natural-talk system prompt、一次带中性 prompt——再用规则表给两边输出数违规，对比零违规率与违规总数。违规计数只测客观信号，"像不像人"仍需人工读输出。
+### 参考数据（v2.1，待跑分后更新）
+
+| 模型 | 无 skill 违规数 | 有 skill 违规数 | 降幅 | 零违规率 |
+|------|----------------|----------------|------|---------|
+| GPT-4o | — | — | — | — |
+| Claude 3.5 Sonnet | — | — | — | — |
+| DeepSeek-V3 | — | — | — | — |
+
+> 方法：5 个文章类提问各调两次，用 `check.py --article` 计数。复现：`python scripts/eval-llm.py --article`
+
+它对一批文章类提问各调用两次 LLM——一次带 natural-talk-article system prompt、一次带中性 prompt——
+再用规则表给两边输出数违规，对比零违规率与违规总数。违规计数只测客观信号，"像不像人"仍需人工读输出下最终判断。
 
 ## 自检清单
 
-改写前快速检查（完整清单见 [`docs/checklist.md`](docs/checklist.md)）：
+写完快速检查（完整清单见 [`docs/checklist.md`](docs/checklist.md)）：
 
 ### 硬性检查（必须通过）
-- [ ] 不确定的事是否说得很确定？ → 改成"不确定"或"不知道"
-- [ ] 有没有编造具体数字、来源、案例？ → 删掉或标明不确定
-- [ ] 有没有评判对方（"你很敏感" / "你问得好"）？ → 只回应内容
+- [ ] 标题是不是空泛名词短语？（"关于X的那些事"）→ 换成具体主张或场景
+- [ ] 开头 100 字有没有传递新信息？（"在当今""随着"）→ 直接进入
+- [ ] 有没有编造具体数字、来源、案例？→ 删掉或标明不确定
+- [ ] 结尾是不是强行升华？（"让我们""共同"）→ 收在具体处
 
 ### 弹性检查（按上限控制）
-- [ ] 开场白：第一句是不是实质内容？ → 删掉铺垫（最多留 1 句）
-- [ ] 协作口吻："作为AI" / "希望帮助" / "好问题"？ → 全文最多 1 次
-- [ ] 讲义腔："让我来" / "首先其次" / "综上所述"？ → 全文最多 1 次
-- [ ] 路标词："值得注意" / "事实上"？ → 全文不超过 2 次
-- [ ] 破折号：有几个 em dash (—)？ → 全文不超过 2 次
+- [ ] 设问钩子：有没有"你有没有想过""为什么总是"？→ 全文最多 1 次
+- [ ] 协作口吻："作为AI" / "希望帮助" / "好问题"？→ 全文最多 1 次
+- [ ] 讲义腔："让我来" / "综上所述"？→ 全文最多 1 次
+- [ ] 路标词："值得注意" / "事实上"？→ 全文不超过 2 次（固定）
+- [ ] 破折号：有几个 em dash (—)？→ 全文不超过 2 次，且只用于未说完/延长/悬念
+- [ ] 加粗：每段超过 1 处吗？→ 删掉
+- [ ] 铁律：有没有`不是…而是 / 很久…久到…`？→ 删否定留肯定，角色引号除外
+- [ ] 动作：有没有连续动作被拆三步？→ 一句写完
 
 ## 组合使用
 
-Natural Talk 可以与其他 skill **同时使用**：
+Natural Talk Article 可以与其他 skill **同时使用**：
 
 ✅ 学术论文润色的 skill  
 ✅ 代码审查类 skill  
 ✅ 客服回复/话术类 skill  
+✅ 对话版 natural-talk（同一个人既写文章也聊天，两边规则不冲突）
 
 ## 贡献
 
-欢迎贡献案例、改进建议或翻译。详见 [CONTRIBUTING.md](https://github.com/chengzhi-c/natural-talk/blob/main/CONTRIBUTING.md)。
+欢迎贡献案例、改进建议或翻译。详见 [CONTRIBUTING.md](CONTRIBUTING.md)。
 
 提交前请确保：
 - [ ] 遵循现有文档风格
 - [ ] 补充的案例有明确的 before/after 对比
 - [ ] 新增规则有实际支撑（不是猜测）
 
-## License
-
-MIT License - 自由使用、修改、分发。详见 [LICENSE](https://github.com/chengzhi-c/natural-talk/blob/main/LICENSE)。
-
 ## 致谢
 
 本项目受以下项目启发：
-- shuorenhua - 文本改写引擎
-- stop-slop - 英文写作去味
-- humanizer - 维基百科式内容改善
-- Wikipedia "Signs of AI writing" - 系统化的 AI 痕迹分类
+- [stop-slop](https://github.com/maypop/stop-slop) — 英文写作去味
+- [humanizer](https://github.com/search?q=humanizer) — 维基百科式内容改善
+- [Wikipedia "Signs of AI writing"](https://en.wikipedia.org/wiki/Wikipedia:Signs_of_AI_writing) — AI 痕迹分类
+
+## License
+
+MIT License - 自由使用、修改、分发。详见 [LICENSE](LICENSE)。
 
 ---
 
-**核心理念**：像人说话，不装，不端着，不知道就说不知道。
+**核心理念**：文章像人写的，不套模板。
 
-**终极标准**：删掉开场和结尾后，内容仍然完整 + 会对朋友这样说。
+**终极标准**：删掉空洞的开头结尾后，内容仍然完整 + 会对朋友这样说吗（读起来不尴尬）。

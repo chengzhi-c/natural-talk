@@ -1,0 +1,269 @@
+# natural-talk 规则唯一源 — 仅此文件可手改，其余由 build.py 生成
+# 编码：UTF-8  格式：YAML  依赖：无（标准库可解析的极简YAML子集）
+# 合并说明：共享 Principles/Tiers/Lexicon/Compliance 与 natural-talk-release 保持一致；article 字段为文章版专属
+# mode 迁移注释：未来可将 elastic/pillars 按 mode.chat / mode.article 拆分，当前保持顶层 elastic 兼容旧 detector
+
+principles:
+  absolute:
+    - id: no-fabricate
+      zh: 不编造
+      en: no fabrication
+      rule: 不知道就说不知道，不模糊，不装懂
+      severity: critical
+    - id: no-judge
+      zh: 不评判人
+      en: no judging
+      rule: 不替对方做心理判断，不给身份认证式夸奖
+      severity: critical
+    - id: no-robot
+      zh: 不装机器人
+      en: no robot trace
+      rule: 避免暴露AI身份的协作痕迹；用户问身份时如实简短回答
+      exception: 身份披露例外
+      severity: critical
+
+  elastic:
+    opening: {limit: 1, unit: 句, desc: 首句即实质, rationale: "经验判断：自然对话几乎无人以铺垫开场"}
+    closing: {limit: 1, unit: 次, desc: 末句为事实或建议非客套, rationale: "末句为事实或建议，避免过度客套"}
+    courtesy: {limit: 1, unit: 次/篇, words: ["作为AI","希望帮助","好问题"], rationale: "协作痕迹直接暴露AI身份，破坏真实感"}
+    lecture: {limit: 1, unit: 次/篇, words: ["让我来","首先其次","综上所述"], rationale: "讲义腔像老师讲课，不像朋友聊天"}
+    signpost: {limit: 2, unit: 次/篇, words: ["值得注意","事实上","归根结底"], rationale: "10篇自然对话样本P75=1.2，放宽至2为稀疏信号"}
+    dash: {limit: 2, unit: 次/篇, chars: ["—","–"], rationale: "stop-slop全禁em dash；本项目放宽至2次，仅悬念/未说完"}
+    excl: {limit: 3, unit: 次/篇, chars: ["!","！"], rationale: "感叹号过度热情，稀疏即可"}
+
+tiers:
+  1:
+    name: 协作痕迹
+    severity: high
+    limit: 1
+    words_zh: ["作为AI","作为人工智能","根据我的训练","基于我的训练数据","训练数据截至","截至我的知识","基于我所掌握的信息","语言模型"]
+    words_courtesy_zh: ["好问题","很好的问题","有深度的问题","这个问题问得好","感谢提问","感谢你的提问","感谢你的咨询","你说得完全对","如果还有问题","如果还有疑问","随时告诉我","欢迎继续交流","欢迎随时"]
+    words_en: ["as an ai","based on my training","i'm an ai","great question","you're absolutely right","i hope this helps","of course","certainly","let me know if"]
+    pattern: hope
+  2:
+    name: 讲义腔
+    severity: medium
+    limit: 1
+    words_zh: ["让我来","让我为你","下面我们","综上所述","由此可见","拆一拆","盘一盘","划重点","敲黑板","捋一捋","让我们"]
+    words_en: ["let me break this down","let's dive in","in conclusion","without further ado","here's what you need to know"]
+    pattern: next_seq
+    step_markers: ["首先","其次","最后","接着","然后"]
+  3:
+    name: 结构性表演
+    severity: medium
+    patterns:
+      negation_affirmation:
+        - "不是.{0,40}(而是|而是说|而是要)"
+        - "不仅仅.{0,30}(而是|更是)"
+        - "不在于.{0,30}而在于"
+        - "与其.{0,16}不如"
+        - "与其说.{0,30}不如说"
+        - "看似.{0,20}实则"
+        - "表面.{0,20}实际"
+        - "很久.{0,6}久到"
+        - "很远.{0,6}远到"
+        - "很长.{0,6}长到"
+        - "很大.{0,6}大到"
+        - "很深.{0,6}深到"
+      dramatic_reveal:
+        - "真正的问题是"
+        - "揭开面纱"
+        - "遮羞布"
+        - "戳穿真相"
+        - "背后的真相"
+        - "深层原因"
+  4:
+    name: 评判越界
+    severity: high
+    words_zh: ["我完全理解","我懂你的","你不是敏感","你问到了","你有很强的","你的观察力很敏锐","你比大多数","这个角度很新颖","这个问题问得好","这是顶刊作者的素养","让我们一起","我们可以共同","你已经看穿了"]
+  5:
+    name: 语言痕迹
+    severity: medium
+    words_zh: ["数据告诉我们","问题变成了","决策浮现了","体现了","体现在","反映了","彰显了","深刻揭示","至关重要","不可或缺","充满活力","错综复杂","赋能","抓手","闭环","底层逻辑","打法","颗粒度"]
+    words_en: ["serves as","stands as","testament","tapestry","groundbreaking","leverage","synergy","paradigm shift","game-changer"]
+    density_en: ["crucial","pivotal","landscape","delve","underscore","showcase","vibrant","profound"]
+    hedge_patterns:
+      - pattern: "可能.{0,4}(或许|大概|大致)"
+        desc: "紧邻模糊词叠加"
+      - pattern: "(通常来说|一般来说|通常情况下).{0,10}(可能|或许|大概|大致|也许)"
+        desc: "前置模糊限定+近距离模糊动词"
+  6:
+    name: 视觉标记与一致性
+    severity: low
+    limits: {dash: 2, bold_per_para: 1, emoji: 0}
+    bold_pattern: '每段最多1处加粗'
+    inline_title_pattern: '^\\s*(?:\\d+[.、）]\\s*)?(?:[-*]\\s*)?\\*\\*.{1,16}\\*\\*\\s*[:：]'
+    consistency:
+      - pattern: "(?=.*你)(?=.*您)"
+        desc: "同一回复中混用'你'和'您'"
+        severity: low
+
+pillars:
+  - 零开场：第一句即实质
+  - 不知即说：不编造，给可靠信息源
+  - 主动语态：真实主语
+  - 具体化：能用"是/有"就不绕
+  - 有边界：不假装完全理解
+  - 破对称：长短句交替
+  - 问啥答啥：不过度平衡
+
+lexicon:
+  zh_signposts: ["值得注意的是","需要强调的是","更关键的是","事实上","实际上","换句话说","说白了","本质上","归根结底","与此同时"]
+  en_signposts: ["at the end of the day","actually","additionally","furthermore","the truth is","here's the thing"]
+  en_density: ["crucial","pivotal","landscape","delve","underscore","showcase","vibrant","profound"]
+
+scenes:
+  # ⚠️ 设计稿 — 当前无代码消费，待需求明确后实现
+  tech_steps: {keywords: ["怎么装","步骤","先.*再","首先.*其次"], policy: 豁免讲义腔步骤序列}
+  emotion: {keywords: ["去世","难受","焦虑","抑郁","分手"], policy: 暂停Tier4优先安慰}
+  formal: {keywords: ["论文","公文","演讲稿","营销文案"], policy: 禁用本skill}
+  chat: {policy: 默认}
+
+budgets:
+  # chat 基准 300 字；article 基准 500 字，密度项按 500 折算，路标固定 2 不放宽
+  L0: {chars: 70, tokens: 32}
+  L1: {chars: 150, tokens: 70}
+  L2: {chars: 430, tokens: 195}
+  L3: {chars: 620, tokens: 285}
+  skill: {chars: 1000, tokens: 455}
+  article:
+    A0: {chars: 70, tokens: 32}
+    A1: {chars: 210, tokens: 110}
+    A2: {chars: 420, tokens: 190}
+    A3: {chars: 700, tokens: 320}
+
+extensions:
+  iron_rule: {desc: "铁律：先否定后肯定（不是…而是/与其…不如/很久…久到…）删否定留肯定，直接说Y；角色语句除外", fix: "不是优化而是重构→重构；等了很久久到忘记→等了三周"}
+  action_compact: {desc: "一动作一句话：连续动作尽量一句写完（伸手按下按钮）；仅紧张/暧昧/恐惧/受伤需慢放时可拆解", level: "提示，不计违规"}
+  fiction: {enabled: false, trigger: ["小说","故事","扮演","同人","NSFW","情感向","fiction","creative writing"], rules: "精确数字感官化/情感外化/节奏由感知驱动，仅 fiction=True 时启用，主链默认关闭"}
+
+# mode 迁移注释：未来可将 elastic/pillars 按 mode.chat / mode.article 拆分，当前保持顶层 elastic 兼容旧 detector
+# article 专属字段（500字基准，路标固定2，其余按比例）
+
+article:
+  title:
+    vague_phrases:
+      zh: ["的那些事","那些事","深度好文","科普一下","必须知道","详解","全面解析","深度解读","完全指南"]
+      en: ["everything you need to know","comprehensive guide","things you should know","ultimate guide","deep dive into"]
+    vague_pattern: "(三|四|五|六|七)(?:个|大)?(?:核心|主要|关键|重要)?(?:维度|趋势|要点|方面|层次|角度)"
+    good_signals:
+      verbs: ["用","写","追","发现","解决","优化","压","查","选","装","搭","改","修","跑","崩","涨","砍","拆","踩","迁","试","换","丢","挂","卡"]
+      scene_markers: ["\\d+","月","天","小时","秒","我","项目","线上","容器","查询","接口","服务"]
+    severity: high
+    rationale: "AI标题几乎都是名词短语堆砌；人类标题通常有动词或具体场景"
+  opening:
+    banned:
+      zh: ["在当今","随着","的背景下","众所周知","你有没有想过","你是否曾","不知道你有没有注意到"]
+      en: ["in today's","with the rapid","in an era of","have you ever wondered","as we all know"]
+    scan_chars: 100
+    density:
+      threshold: 0.15
+      method: "(数字token数 + 具体名词数 + 具体动词数) / 总token数"
+      desc: "低于0.15视为零信息开头"
+    severity: high
+    rationale: "人类作者从具体问题/场景/主张开始；AI从宏大背景铺垫开始"
+  closing:
+    pompous:
+      zh: ["让我们","共同探索","共同努力","共同成长","一起成长","携手","并肩","未来可期","展望未来","希望对你有所启发","关于这个问题，我想说的就这些"]
+      en: ["let us","together we can","the future is","as we move forward","in conclusion, I hope"]
+    scan_chars: 150
+    echo_threshold: 0.4
+    severity: high
+    rationale: "AI文章结尾几乎都有升华/呼应/展望；人类文章的结尾通常是'就这样'或一个具体建议"
+  hooks:
+    limit: 1
+    patterns:
+      zh: ["你有没有想过","你知道吗","为什么.*(?:总是|就是|偏偏).*？","有没有想过为什么"]
+      en: ["have you ever wondered","did you know","why do we always"]
+    severity: medium
+  transitions:
+    banned:
+      zh:
+        - "说到.{1,10}(就不得不|不得不|自然要|就要)"
+        - "提到.{1,10}(自然|就不得不|不能不)"
+        - "谈到.{1,10}(我们|就需要|还需要)"
+        - "那么.{0,20}(到底|究竟).{0,10}(呢|？)"
+        - "接下来.{0,6}(让我们|我们来)"
+        - "下面.{0,6}(让我们|我们来|我们就来)"
+      en:
+        - "having said that"
+        - "with that in mind"
+        - "speaking of which"
+        - "now let's (turn to|look at|move on)"
+    severity: medium
+    rationale: "'说到X就不得不提Y'是AI文章最显眼的过渡模式之一"
+  paragraph:
+    homogeneity:
+      window: 3
+      cv_threshold: 0.25
+      structure_match: true
+      severity: medium
+    tail_summary:
+      patterns:
+        zh:
+          - "由此可见.{0,20}[。！]?$"
+          - "因此.{0,6}(我们|在).{0,20}(需要|应该|必须)"
+          - "这也是为什么.{0,30}[。！]?$"
+          - "总之.{0,30}[。！]?$"
+          - "可见.{0,20}(至关重要|不可或缺|非常关键)"
+        en:
+          - "in short,.*$"
+          - "this is (why|exactly why).*$"
+          - "clearly,.*$"
+      threshold: 2
+      severity: low
+      rationale: "人类作者不会每段都用一句话收束；AI几乎段段有结论"
+  redundancy:
+    trigger_words:
+      zh: ["换句话说","也就是说","简单来说","换言之","说白了就是","通俗地讲"]
+      en: ["in other words","put simply","to put it simply","that is to say"]
+    severity: low
+    fix: "删掉复述句，保留信息量更高的那句"
+    rationale: "说完一件事用'换句话说'再说一遍，是AI填充字数的常见手段"
+  false_attribution:
+    patterns:
+      zh:
+        - "研究(表明|显示|指出|发现)"
+        - "据.{0,6}(专家|学者|业内人士|分析师).{0,6}(介绍|表示|指出|称)"
+        - "根据(最新|相关|一项)?(数据|统计|调查|报告)"
+        - "有数据(表明|显示)"
+        - "据(了解|悉)"
+      en:
+        - "studies (show|suggest|indicate)"
+        - "according to (experts|research|recent data)"
+        - "research (shows|suggests|indicates|has shown)"
+    severity: high
+    fix: "给出具体来源（论文名/机构名/年份），或删掉归因直接陈述事实"
+    rationale: "有归因无来源是AI文章编造的最高发区域；文章比对话更危险因为看起来更'正式'"
+  connective_density:
+    words:
+      zh: ["然而","因此","不过","但是","同时","此外","另外","与此同时","尽管如此","除此之外"]
+      en: ["however","therefore","moreover","furthermore","additionally","nevertheless","in addition","on the other hand","that said"]
+    limit_per_500: 4
+    severity: low
+    rationale: "人类段间连接靠语义本身，不靠每段开头放一个连接词"
+  section_symmetry:
+    cv_threshold: 0.20
+    min_sections: 3
+    severity: low
+    rationale: "AI文章各节长度高度均匀；人类作者有详有略"
+  three_point:
+    pattern: "(三|四|五|六|七)(?:个|大)?(?:核心|主要|关键|重要)?(?:维度|趋势|要点|方面|层次|角度)"
+    variance_threshold: 400
+    action: hint
+    severity: low
+    rationale: "文章里'三个维度/四大趋势'几乎一律是后期凑的"
+  fiction:
+    enabled: false
+    trigger: ["小说","故事","扮演","同人","情感向","fiction","creative writing"]
+    rules_when_on:
+      allow_sensory: true
+      allow_emotion_ext: true
+      relax_tiers: [3, 6]
+      dash_limit: 6
+    rules_when_off:
+      desc: "技术文/博客/复盘默认关闭。数字保持精确，不感官化。"
+
+# 合规锚点（供 check-sync 归一化校验，不影响编译）
+compliance_anchors:
+  phrases: ["客套收尾","协作口吻","路标词","破折号","感叹号","三不说","三要做","会对朋友这样说吗","三点判据","别过度执行","虚假主语","像朋友","直接回答","不说作为AI","不适用范围","本规则让位","直奔主题","开场白≤1句","客套收尾≤1次","协作口吻≤1次","讲义腔≤1次","路标词≤2次","破折号≤2次","感叹号≤3次","空泛标题","空泛引入","强行升华结尾","设问钩子","标题就是主张","开头直接进入","结尾收在具体处","段落有呼吸","铁律","一动作一句话","不是而是","fiction"]

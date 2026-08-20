@@ -10,9 +10,13 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - name: Rule cases + format self-check
-        run: python scripts/check.py
-      - name: Cross-file sync check
+      - name: Build check (core/rules.yaml -> dist/*)
+        run: python scripts/build.py --check
+      - name: Sync check
         run: python scripts/check-sync.py
-      - name: Eval script smoke check (no network)
+      - name: Cases
+        run: python scripts/check.py
+      - name: Bench (token/speed/F1 gate)
+        run: python scripts/bench.py
+      - name: Eval smoke (no network)
         run: python scripts/eval-llm.py --list

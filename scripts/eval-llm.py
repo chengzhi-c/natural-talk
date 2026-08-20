@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
-"""natural-talk LLM 级效果评测。
+"""natural-talk-article LLM 级效果评测。
 
-回答"加载本 skill 后，模型输出是否真的更自然"：
-对同一批用户提问分别调用 LLM 两次——一次带 natural-talk system prompt
-（templates/system-prompt-standard.txt），一次带中性 system prompt——
+回答"加载本 skill 后，模型写的文章是否真的更自然"：
+对同一批文章类提问各调用 LLM 两次——一次带 natural-talk-article system prompt
+（templates/system-prompt-standard.txt），一次带中性 prompt——
 再用 scripts/check.py 的规则表给两边输出计数违规，汇总对比。
 
 用法：
@@ -19,6 +19,9 @@
 结果口径：violations 越少越接近规则要求；关注 with-skill 相对 baseline 的
 零违规率提升与违规总数下降，而不是单条输出的绝对分数。违规计数只测客观
 信号（禁用词、密度、格式），"像不像人"仍需人工读输出下最终判断。
+
+注：本脚本的 check_article() 与 scripts/check.py 保持同步；
+若规则表变更，两处一起改（或改为 import，见 check.py）。
 """
 import json
 import os
@@ -29,20 +32,22 @@ import urllib.request
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "scripts"))
 
-from check import run_checks  # noqa: E402
+from engine.detector import article_check  # noqa: E402
 
 STANDARD_PROMPT = (ROOT / "templates" / "system-prompt-standard.txt").read_text(encoding="utf-8")
 NEUTRAL_PROMPT = "You are a helpful assistant."
 
-# 评测提示词：刻意覆盖容易诱发 AI 腔的场景（客套、讲义腔、编造对冲、评判、情绪）。
+# 评测提示词：刻意覆盖文章场景下容易诱发 AI 腔的提问
+# （空泛标题、空泛引入、讲义腔、三点并列、强行升华、设问钩子）。
 PROMPTS = [
-    {"id": "tool-choice", "prompt": "我该学 Vue 还是 React？"},
-    {"id": "vague-analysis", "prompt": "帮我分析一下这个问题的本质"},
-    {"id": "knowledge-gap", "prompt": "2024 年 Rust 在工业界的采用率是多少？"},
-    {"id": "complaint", "prompt": "我的 Docker 容器启动失败，折腾一天了，帮帮我"},
-    {"id": "emotion", "prompt": "我父亲去世了，我很难受"},
+    {"id": "tutorial", "prompt": "写一篇给新手看的 Docker 容器启动失败排查指南"},
+    {"id": "opinion", "prompt": "该学 Vue 还是 React？写篇文章说说你的看法"},
+    {"id": "retro", "prompt": "写一篇线上事故复盘，讲讲团队从中学到了什么"},
+    {"id": "deep-dive", "prompt": "详细讲讲 MySQL 索引的原理和常见误区"},
+    {"id": "worst-case", "prompt": "帮我分析一下这个问题的本质"},
 ]
 
 
@@ -91,12 +96,13 @@ def main():
         row = {"id": p["id"]}
         for tag, system in (("with_skill", STANDARD_PROMPT), ("baseline", NEUTRAL_PROMPT)):
             try:
-                answer = chat(system, p["prompt"], timeout)
+                raw = chat(system, p["prompt"], timeout)
             except (urllib.error.URLError, TimeoutError, KeyError, json.JSONDecodeError) as e:
                 print("[{}] {} 调用失败：{}".format(p["id"], tag, e))
                 row[tag] = None
                 continue
-            violations, _ = run_checks(p["prompt"], answer)
+            # LLM 输出通常是整篇正文；这里用中性占位标题（模型生成的标题质量需人工评）。
+            violations, _ = check_article("文章", raw)
             row[tag] = violations
             print("[{}] {} 违规 {} 条：{}".format(p["id"], tag, len(violations), summarize(violations)))
             time.sleep(0.3)  # 轻度限速，避免触发服务端节流

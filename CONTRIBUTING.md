@@ -1,133 +1,44 @@
-# 贡献指南
+# Contributing to Natural Talk Article
 
-感谢你考虑为 Natural Talk 贡献！
+欢迎贡献文章版的改进建议、案例或翻译。
 
-## 贡献方式
+## 项目结构
 
-### 1. 报告问题
+- `core/rules.yaml` — **规则唯一源**。改规则只改这个文件，其余由 `python scripts/build.py` 生成。
+- `docs/quick-reference.md` — 快速参考
+- `docs/checklist.md` — 自检清单（可打印）
+- `docs/detection.md` — 检测 AI 写作文章的信号
+- `docs/examples.md` — before/after 改善案例
+- `templates/system-prompt-standard.txt` — 标准版 system prompt（日常用）
+- `templates/system-prompt-lite.txt` — 轻量版 system prompt（对 token 敏感）
+- `scripts/check.py` — 规则自校验器
+- `scripts/check-sync.py` — 多文件规则同步防漂移
+- `scripts/eval-llm.py` — LLM 级效果评测
+- `tests/cases.json` — 校验用例
 
-如果你发现文档中的错误或不清楚的地方：
+## 开发流程
 
-- 在 GitHub 开 Issue
-- 说明具体是哪部分有问题
-- 如果可能，提供改进建议
+1. 改规则 → 只改 `docs/full-guide.md`
+2. 同步其他文件（SKILL.md / README / quick-reference / 模板）
+3. 新增或修改用例 → `tests/cases.json`
+4. 跑 `python scripts/check.py` 和 `python scripts/check-sync.py`，必须全绿
+5. `check-sync.py` 会自动检查规则块是否漂移；如果报 FAIL，说明同步没做对
 
-### 2. 提交案例
+## 贡献案例
 
-如果你有好的 before/after 对比案例：
+提交的案例要有明确的 before/after 对比：
 
-- Fork 仓库
-- 在 `docs/examples.md` 添加你的案例
-- 确保案例包含：
-  - 场景说明
-  - AI 腔版本 + 问题标注
-  - 自然版本 + 优化点
-- 提交 Pull Request
+- ❌ AI 腔：展示典型的 AI 文章症状（空泛标题、空泛引入、三点并列、强行升华……）
+- ✅ 自然：展示改法，并在下方列出优化点
 
-**案例格式**：
+案例格式见 `docs/examples.md` 现有 5 组。
 
-```markdown
-## 案例 X：[场景名称]
+## 贡献规则
 
-**场景**：[具体描述]
+- 新增规则要有实际支撑（不是猜测）
+- 遵循现有文档风格
+- 不适用范围要写清楚（学术论文、正式公文、营销文案、演讲稿等让位）
 
-### ❌ AI 腔（得分：X/10）
+## License
 
-```
-[AI 腔内容]
-```
-
-**问题标注**：
-- ❌ [具体问题]
-- ❌ [具体问题]
-
-### ✅ 自然（得分：X/10）
-
-```
-[自然版本]
-```
-
-**优化点**：
-- ✅ [具体改进]
-- ✅ [具体改进]
-```
-
-### 3. 改进规则
-
-如果你想改进或补充规则：
-
-- 先开 Issue 讨论
-- 说明为什么需要这条规则
-- 提供实际案例支撑
-- 等待反馈后再提交 PR
-
-**规则修改流程**：
-
-1. 只改 `docs/full-guide.md`（规则唯一源）
-2. 同步 SKILL.md、docs/quick-reference.md、templates/ 中对应内容
-3. 为新增规则补测试用例到 `tests/cases.json`
-4. 本地运行 `python scripts/check.py` 和 `python scripts/check-sync.py`，全绿再提交
-
-### 4. 翻译
-
-如果你想贡献其他语言版本：
-
-- Fork 仓库
-- 创建 `docs/[language-code]/` 目录
-- 翻译核心文档
-- 提交 Pull Request
-
-## 提交前检查
-
-- [ ] 遵循现有文档风格
-- [ ] 补充的案例有明确的 before/after 对比
-- [ ] 新增规则有实际支撑（不是猜测）
-- [ ] 规则改动已同步到全部相关文件（以 `python scripts/check-sync.py` 通过为准）
-- [ ] `python scripts/check.py` 全绿（正例通过、反例命中、边缘用例符合预期）
-- [ ] 没有拼写错误
-- [ ] Markdown 格式正确
-
-## 文件职责
-
-| 文件 | 定位 | 格式要求 |
-|------|------|----------|
-| SKILL.md | 注入（skill 触发时进入 context） | 无 emoji；加粗仅用于标题/一级关键词 |
-| templates/*.txt | 注入（system prompt） | 纯平文本：无 emoji、无加粗 |
-| docs/full-guide.md | 阅读参考（规则唯一源） | 允许格式；勿整体注入 |
-| docs/ 其余文件 | 阅读 | 允许格式 |
-| README / CONTRIBUTING | 阅读 | 允许格式 |
-| scripts/*.py | 机器校验 | 只依赖 Python 标准库 |
-| tests/cases.json | 校验数据 | JSON |
-
-## 不接受的贡献
-
-- 纯理论讨论，没有实际案例
-- 过于主观的风格偏好（没有普遍性）
-- 与现有规则严重冲突的建议
-- 商业推广或广告内容
-
-## 行为准则
-
-- 尊重他人的观点
-- 建设性地讨论分歧
-- 专注于改进项目本身
-- 不进行人身攻击或侮辱
-
-## 版权说明
-
-提交贡献即表示你同意：
-
-- 你的贡献将采用 MIT License
-- 你拥有贡献内容的版权或已获得授权
-- 你的贡献可以被项目维护者修改或删除
-
-## 联系方式
-
-如果有任何问题，可以：
-
-- 在 [GitHub](https://github.com/chengzhi-c/natural-talk) 开 Issue
-- 通过 GitHub Discussions 讨论
-
----
-
-再次感谢你的贡献！
+MIT。详见 [LICENSE](LICENSE)。

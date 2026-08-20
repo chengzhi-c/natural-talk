@@ -1,167 +1,407 @@
 {
-  "description": "natural-talk 校验用例。expect=pass 的用例须零违规（提示不算违规）；expect=fail 的用例须至少命中一条违规（用于校验 checker 灵敏度）。规则表见 scripts/check.py，与 docs/full-guide.md 同步。",
+  "description": "natural-talk-article 校验用例。expect=pass 的用例须零违规（提示不算违规）；expect=fail 的用例须至少命中一条违规（用于校验 checker 灵敏度）。规则表见 scripts/check.py，与 docs/full-guide.md 同步。文章版用例以 title + body 为输入，与对话版（user + answer）不同。",
   "cases": [
     {
-      "id": "pos-docker",
-      "user": "为什么我的 Docker 容器启动失败？",
+      "id": "pos-docker-article",
+      "title": "容器起不来，我追了三天",
       "expect": "pass",
-      "answer": "看下日志里的错误信息。常见的一般有三种情况：\n\n1. 端口被占用 - 试试改端口或停掉占用的进程\n2. 镜像拉不下来 - 检查网络或换国内镜像源\n3. 权限不够 - 可以用 sudo 或把用户加到 docker 组\n\n要是有完整报错可以贴给我，我看看能不能给更具体的建议。"
+      "body": "容器起不来，追了三天，最后发现是挂载目录权限不够。\n\n常见的一般有三种情况：\n1. 端口被占用 - 试试改端口或停掉占用的进程\n2. 镜像拉不下来 - 检查网络或换国内镜像源\n3. 权限不够 - 可以用 sudo 或把用户加到 docker 组\n\n先用 `docker logs` 看报错，比猜快。有完整输出贴给我，我帮你看。"
     },
     {
-      "id": "pos-rust",
-      "user": "2024 年 Rust 在工业界的采用率是多少？",
+      "id": "pos-conclusion-article",
+      "title": "建议用方法 A",
       "expect": "pass",
-      "answer": "我不知道 2024 年的具体数字。\n\n不过你可以试试去查 Stack Overflow 年度开发者调查、Rust 官方博客的年度回顾，以及具体公司的技术博客，看看谁在用。\n\n或者去 r/rust 问，那边可能有人追踪这个。"
+      "body": "建议用方法 A。A 性能比 B 快 3 倍，而且社区活跃，文档全。\n\n缺点是学习曲线陡。你看情况决定。\n\n你要做的是大型项目的话，再考虑 B。"
     },
     {
-      "id": "pos-oauth",
-      "user": "什么是 OAuth 2.0？",
+      "id": "pos-retro-article",
+      "title": "项目上线第二天崩了",
       "expect": "pass",
-      "answer": "OAuth 2.0 是授权协议。让用户授权第三方 app 访问他们的数据，\n但不用把密码给这些 app。\n\n比如：\n你用微信登录某个网站 → 网站跳到微信 → 你同意授权 → \n网站拿到你的微信头像和昵称，但拿不到你的微信密码。\n\n一般流程是\"授权码模式\"：\n1. 用户点\"用 XX 登录\"\n2. 跳到 XX 的授权页面\n3. 用户同意，XX 给一个临时授权码\n4. 网站用这个码换取 access token\n5. 网站用 token 调用 XX 的 API 获取用户信息\n\n好处是安全，密码不泄露 + 方便，不用重复注册。"
+      "body": "项目上线第二天崩了。查了一晚，发现是配置文件里少了一个逗号。\n\n那个逗号是我加的。之前 review 的人没看出来，我也没坚持。\n\n现在团队的做法是上线前必须走一遍 checklist，review 的人不能少于两个。跑一遍冒烟测试，比什么都有用。"
     },
     {
-      "id": "pos-vue",
-      "user": "我该学 Vue 还是 React？",
+      "id": "pos-long-article",
+      "title": "MySQL 索引：什么时候该建，什么时候别建",
       "expect": "pass",
-      "answer": "这个看你的目标是什么。\n\n如果要找工作可以选 React\n- 招聘岗位多 2-3 倍\n- 大厂基本都用（Meta、Netflix、Airbnb）\n- 学会了能直接用 React Native 做移动端\n\n如果是纯兴趣/小项目可以选 Vue\n- 文档清楚，中文资料多\n- 上手快，一天能写出东西\n- 配套工具（Vue Router、Pinia）官方维护\n\n总之我的看法是先学 React。虽然陡一点，但学会了找工作容易。\nVue 要用的时候，有 React 基础一周就能上手。\n\n现在做什么项目？"
+      "body": "先说结论：InnoDB 的 B+ 树索引是绝大多数场景下的正确选择，不用特意换成别的结构。\n\n你问的数据页和索引之间是什么关系，分开讲。\n\nInnoDB 的存储单位是数据页，默认 16KB 一页。记录按主键顺序塞进页里，页与页之间用双向链表连起来。没有索引的时候，查一条记录要把这些页从头到尾扫一遍，记录越多越慢，这就是全表扫描。\n\nB+ 树做的事情是给这些页建目录。拿主键索引举例—非叶子节点存的是键值和指向下一层的指针，所有真实记录都在叶子节点，叶子节点之间还有指针串成链表。这样一次查询从根节点走到叶子节点，通常只需要 3 到 4 次磁盘 IO，树的高度决定 IO 次数。一个 16KB 的页能放上千个键，所以几百万记录的表，树高也就 3 层左右。\n\n二级索引类似，只是叶子节点存的是二级索引键加主键值。查到主键值之后，还要回到主键索引里取完整记录，这一步叫回表。覆盖索引就是让查询要的字段全在索引里，省掉回表那一步。\n\n几个常见误区说一下。联合索引有最左前缀规则—列顺序没排对，索引就失效。范围查询后面的列也用不上索引。区分度太低的列单独建索引没有意义，优化器会直接放弃。\n\n判断该不该建索引，看两件事：这个查询出现的频率够不够高，以及索引能不能把扫描范围压下来。用 EXPLAIN 看执行计划，type 列是 ALL 说明还是全表扫描，rows 列告诉你大概要读多少行。\n\n单表索引不是越多越好，每多一个索引，写入和更新时都要多维护一棵树，还会占磁盘。一般业务表 3 到 5 个索引是常见范围—再往上就要审视是不是查询设计有问题。\n\n慢查询日志加上 pt-query-digest 这类工具，能把吃资源最多的 SQL 挑出来，再逐个决定加索引还是改写法—比拍脑袋建索引靠谱。\n\n顺带说下聚簇索引。InnoDB 的主键索引叶子节点直接存整行数据，所以主键尽量短、尽量自增，不然插入时页分裂会很频繁。MyISAM 没有聚簇概念，索引和数据是分开的两个文件，这是两者一个大的架构差别。\n\n字符串字段建索引，可以考虑只取前缀建索引—省空间，但要留意区分度，前缀太短会让扫描行数变多。长文本字段直接建全文索引或者交给搜索引擎更合适，别硬套普通索引。\n\n索引失效的排查套路也简单：对慢 SQL 跑一次 EXPLAIN，看 key 列有没有用上索引，extra 列有没有 Using filesort、Using temporary，有的话改查询写法或者调索引列。改完再跑一次对比扫描行数，降下来就说明方向对了。"
     },
     {
-      "id": "neg-docker",
-      "user": "为什么我的 Docker 容器启动失败？",
+      "id": "pos-steps-article",
+      "title": "Windows 和 Ubuntu 双系统安装步骤",
+      "expect": "pass",
+      "body": "首先备份重要数据，装系统有概率清掉分区表。其次进 BIOS 关掉 Secure Boot，很多启动问题都出在这。\n\n装之前先压缩分区：在 Windows 磁盘管理里压缩出一个至少 50GB 的空闲空间，用 Rufus 把 Ubuntu 镜像烧进 U 盘。U 盘启动后进安装程序选\"与 Windows 共存\"。\n\n装完第一次重启进 BIOS 把 Ubuntu 设为第一启动项。怕出错的话先备份引导区，出问题能用修复盘救回来。"
+    },
+    {
+      "id": "pos-en-article",
+      "title": "Why my Docker container won't start",
+      "expect": "pass",
+      "body": "Check the error in the logs first. The usual causes are a port conflict, a failed image pull, or missing permissions for the mounted directory.\n\nPaste the full error and I can be more specific."
+    },
+    {
+      "id": "pos-title-claim",
+      "title": "我用三个月把查询性能提了十倍",
+      "expect": "pass",
+      "body": "线上有个查询从 2 秒变成了 20 秒。追了三个月，最后发现是索引顺序没排对。\n\n联合索引有最左前缀规则，列顺序没排对，索引就失效了。改成对的顺序之后，那个查询回到了 0.3 秒。"
+    },
+    {
+      "id": "pos-no-close",
+      "title": "一次线上事故的复盘",
+      "expect": "pass",
+      "body": "项目上线第二天崩了。查了一晚，发现是配置文件里少了一个逗号。\n\n那个逗号是我加的。之前 review 的人没看出来，我也没坚持。\n\n现在团队的做法是上线前走一遍 checklist，review 的人不能少于两个。跑一遍冒烟测试，比什么都有用。"
+    },
+    {
+      "id": "pos-mixed-paragraphs",
+      "title": "写技术文章的三个体会",
+      "expect": "pass",
+      "body": "写技术文章三年，有些体会。\n\n第一，写之前先想清楚给谁看。写给新手和写给有经验的人，用词完全不一样。\n\n第二，具体比漂亮重要。\"这个方案提升了效率\"不如\"登录时间从 3 秒降到 0.8 秒\"。\n\n第三，不确定就说不确定。编造一个数字比写得难看更糟。"
+    },
+    {
+      "id": "pos-data-real",
+      "title": "一个查询从 2 秒变 20 秒之后",
+      "expect": "pass",
+      "body": "线上有个查询从 2 秒变成了 20 秒。追了三个月，最后发现是索引顺序没排对。\n\n联合索引有最左前缀规则，列顺序没排对，索引就失效了。改成对的顺序之后，那个查询回到了 0.3 秒，白天高峰期也没再超过 1 秒。"
+    },
+    {
+      "id": "pos-emotion-article",
+      "title": "配置文件里少了一个逗号",
+      "expect": "pass",
+      "body": "项目上线第二天崩了。查了一晚，发现是配置文件里少了一个逗号。\n\n那个逗号是我加的。之前 review 的人没看出来，我也没坚持。\n\n现在团队的做法是上线前必须走一遍 checklist，review 的人不能少于两个。跑一遍冒烟测试，比什么都有用。"
+    },
+    {
+      "id": "neg-docker-article",
+      "title": "关于 Docker 容器排查的那些事",
       "expect": "fail",
-      "answer": "你好！感谢你的提问。这是一个很好的问题！让我来帮你详细分析一下。\n\n首先，值得注意的是，Docker 容器启动失败的原因是多方面的。其次，\n我们需要系统梳理可能的问题点。最后，我会给出具体的排查建议。\n\n事实上，这不仅仅是一个配置问题，而是一个需要深入理解 Docker 底层\n机制的问题。让我们一步步拆解这个问题。\n\n归根结底，问题可能出在以下几个方面：\n1. 端口冲突问题\n2. 镜像拉取问题  \n3. 权限配置问题\n\n综上所述，建议你按照以上三个方向逐一排查。希望这能帮助你解决问题！\n如果还有疑问请随时告诉我。"
+      "body": "在当今容器化技术快速发展的背景下，Docker 已经成为开发者必备的工具。然而，很多同学在使用 Docker 的过程中经常会遇到容器启动失败的问题。本文将为你详细解析排查方法。\n\n首先，值得注意的是，Docker 容器启动失败的原因是多方面的。其次，我们需要系统梳理可能的问题点。最后，我会给出具体的排查建议。\n\n事实上，这不仅仅是一个配置问题，而是一个需要深入理解 Docker 底层机制的问题。让我们一步步拆解这个问题。\n\n归根结底，问题可能出在以下三个核心维度：\n1. **端口冲突问题**：需要检查端口占用情况\n2. **镜像拉取问题**：必须确认网络和镜像源\n3. **权限配置问题**：应该验证用户组设置\n\n综上所述，建议你按照以上三个方向逐一排查。希望这能帮助你解决问题！如果还有疑问请随时告诉我。"
     },
     {
-      "id": "neg-rust",
-      "user": "2024 年 Rust 在工业界的采用率是多少？",
+      "id": "neg-introduce-article",
+      "title": "关于数据库优化的那些事",
       "expect": "fail",
-      "answer": "这是一个非常有深度的问题！让我来为你详细解答。\n\n虽然我的训练数据截至 2023 年 10 月，没有 2024 年的精确统计数据，\n但根据行业趋势和一般经验来看，Rust 的采用率应该在持续增长。\n\n通常来说，在系统编程领域，Rust 可能已经达到了 15-20% 左右的市场\n份额。当然，这只是一个大致的估算，实际情况可能会有所不同。\n\n建议你可以查看 Stack Overflow 开发者调查、Rust 官方年度报告等权威\n来源获取更准确的数据。希望这个回答对你有所帮助！"
+      "body": "在当今数字化转型的大背景下，随着数据库技术的快速发展，数据库优化已经成为每个开发者必须面对的问题。本文将从多个维度为你详细解析。\n\n事实上，很多优化技巧看起来简单，但实际效果差异很大。归根结底，优化的核心在于理解查询的执行路径。"
     },
     {
-      "id": "neg-oauth",
-      "user": "什么是 OAuth 2.0？",
+      "id": "neg-three-dimensions-article",
+      "title": "如何分析一个复杂问题",
       "expect": "fail",
-      "answer": "好问题！让我来帮你深入理解这个至关重要的概念。\n\n首先，我们需要了解 OAuth 2.0 的定义。其次，要掌握它的核心特点。\n接下来，我会为你详细剖析它的应用场景。最后，总结它的价值。\n\nOAuth 2.0 是一个授权框架，它允许第三方应用获得对 HTTP 服务上用户\n账户的有限访问权限。值得注意的是，这不仅仅是一个技术标准，更是\n一个深刻影响现代互联网安全架构的重要机制。\n\n通过使用 OAuth 2.0，我们可以显著提升用户体验，同时确保数据安全。\n它在现代应用开发中扮演着不可或缺的角色。\n\n综上所述，OAuth 2.0 是你必须掌握的核心技术之一。希望这个解释能\n帮助你建立清晰的认知！"
+      "body": "这个问题的本质体现在三个核心维度：\n1. **技术层面**：需要深刻理解架构设计\n2. **业务层面**：必须充分考虑用户需求\n3. **战略层面**：应该前瞻性地布局生态"
     },
     {
-      "id": "neg-vue",
-      "user": "我该学 Vue 还是 React？",
+      "id": "neg-close-article",
+      "title": "团队协作中沟通的重要性",
       "expect": "fail",
-      "answer": "感谢你的咨询！这是一个很多开发者都会遇到的关键问题。让我来为你\n进行全面分析。\n\n首先，值得注意的是，Vue 和 React 都是优秀的前端框架，各有千秋。\n其次，我们需要从多个维度进行深入对比。接下来，我会为你详细拆解。\n\n事实上，这不是一个简单的\"哪个更好\"的问题，而是要基于你的具体\n需求和背景来综合判断。让我们系统梳理一下：\n\n归根结底，两者的核心差异体现在以下方面：\n- **学习曲线**：Vue 更容易上手，对新手更友好\n- **生态系统**：React 的社区更庞大，资源更丰富  \n- **就业市场**：React 的岗位需求量相对更大\n\n综上所述，我强烈建议你：如果是新手，从 Vue 开始；如果追求就业，\n选 React。当然，最理想的情况是两者都掌握。希望这个分析能帮助你\n做出明智的决策！如有更多问题，欢迎继续交流。"
+      "body": "团队协作中，沟通很重要。信息不对称是大多数线上事故的根因。\n\n我们团队的做法是：上线前必须走一遍 checklist，review 的人不能少于两个。\n\n当然，每个团队的情况不一样。归根结底，让我们共同探索更高效的协作方式，携手前行，未来可期。"
     },
     {
-      "id": "neg-worst",
-      "user": "帮我分析一下这个问题的本质",
+      "id": "neg-hooks-article",
+      "title": "为什么你的查询总是很慢",
       "expect": "fail",
-      "answer": "你好！这是一个非常有深度的好问题！让我来为你详细解答。\n\n首先，值得注意的是，这不仅仅是一个技术问题，而是一个需要深入\n理解底层逻辑的重要问题。其次，我们需要系统梳理各个方面。接下来，\n让我们一步步拆解。\n\n事实上，归根结底，问题的本质体现在以下三个核心维度：\n1. **技术层面**：需要深刻理解架构设计\n2. **业务层面**：必须充分考虑用户需求\n3. **战略层面**：应该前瞻性地布局生态\n\n综上所述，通过以上分析我们可以看出，这个问题的解决需要多维度\n综合考量。我强烈建议你按照上述思路逐一落实。当然，任何方案都\n需要根据实际情况灵活调整。\n\n希望这个回答能帮助你建立清晰的认知！如果还有任何疑问，欢迎随时\n向我提问。让我们共同探索，一起成长！"
+      "body": "你有没有想过，为什么你的查询总是很慢？实际上，数据库慢通常不是一个问题，而是多个小问题叠加的结果。你有没有想过，索引失效的常见原因有哪些？事实上，很多时候查询慢是因为没走索引。为什么总是加了索引还是慢？"
     },
     {
-      "id": "edge-identity",
-      "user": "你是 AI 吗？",
-      "expect": "pass",
-      "answer": "我是 AI 助手，基于大语言模型。我的训练数据有截止时间，具体到哪个月要看部署方给的信息，建议直接查你用的这个产品的官方说明。"
-    },
-    {
-      "id": "edge-steps",
-      "user": "怎么装 Windows 和 Ubuntu 双系统？",
-      "expect": "pass",
-      "answer": "首先备份重要数据，装系统有概率清掉分区表。其次进 BIOS 关掉 Secure Boot，很多启动问题都出在这。\n\n装之前先压缩分区：\n1. 在 Windows 磁盘管理里压缩出一个至少 50GB 的空闲空间\n2. 用 Rufus 把 Ubuntu 镜像烧进 U 盘\n3. U 盘启动，进安装程序后选\"与 Windows 共存\"\n4. 装完第一次重启进 BIOS 把 Ubuntu 设为第一启动项\n\n怕出错的话，先备份引导区再动手，出问题能用修复盘救回来。"
-    },
-    {
-      "id": "edge-long",
-      "user": "讲讲 MySQL 索引的原理，详细一点",
-      "expect": "pass",
-      "answer": "先说结论：InnoDB 的 B+ 树索引是绝大多数场景下的正确选择，不用特意换成别的结构。\n\n你问的数据页和索引之间是什么关系，分开讲。\n\nInnoDB 的存储单位是数据页，默认 16KB 一页。记录按主键顺序塞进页里，页与页之间用双向链表连起来。没有索引的时候，查一条记录要把这些页从头到尾扫一遍，记录越多越慢，这就是全表扫描。\n\nB+ 树做的事情是给这些页建目录。拿主键索引举例—非叶子节点存的是键值和指向下一层的指针，所有真实记录都在叶子节点，叶子节点之间还有指针串成链表。这样一次查询从根节点走到叶子节点，通常只需要 3 到 4 次磁盘 IO，树的高度决定 IO 次数。一个 16KB 的页能放上千个键，所以几百万记录的表，树高也就 3 层左右。\n\n二级索引类似，只是叶子节点存的是二级索引键加主键值。查到主键值之后，还要回到主键索引里取完整记录，这一步叫回表。覆盖索引就是让查询要的字段全在索引里，省掉回表那一步。\n\n几个常见误区说一下。联合索引有最左前缀规则—列顺序没排对，索引就失效。范围查询后面的列也用不上索引。区分度太低的列单独建索引没有意义，优化器会直接放弃。\n\n判断该不该建索引，看两件事：这个查询出现的频率够不够高，以及索引能不能把扫描范围压下来。用 EXPLAIN 看执行计划，type 列是 ALL 说明还是全表扫描，rows 列告诉你大概要读多少行。\n\n单表索引不是越多越好，每多一个索引，写入和更新时都要多维护一棵树，还会占磁盘。一般业务表 3 到 5 个索引是常见范围—再往上就要审视是不是查询设计有问题。\n\n慢查询日志加上 pt-query-digest 这类工具，能把吃资源最多的 SQL 挑出来，再逐个决定加索引还是改写法—比拍脑袋建索引靠谱。\n\n顺带说下聚簇索引。InnoDB 的主键索引叶子节点直接存整行数据，所以主键尽量短、尽量自增，不然插入时页分裂会很频繁。MyISAM 没有聚簇概念，索引和数据是分开的两个文件，这是两者一个大的架构差别。\n\n字符串字段建索引，可以考虑只取前缀建索引—省空间，但要留意区分度，前缀太短会让扫描行数变多。长文本字段直接建全文索引或者交给搜索引擎更合适，别硬套普通索引。\n\n索引失效的排查套路也简单：对慢 SQL 跑一次 EXPLAIN，看 key 列有没有用上索引，extra 列有没有 Using filesort、Using temporary，有的话改查询写法或者调索引列。改完再跑一次对比扫描行数，降下来就说明方向对了。"
-    },
-    {
-      "id": "edge-emotion",
-      "user": "我父亲去世了，我很难受",
-      "expect": "pass",
-      "answer": "听到这个消息很难过。失去至亲是很重的痛，你现在的难受都是正常的。想说的时候可以讲讲他是什么样的人，不想说就安静待着，我都听着。"
-    },
-    {
-      "id": "edge-three-ok",
-      "user": "网站打开很慢一般是什么原因？",
-      "expect": "pass",
-      "answer": "常见原因有三类：\n1. 服务器带宽不够\n2. 静态资源没上 CDN\n3. 数据库查询太慢\n\n先用浏览器开发者工具看哪个请求耗时最长，再对症处理，比盲目加配置管用。"
-    },
-    {
-      "id": "edge-three-bad",
-      "user": "帮我分析一下这个问题",
+      "id": "neg-title-vague",
+      "title": "关于 React 的那些事",
       "expect": "fail",
-      "answer": "这个问题的本质体现在三个核心维度：\n1. **技术层面**：需要深刻理解架构设计\n2. **业务层面**：必须充分考虑用户需求\n3. **战略层面**：应该前瞻性地布局生态"
-    },
-    {
-      "id": "pos-hedge-once",
-      "user": "为什么我的 Docker 容器启动失败？",
-      "expect": "pass",
-      "answer": "通常是端口冲突。先 docker ps 看看有没有重复映射，没有的话再看挂载目录的权限。"
-    },
-    {
-      "id": "neg-hedge-stack",
-      "user": "这个方案能上线吗？",
-      "expect": "fail",
-      "answer": "通常来说，在大多数情况下，这个方案可能大致上能够满足需求。"
-    },
-    {
-      "id": "pos-step-report",
-      "user": "帮我看下这个报错",
-      "expect": "pass",
-      "answer": "先看第一条报错的行号和堆栈，其次确认是不是权限问题，用 root 跑一遍试试。\n\n大概率是这两个之一，日志贴全一点我能看得更准。"
-    },
-    {
-      "id": "pos-steps-no-keyword",
-      "user": "我的服务一直起不来，急死了",
-      "expect": "pass",
-      "answer": "首先看服务日志，其次确认端口有没有被占。大概率是这两个问题之一。"
-    },
-    {
-      "id": "pos-signpost-density",
-      "user": "这两个方案到底选哪个？",
-      "expect": "pass",
-      "answer": "实际上两个都能跑。实际上的差别在维护成本，A 的依赖少，B 的文档全。"
-    },
-    {
-      "id": "neg-signpost-density",
-      "user": "这两个方案到底选哪个？",
-      "expect": "fail",
-      "answer": "实际上两个都能跑。实际上的差别在维护成本。实际上，本质上还是看团队熟悉哪个。实际上选 A 更省事。"
-    },
-    {
-      "id": "pos-en-docker",
-      "user": "Why won't my Docker container start?",
-      "expect": "pass",
-      "answer": "Check the error in the logs first. The usual causes are a port conflict, a failed image pull, or missing permissions for the mounted directory.\n\nPaste the full error and I can be more specific."
-    },
-    {
-      "id": "pos-en-unknown",
-      "user": "What was Instagram's revenue in 2024?",
-      "expect": "pass",
-      "answer": "I don't know the exact figure. Instagram does not break it out separately in Meta's filings.\n\nThe closest public number is Meta's total ad revenue, and even that needs the 10-K. Check Meta's investor site for the real data."
-    },
-    {
-      "id": "pos-en-single-word",
-      "user": "Why did the migration fail?",
-      "expect": "pass",
-      "answer": "The log points to a lock timeout, so the migration ran into a crucial constraint: two transactions held locks on the same rows."
-    },
-    {
-      "id": "pos-en-landscape",
-      "user": "How do I pick a venue for the workshop?",
-      "expect": "pass",
-      "answer": "The landscape of venues in this city changed a lot in 2024. Pick a place close to the train station, because most attendees arrive by rail, and check whether the room has a projector."
+      "body": "React 是一个前端框架。它用组件的方式组织界面，状态驱动视图更新。\n\n优点是社区大，文档全，岗位多。缺点是学习曲线陡，包体积也不小。\n\n想学的话从官方文档开始，别一上来就啃源码。"
     },
     {
       "id": "neg-en-ai-speak",
-      "user": "What is OAuth 2.0?",
+      "title": "Everything You Need to Know About Docker",
       "expect": "fail",
-      "answer": "Great question! Let me break this down. First, OAuth 2.0 is crucial for modern security. Additionally, it serves as a pivotal framework for authorization. In conclusion, I hope this helps!"
+      "body": "Great question! Let me break this down. First, Docker is a crucial tool for modern development. Additionally, it serves as a pivotal framework for containerization. In conclusion, I hope this helps!"
     },
     {
       "id": "neg-en-word-density",
-      "user": "Should we rewrite the service?",
+      "title": "Should we rewrite the service?",
       "expect": "fail",
-      "answer": "The crucial thing is that the landscape keeps shifting. The pivotal landscape depends on a vibrant ecosystem, and another crucial, pivotal landscape shift is already visible."
+      "body": "The crucial thing is that the landscape keeps shifting. The pivotal landscape depends on a vibrant ecosystem, and another crucial, pivotal landscape shift is already visible."
+    },
+    {
+      "id": "neg-worst-article",
+      "title": "关于如何分析一个复杂问题",
+      "expect": "fail",
+      "body": "关于如何分析一个复杂问题，这是一个非常有深度的话题。让我来为你详细解答。\n\n首先，值得注意的是，这不仅仅是一个技术问题，而是一个需要深入理解底层逻辑的重要问题。其次，我们需要系统梳理各个方面。接下来，让我们一步步拆解。\n\n事实上，归根结底，问题的本质体现在三个核心维度：\n1. **技术层面**：需要深刻理解架构设计\n2. **业务层面**：必须充分考虑用户需求\n3. **战略层面**：应该前瞻性地布局生态\n\n综上所述，通过以上分析我们可以看出，这个问题的解决需要多维度综合考量。我强烈建议你按照上述思路逐一落实。当然，任何方案都需要根据实际情况灵活调整。\n\n希望这个回答能帮助你建立清晰的认知！如果还有任何疑问，欢迎随时向我提问。让我们共同探索，一起成长！"
+    },
+    {
+      "id": "pos-density-exempt",
+      "title": "我用三月把查询提了十倍",
+      "expect": "pass",
+      "body": "在当今AI发展的背景下，上周查询从2秒变20秒，我追了三天用EXPLAIN发现索引顺序错了，改回0.3秒。\n\n具体是联合索引最左前缀没排对，改完压测通过。"
+    },
+    {
+      "id": "neg-title-semantic",
+      "title": "数据库概览",
+      "expect": "pass",
+      "body": "这次把查询从2秒压到0.3秒，改的是联合索引顺序。EXPLAIN显示type为ALL，rows很高，改后rows降了一个量级。"
+    },
+    {
+      "id": "pos-en-title-pass",
+      "title": "Fixing MySQL index order cut query time by 10x",
+      "expect": "pass",
+      "body": "Query went from 2s to 0.3s after fixing index order. EXPLAIN showed type ALL before, rows dropped an order after."
+    },
+    {
+      "id": "pos-three-real",
+      "title": "容器起不来，先看这三处",
+      "expect": "pass",
+      "body": "容器起不来，先看日志。\n\n1. 端口被占用 - lsof -i:8080 看看是谁占用，杀掉或换端口\n2. 镜像拉不下来 - 公司网络走代理，换国内镜像源重试\n3. 权限不够，这个最隐蔽：挂载目录的SELinux标签不对，即使chmod 777也不行，需要chcon或关闭SELinux再试"
+    },
+    {
+      "id": "neg-title-vague-pattern",
+      "title": "X的三大维度深度解析",
+      "expect": "fail",
+      "body": "这次从三大维度分析问题，结论是索引顺序。\n\n改后查询回到0.3秒。"
+    },
+    {
+      "id": "pos-paragraph-breathing",
+      "title": "一次线上事故的复盘",
+      "expect": "pass",
+      "body": "项目上线第二天崩了。\n\n查了一晚，发现是配置文件里少了一个逗号，那个逗号是我加的。\n\n现在团队的做法是上线前走一遍checklist。\n\n跑一遍冒烟测试，比什么都有用。\n\n就这么简单。"
+    },
+    {
+      "id": "pos-paragraph-warning",
+      "title": "段落同构仅提示",
+      "expect": "pass",
+      "body": "观点一：索引很重要。我们需要理解B+树。\n\n观点二：索引很重要。我们需要理解最左前缀。\n\n观点三：索引很重要。我们需要理解回表。\n\n观点四：索引很重要。我们需要理解前缀索引。"
+    },
+    {
+      "id": "pos-long-1500",
+      "title": "MySQL 索引：什么时候该建，什么时候别建",
+      "expect": "pass",
+      "body": "先说结论：InnoDB的B+树是多数场景正确选择。\n\n数据页16KB，记录按主键塞，页间双向链表。无索引要全扫。\n\n二级索引叶子存主键，回表一次。多一个索引多一棵树维护，业务表3-5个常见。\n\nEXPLAIN看type和rows，ALL即全扫。字符串取前缀建索引，长文本走全文索引。\n\n慢日志加pt-query-digest挑慢SQL，再决定加索引或改写法。"
+    },
+    {
+      "id": "neg-jiudao-repetition",
+      "title": "一次漫长的等待",
+      "expect": "fail",
+      "body": "我们在机房等了很久，久到忘记时间。\n\n最后发现是网络超时。"
+    },
+    {
+      "id": "neg-bushi-ershi-variant",
+      "title": "关于重构的思考",
+      "expect": "fail",
+      "body": "与其说它是优化，不如说它是重构。\n\n看似简单实则复杂，表面上是配置问题实际上是权限。"
+    },
+    {
+      "id": "pos-direct-no-jiudao",
+      "title": "等了3周才恢复",
+      "expect": "pass",
+      "body": "等了三周，服务才恢复。\n\n原因是配置错误，直接改回正确值。"
+    },
+    {
+      "id": "pos-action-compact-article",
+      "title": "伸手按下按钮",
+      "expect": "pass",
+      "body": "他伸手按下按钮，服务恢复了。"
+    },
+    {
+      "id": "pos-action-split-warning-article",
+      "title": "动作拆解仅提示",
+      "expect": "pass",
+      "body": "他抬起手然后伸出食指接着按下按钮，屏幕亮了。"
+    },
+    {
+      "id": "pos-dash-suspense-article",
+      "title": "话没说完",
+      "expect": "pass",
+      "body": "话没说完——就被打断了，后来才知道是配置错了。"
+    },
+    {
+      "id": "pos-bushi-quoted-article",
+      "title": "他说不是优化而是重构",
+      "expect": "pass",
+      "body": "他说\"不是优化而是重构\"，我觉得有道理。直接按重构方案改，查询从2秒回到0.3秒。"
+    },
+    {
+      "id": "pos-title-suggestion",
+      "title": "数据库概览-建议加动词",
+      "expect": "pass",
+      "body": "这次把查询从2秒压到0.3秒，改的是索引顺序。"
+    },
+    {
+      "id": "pos-fiction-off-precise",
+      "title": "精确数字在技术文不强制感官化",
+      "expect": "pass",
+      "body": "过了5分钟，服务恢复，距离0.5米处能看到指示灯。技术文里精确数字保留，不用改成过了一会儿。"
+    },
+    {
+      "id": "title-vague-extra1",
+      "title": "关于Go的那些事",
+      "expect": "fail",
+      "body": "Go适合写工具，编译快，单二进制好部署。"
+    },
+    {
+      "id": "title-vague-extra2",
+      "title": "Kubernetes完全指南",
+      "expect": "fail",
+      "body": "K8s调度有点复杂，但跑起来稳定。"
+    },
+    {
+      "id": "title-vague-extra3",
+      "title": "微服务的四大趋势深度解析",
+      "expect": "fail",
+      "body": "这次聊聊微服务拆分后的坑。"
+    },
+    {
+      "id": "title-good-extra1",
+      "title": "把P99从800ms压到120ms",
+      "expect": "pass",
+      "body": "上周把P99从800ms压到120ms，改的是索引顺序和缓存。"
+    },
+    {
+      "id": "title-good-extra2",
+      "title": "线上事故：少了一个逗号",
+      "expect": "pass",
+      "body": "少了一个逗号导致全量回滚，查了一晚。"
+    },
+    {
+      "id": "title-noun-extra",
+      "title": "服务治理概览",
+      "expect": "pass",
+      "body": "这次把查询从2秒压到0.3秒，改的是索引顺序。"
+    },
+    {
+      "id": "opening-banned-extra1",
+      "title": "一次排查",
+      "expect": "fail",
+      "body": "随着微服务的兴起，越来越多的团队关注治理。\n\n实际上问题出在配置。"
+    },
+    {
+      "id": "opening-banned-extra2",
+      "title": "众所周知的优化",
+      "expect": "fail",
+      "body": "众所周知，容器化很重要。本文将带你了解。\n\n其实就是权限问题。"
+    },
+    {
+      "id": "opening-good-extra1",
+      "title": "上周扩容失败",
+      "expect": "pass",
+      "body": "上周扩容失败，回滚花了两小时，最后发现是配置中心推送延迟。"
+    },
+    {
+      "id": "opening-density-exempt-extra",
+      "title": "K8s里的坑",
+      "expect": "pass",
+      "body": "在当今的K8s集群里，上周我们把查询从2秒变0.3秒，用EXPLAIN定位到索引顺序错了。"
+    },
+    {
+      "id": "closing-pompous-extra1",
+      "title": "一次复盘",
+      "expect": "fail",
+      "body": "前面讲了三步排查。\n\n让我们携手共进，展望未来，未来可期。"
+    },
+    {
+      "id": "closing-pompous-extra2",
+      "title": "一点心得",
+      "expect": "fail",
+      "body": "总结一下。\n\n希望本文能对你有所启发，关于这个问题我想说的就这些。"
+    },
+    {
+      "id": "closing-good-extra1",
+      "title": "先这样",
+      "expect": "pass",
+      "body": "前面三步查完。\n\n先这样，跑通再贴日志。"
+    },
+    {
+      "id": "closing-good-extra2",
+      "title": "你遇到哪种",
+      "expect": "pass",
+      "body": "三种情况说完。\n\n你现在遇到的是哪种？贴日志我帮你看。"
+    },
+    {
+      "id": "false-attr-extra1",
+      "title": "容器化提效",
+      "expect": "pass",
+      "body": "研究表明容器化能提效30%。\n\n我们团队实践后确实快了，但数据来自内部统计。"
+    },
+    {
+      "id": "false-attr-extra2",
+      "title": "CNCF报告",
+      "expect": "pass",
+      "body": "根据CNCF 2023报告，55%团队在用K8s，有来源可查。"
+    },
+    {
+      "id": "false-attr-extra3",
+      "title": "Experts say",
+      "expect": "pass",
+      "body": "According to experts, you should use K8s. We found it helpful."
+    },
+    {
+      "id": "trans-extra1",
+      "title": "缓存与Redis",
+      "expect": "fail",
+      "body": "说到缓存，就不得不提Redis。\n\n其实直接说Redis就行。"
+    },
+    {
+      "id": "trans-extra2",
+      "title": "到底怎么解决",
+      "expect": "fail",
+      "body": "那么，这个问题到底该怎么解决呢？接下来让我们看看。\n\n直接给结论更省事。"
+    },
+    {
+      "id": "trans-natural-extra",
+      "title": "缓存是另一回事",
+      "expect": "pass",
+      "body": "缓存是另一回事。\n\n这次先说索引。"
+    },
+    {
+      "id": "tail-many-extra",
+      "title": "段尾堆砌",
+      "expect": "pass",
+      "body": "第一段内容。由此可见，缓存很重要。\n\n第二段内容。因此我们需要重视。\n\n第三段内容。这也是为什么要关注。\n\n第四段。总之很关键。"
+    },
+    {
+      "id": "tail-two-extra",
+      "title": "两处总结",
+      "expect": "pass",
+      "body": "第一段。由此可见很重要。\n\n第二段。因此需要重视。\n\n第三段正常收尾。"
+    },
+    {
+      "id": "tail-natural-extra2",
+      "title": "自然收尾",
+      "expect": "pass",
+      "body": "后来换了方案就好了。\n\n就这么简单。"
+    },
+    {
+      "id": "redund-extra1",
+      "title": "提升",
+      "expect": "pass",
+      "body": "性能提升3倍。换句话说，速度变三倍。\n\n其实一句就够。"
+    },
+    {
+      "id": "redund-extra2",
+      "title": "O1很快",
+      "expect": "pass",
+      "body": "这是O(1)。也就是说，查询很快。\n\n其实补充了复杂度含义。"
+    },
+    {
+      "id": "redund-info-extra2",
+      "title": "Ologn补充",
+      "expect": "pass",
+      "body": "这是O(log n)。换句话说，数据量翻倍多一次IO，补充了前句没有的信息。"
+    },
+    {
+      "id": "connective-high-extra",
+      "title": "连接词多",
+      "expect": "pass",
+      "body": "然而这并不意味着简单。此外我们还要考虑。因此综合来看，不过也有人认为。同时不能忽视，另外与此同时还要看。\n\n其实可以少用几个。"
+    },
+    {
+      "id": "connective-ok-extra",
+      "title": "连接词少",
+      "expect": "pass",
+      "body": "然而这次确实有问题。\n\n其他段落正常，没有堆砌。"
+    },
+    {
+      "id": "symmetry-high-extra",
+      "title": "节对称",
+      "expect": "pass",
+      "body": "## 第一节\n字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字\n\n## 第二节\n字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字\n\n## 第三节\n字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字\n"
+    },
+    {
+      "id": "symmetry-ok-extra",
+      "title": "节不对称",
+      "expect": "pass",
+      "body": "## 第一节\n字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字\n\n## 第二节\n字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字\n\n## 第三节\n字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字字\n"
     }
   ]
 }
