@@ -237,19 +237,6 @@ export OPENAI_API_KEY=...   # OpenAI 兼容接口均可（DeepSeek / Moonshot / 
 python scripts/eval-llm.py
 ```
 
-### 参考数据（v2.1，待跑分后更新）
-
-| 模型 | 无 skill 违规数 | 有 skill 违规数 | 降幅 | 零违规率 |
-|------|----------------|----------------|------|---------|
-| GPT-4o | — | — | — | — |
-| Claude 3.5 Sonnet | — | — | — | — |
-| DeepSeek-V3 | — | — | — | — |
-
-> 方法：5 个文章类提问各调两次，用 `check.py --article` 计数。复现：`python scripts/eval-llm.py --article`
-
-它对一批文章类提问各调用两次 LLM——一次带 natural-talk-article system prompt、一次带中性 prompt——
-再用规则表给两边输出数违规，对比零违规率与违规总数。违规计数只测客观信号，"像不像人"仍需人工读输出下最终判断。
-
 ## 自检清单
 
 写完快速检查（完整清单见 [`docs/checklist.md`](docs/checklist.md)）：
