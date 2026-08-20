@@ -63,8 +63,8 @@
 
 **规则修改流程**：
 
-1. 只改 `docs/full-guide.md`（规则唯一源）
-2. 同步 SKILL.md、docs/quick-reference.md、templates/ 中对应内容
+1. 只改 `core/rules.yaml`（规则唯一源）
+2. 运行 `python scripts/build.py` 生成 `dist/*` 并同步 `SKILL.md`（与 `dist/SKILL.md` 保持一致）
 3. 为新增规则补测试用例到 `tests/cases.json`
 4. 本地运行 `python scripts/check.py` 和 `python scripts/check-sync.py`，全绿再提交
 
@@ -91,9 +91,11 @@
 
 | 文件 | 定位 | 格式要求 |
 |------|------|----------|
-| SKILL.md | 注入（skill 触发时进入 context） | 无 emoji；加粗仅用于标题/一级关键词 |
-| templates/*.txt | 注入（system prompt） | 纯平文本：无 emoji、无加粗 |
-| docs/full-guide.md | 阅读参考（规则唯一源） | 允许格式；勿整体注入 |
+| core/rules.yaml | 唯一源（仅此文件可手改） | YAML 极简子集，含 severity/rationale |
+| SKILL.md / dist/SKILL.md | 注入（skill 触发时进入 context） | 由 build.py 生成，保持同步；无 emoji；加粗仅标题 |
+| dist/prompts/*.txt | 注入（分级 system prompt） | 由 build.py 生成；纯文本 |
+| templates/*.txt | 注入（system prompt 预设） | 纯平文本：无 emoji、无加粗 |
+| docs/full-guide.md | 阅读参考（非唯一源） | 允许格式；勿整体注入 |
 | docs/ 其余文件 | 阅读 | 允许格式 |
 | README / CONTRIBUTING | 阅读 | 允许格式 |
 | scripts/*.py | 机器校验 | 只依赖 Python 标准库 |
