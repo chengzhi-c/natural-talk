@@ -8,7 +8,9 @@
 
 ---
 
-**让 AI 像人说话的完整指南**
+**让 AI 像人说话的完整指南
+
+> **文章版**：去除文章中的 AI 腔（空泛标题、段落同构、强行升华）→ [`article` 分支](https://github.com/chengzhi-c/natural-talk/tree/article)
 
 一套针对对话场景的 AI 腔清理规则。适用于 Claude Code、ChatGPT、Cursor 等所有支持 system prompt 的 AI 工具。
 
@@ -20,8 +22,8 @@ Natural Talk 是一套完整的对话风格规则，让 AI 的回复更自然、
 
 ✅ **诚实优先**：不知道就说不知道，不编造，不模糊其辞  
 ✅ **直接表达**：零开场零收尾，直奔主题  
-✅ **自然对话**：像朋友聊天，不像客服或演讲者  
-✅ **可自查信号**：破折号≤2次、路标词≤2次、开场白≤1句（自查清单，非精确断言）  
+✅ **自然对话**：像朋友聊天，不像客服或演讲者；一个动作尽量一句话说完  
+✅ **可自查信号**：破折号≤2次（仅悬念/未说完）、路标词≤2次、开场白≤1句（自查清单，非精确断言）  
 ✅ **中英双语**：通用规则 + 语言特定规则  
 
 ## 快速开始
@@ -43,6 +45,8 @@ Natural Talk 是一套完整的对话风格规则，让 AI 的回复更自然、
 复制 [`templates/system-prompt-lite.txt`](templates/system-prompt-lite.txt) 到 system prompt。
 
 适合：对 token 敏感的场景，或只需核心规则。
+
+> 分级按需：`dist/prompts/` 下提供 L0 41c/19tok 常驻极轻 · L1 144c/66tok 默认 · L2 415c/189tok 投诉时 · L3 582c/265tok 显式调用，可由 `engine/selector.py` 按上下文自动选档。参见 [`docs/full-guide.md`](docs/full-guide.md)。
 
 ### 方式 4：Claude Code Skill
 
@@ -68,27 +72,45 @@ git clone https://github.com/chengzhi-c/natural-talk.git
 natural-talk/
 ├── README.md                        # 项目说明（本文件）
 ├── LICENSE                          # MIT License
-├── SKILL.md                         # Claude Code Skill 入口（克隆即用）
-├── .github/
-│   └── workflows/ci.yml            # CI：自动跑 check.py + check-sync.py
-├── assets/
-│   └── natural-talk.png             # 品牌图（README 展示）
+├── SKILL.md                         # Claude Code Skill 入口（与 dist/SKILL.md 同步）
+├── core/
+│   └── rules.yaml                  # 规则唯一源（仅此文件可手改）
+├── dist/                           # 生成产物（linguist-generated）
+│   ├── SKILL.md
+│   ├── lexicon.json                # 词表（含 _generated 标记）
+│   └── prompts/
+│       ├── prompt.l0.txt           # 41c 常驻极轻
+│       ├── prompt.l1.txt           # 144c 默认
+│       ├── prompt.l2.txt           # 415c 投诉升档
+│       └── prompt.l3.txt           # 600c 显式调用
+├── engine/
+│   ├── detector.py                 # Trie+Regex+密度 检测器
+│   ├── fixer.py
+│   ├── selector.py
+│   └── trie.py
 ├── docs/
-│   ├── full-guide.md               # 完整指南（规则唯一源）
-│   ├── quick-reference.md          # 快速参考（核心规则）
-│   ├── examples.md                 # 改善案例（5 组完整对比）
-│   ├── checklist.md                # 自检清单（可打印）
-│   └── detection.md                # 检测 AI 生成对话的信号
+│   ├── full-guide.md               # 完整指南（阅读参考）
+│   ├── quick-reference.md          # 快速参考
+│   ├── examples.md                 # 改善案例（6 组）
+│   ├── misjudgments.md             # 常见误判（防矫枉）
+│   ├── checklist.md                # 自检清单
+│   └── detection.md                # 检测信号
 ├── templates/
-│   ├── system-prompt-lite.txt      # 轻量版 system prompt（<500字）
-│   └── system-prompt-standard.txt  # 标准版 system prompt（平文本，无格式）
+│   ├── system-prompt-lite.txt
+│   ├── system-prompt-standard.txt
+│   ├── preset-tech-blog.txt        # 场景预设：技术博客
+│   ├── preset-customer-service.txt # 场景预设：客服
+│   └── preset-social-media.txt     # 场景预设：社媒
+├── benchmarks/                     # 评测存档（eval-llm.py 输出）
 ├── scripts/
-│   ├── check.py                    # 规则自校验器（正反例 + 边缘用例）
-│   ├── check-sync.py               # 多文件规则同步防漂移
-│   └── eval-llm.py                 # LLM 级效果评测（带/不带 skill 对比）
+│   ├── build.py                    # 唯一源 → dist 构建器
+│   ├── check.py                    # 规则校验（含节奏检测）
+│   ├── check-sync.py               # 同步防漂移（含语义覆盖）
+│   ├── eval-llm.py                 # LLM A/B 评测（分Tier存档）
+│   └── bench.py                    # Token/速度/F1 门禁
 ├── tests/
-│   └── cases.json                  # 校验用例（正例/反例/边缘）
-└── CONTRIBUTING.md                  # 贡献指南
+│   └── cases.json                  # 58 条校验用例
+└── CONTRIBUTING.md
 ```
 
 ## 适用场景
@@ -130,6 +152,8 @@ natural-talk/
 2. **不评判人**：不替对方做心理判断，不给身份认证式夸奖
 3. **不装机器人**：避免暴露 AI 身份的协作痕迹
 
+**铁律**：`不是…而是 / 与其…不如 / 很久…久到…` 这类先否定后肯定的句子，直接删否定留肯定（例：`不是优化而是重构` → `重构`），角色引号内除外。
+
 **身份披露例外**：用户直接问及你的身份、能力边界或知识截止时间时，如实简短作答，不回避。
 
 ### 表达层（弹性规则，有明确上限）
@@ -141,7 +165,7 @@ natural-talk/
 | 协作口吻 | ≤1次/全文 | "作为AI" / "希望帮助" / "好问题" |
 | 讲义腔 | ≤1次/全文 | "让我来" / "首先其次" / "综上所述" |
 | 路标词 | ≤2次/全文 | "值得注意" / "事实上" / "归根结底" |
-| 破折号 | ≤2次/全文 | em dash (—) 和 en dash (–) |
+| 破折号 | ≤2次/全文 | em dash (—) 和 en dash (–)，只用于未说完/延长/悬念 |
 | 感叹号 | ≤3次/全文 | 避免过度热情 |
 
 ## 效果对比
@@ -188,6 +212,25 @@ natural-talk/
 年度回顾，以及具体公司的技术博客，看看谁在用。
 
 或者去 r/rust 问，那边可能有人追踪这个。
+```
+
+
+### 示例 3：情绪场景
+
+❌ **AI 腔**：
+
+```
+我完全理解你的感受。失去亲人是人生中最艰难的经历之一。
+让我们一起面对这个困难时期。首先，你需要允许自己悲伤。
+其次，建议寻求专业心理支持。希望你能早日走出来！
+```
+
+✅ **自然**：
+
+```
+听到这个消息很难过。
+
+如果你想的话，我可以陪你聊聊。不想说也没关系。
 ```
 
 更多案例见 [`docs/examples.md`](docs/examples.md)。
@@ -238,6 +281,16 @@ export OPENAI_API_KEY=...   # OpenAI 兼容接口均可（DeepSeek / Moonshot / 
 python scripts/eval-llm.py
 ```
 
+### 参考数据（v2.1，待跑分后更新）
+
+| 模型 | 无 skill 违规数 | 有 skill 违规数 | 降幅 | 零违规率 |
+|------|----------------|----------------|------|---------|
+| GPT-4o | — | — | — | — |
+| Claude 3.5 Sonnet | — | — | — | — |
+| DeepSeek-V3 | — | — | — | — |
+
+> 测试方法：5 个高 AI 腔诱发问题各调两次，用规则表自动计数。复现：`python scripts/eval-llm.py`
+
 它对 5 个容易诱发 AI 腔的提问各调两次 LLM——一次带 natural-talk system prompt、一次带中性 prompt——再用规则表给两边输出数违规，对比零违规率与违规总数。违规计数只测客观信号，"像不像人"仍需人工读输出。
 
 ## 自检清单
@@ -280,13 +333,13 @@ MIT License - 自由使用、修改、分发。详见 [LICENSE](https://github.c
 ## 致谢
 
 本项目受以下项目启发：
-- shuorenhua - 文本改写引擎
-- stop-slop - 英文写作去味
-- humanizer - 维基百科式内容改善
-- Wikipedia "Signs of AI writing" - 系统化的 AI 痕迹分类
+- [shuorenhua](https://github.com/search?q=shuorenhua) - 文本改写引擎
+- [stop-slop](https://github.com/maypop/stop-slop) - 英文写作去味
+- [humanizer](https://github.com/search?q=humanizer) - 维基百科式内容改善
+- [Wikipedia "Signs of AI writing"](https://en.wikipedia.org/wiki/Wikipedia:Signs_of_AI_writing) - 系统化的 AI 痕迹分类
 
 ---
 
-**核心理念**：像人说话，不装，不端着，不知道就说不知道。
+**核心理念**：像人说话，不知道就说不知道。
 
 **终极标准**：删掉开场和结尾后，内容仍然完整 + 会对朋友这样说。

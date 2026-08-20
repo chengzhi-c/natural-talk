@@ -162,6 +162,192 @@
       "user": "Should we rewrite the service?",
       "expect": "fail",
       "answer": "The crucial thing is that the landscape keeps shifting. The pivotal landscape depends on a vibrant ecosystem, and another crucial, pivotal landscape shift is already visible."
+    },
+    {
+      "id": "edge-formal-skip",
+      "user": "帮我写一篇学术论文摘要",
+      "expect": "pass",
+      "answer": "本研究提出一种基于B+树的索引优化方法，实验表明查询延迟降低23%。该文的创新点在于..."
+    },
+    {
+      "id": "edge-anxiety",
+      "user": "最近很焦虑，睡不好",
+      "expect": "pass",
+      "answer": "听起来最近压力很大。睡不好的时候，白天确实会更难熬。愿意说说是什么事让你挂心吗？不想说也可以，先试试把睡前半小时留给完全不碰手机的时间。"
+    },
+    {
+      "id": "neg-english-overpolite",
+      "user": "How to deploy?",
+      "expect": "fail",
+      "answer": "Great question! As an AI, I hope this helps! Let me break this down. Firstly, you should..."
+    },
+    {
+      "id": "pos-short-answer",
+      "user": "Docker和Podman哪个好？",
+      "expect": "pass",
+      "answer": "本地开发用 Docker，生产要 rootless 选 Podman。两者命令兼容，换成本低。"
+    },
+    {
+      "id": "neg-dash-abuse",
+      "user": "解释下这个概念",
+      "expect": "fail",
+      "answer": "这个设计——本质上——是一个——充满活力——的范式转移——值得注意的是——它至关重要。"
+    },
+    {
+      "id": "pos-action-compact",
+      "user": "帮我按个按钮",
+      "expect": "pass",
+      "answer": "他伸手按下按钮。"
+    },
+    {
+      "id": "pos-action-split-warning",
+      "user": "描述一下他的动作",
+      "expect": "pass",
+      "answer": "他抬起手然后伸出食指接着按下按钮。"
+    },
+    {
+      "id": "pos-dash-suspense",
+      "user": "他说了什么？",
+      "expect": "pass",
+      "answer": "话没说完——就被打断了。"
+    },
+    {
+      "id": "pos-bushi-quoted",
+      "user": "他说了什么？",
+      "expect": "pass",
+      "answer": "他说\"不是优化而是重构\"，我觉得有道理。"
+    },
+    {
+      "id": "neg-jiudao",
+      "user": "等了多久？",
+      "expect": "fail",
+      "answer": "我们在机房等了很久，久到忘记时间，最后发现是网络超时。"
+    },
+    {
+      "id": "pos-jiudao-direct",
+      "user": "等了多久？",
+      "expect": "pass",
+      "answer": "等了三周，服务才恢复。"
+    },
+    {
+      "id": "edge-empty",
+      "user": "测试",
+      "expect": "pass",
+      "answer": ""
+    },
+    {
+      "id": "edge-code-only",
+      "user": "写个函数",
+      "expect": "pass",
+      "answer": "```python\ndef foo():\n    return 42\n```"
+    },
+    {
+      "id": "edge-ultra-long",
+      "user": "讲讲 MySQL 索引的原理，详细一点，再多点",
+      "expect": "pass",
+      "answer": "先说结论：B+树索引是正确选择。\n\n页结构：InnoDB 每页 16KB，记录按主键排序。查找从根到叶子通常 3-4 次 IO。\n二级索引叶子存主键，回表取完整行；覆盖索引省掉回表。\n最左前缀要对上，范围查询后面列失效，区分度低的列别单独建。\n用 EXPLAIN 看 type 和 rows；单表 3-5 个索引常见，再多就审视查询设计。\n\n先说结论：B+树索引是正确选择。\n\n页结构：InnoDB 每页 16KB，记录按主键排序。查找从根到叶子通常 3-4 次 IO。\n二级索引叶子存主键，回表取完整行；覆盖索引省掉回表。\n最左前缀要对上，范围查询后面列失效，区分度低的列别单独建。\n用 EXPLAIN 看 type 和 rows；单表 3-5 个索引常见，再多就审视查询设计。\n\n先说结论：B+树索引是正确选择。\n\n页结构：InnoDB 每页 16KB，记录按主键排序。查找从根到叶子通常 3-4 次 IO。\n二级索引叶子存主键，回表取完整行；覆盖索引省掉回表。\n最左前缀要对上，范围查询后面列失效，区分度低的列别单独建。\n用 EXPLAIN 看 type 和 rows；单表 3-5 个索引常见，再多就审视查询设计。\n\n先说结论：B+树索引是正确选择。\n\n页结构：InnoDB 每页 16KB，记录按主键排序。查找从根到叶子通常 3-4 次 IO。\n二级索引叶子存主键，回表取完整行；覆盖索引省掉回表。\n最左前缀要对上，范围查询后面列失效，区分度低的列别单独建。\n用 EXPLAIN 看 type 和 rows；单表 3-5 个索引常见，再多就审视查询设计。\n\n先说结论：B+树索引是正确选择。\n\n页结构：InnoDB 每页 16KB，记录按主键排序。查找从根到叶子通常 3-4 次 IO。\n二级索引叶子存主键，回表取完整行；覆盖索引省掉回表。\n最左前缀要对上，范围查询后面列失效，区分度低的列别单独建。\n用 EXPLAIN 看 type 和 rows；单表 3-5 个索引常见，再多就审视查询设计。\n\n先说结论：B+树索引是正确选择。\n\n页结构：InnoDB 每页 16KB，记录按主键排序。查找从根到叶子通常 3-4 次 IO。\n二级索引叶子存主键，回表取完整行；覆盖索引省掉回表。\n最左前缀要对上，范围查询后面列失效，区分度低的列别单独建。\n用 EXPLAIN 看 type 和 rows；单表 3-5 个索引常见，再多就审视查询设计。\n\n先说结论：B+树索引是正确选择。\n\n页结构：InnoDB 每页 16KB，记录按主键排序。查找从根到叶子通常 3-4 次 IO。\n二级索引叶子存主键，回表取完整行；覆盖索引省掉回表。\n最左前缀要对上，范围查询后面列失效，区分度低的列别单独建。\n用 EXPLAIN 看 type 和 rows；单表 3-5 个索引常见，再多就审视查询设计。\n\n先说结论：B+树索引是正确选择。\n\n页结构：InnoDB 每页 16KB，记录按主键排序。查找从根到叶子通常 3-4 次 IO。\n二级索引叶子存主键，回表取完整行；覆盖索引省掉回表。\n最左前缀要对上，范围查询后面列失效，区分度低的列别单独建。\n用 EXPLAIN 看 type 和 rows；单表 3-5 个索引常见，再多就审视查询设计。\n\n先说结论：B+树索引是正确选择。\n\n页结构：InnoDB 每页 16KB，记录按主键排序。查找从根到叶子通常 3-4 次 IO。\n二级索引叶子存主键，回表取完整行；覆盖索引省掉回表。\n最左前缀要对上，范围查询后面列失效，区分度低的列别单独建。\n用 EXPLAIN 看 type 和 rows；单表 3-5 个索引常见，再多就审视查询设计。\n\n先说结论：B+树索引是正确选择。\n\n页结构：InnoDB 每页 16KB，记录按主键排序。查找从根到叶子通常 3-4 次 IO。\n二级索引叶子存主键，回表取完整行；覆盖索引省掉回表。\n最左前缀要对上，范围查询后面列失效，区分度低的列别单独建。\n用 EXPLAIN 看 type 和 rows；单表 3-5 个索引常见，再多就审视查询设计。\n\n先说结论：B+树索引是正确选择。\n\n页结构：InnoDB 每页 16KB，记录按主键排序。查找从根到叶子通常 3-4 次 IO。\n二级索引叶子存主键，回表取完整行；覆盖索引省掉回表。\n最左前缀要对上，范围查询后面列失效，区分度低的列别单独建。\n用 EXPLAIN 看 type 和 rows；单表 3-5 个索引常见，再多就审视查询设计。\n\n先说结论：B+树索引是正确选择。\n\n页结构：InnoDB 每页 16KB，记录按主键排序。查找从根到叶子通常 3-4 次 IO。\n二级索引叶子存主键，回表取完整行；覆盖索引省掉回表。\n最左前缀要对上，范围查询后面列失效，区分度低的列别单独建。\n用 EXPLAIN 看 type 和 rows；单表 3-5 个索引常见，再多就审视查询设计。\n\n"
+    },
+    {
+      "id": "edge-emoji-requested",
+      "user": "用emoji回答今天怎么样",
+      "expect": "pass",
+      "answer": "今天还行 ✅ 天气不错"
+    },
+    {
+      "id": "edge-emoji-not-requested-pass",
+      "user": "你好",
+      "expect": "pass",
+      "answer": "你好，最近怎么样？"
+    },
+    {
+      "id": "edge-only-english-short",
+      "user": "hi",
+      "expect": "pass",
+      "answer": "Hey, check the logs first."
+    },
+    {
+      "id": "edge-mixed-code-text",
+      "user": "怎么修这个报错？",
+      "expect": "pass",
+      "answer": "看日志。先试 `docker ps`，如果是端口冲突改映射，否则看 `docker logs` 的第一条报错。"
+    },
+    {
+      "id": "edge-thanks-once",
+      "user": "谢谢",
+      "expect": "pass",
+      "answer": "不客气，有问题再说。"
+    },
+    {
+      "id": "edge-formal-skip-legal",
+      "user": "帮我写个法律声明",
+      "expect": "pass",
+      "answer": "本声明依据《合同法》制定，体现了双方权利义务……"
+    },
+    {
+      "id": "edge-one-signpost",
+      "user": "选哪个方案？",
+      "expect": "pass",
+      "answer": "事实上 A 更快一点，但 B 的维护成本低。"
+    },
+    {
+      "id": "edge-you-nin-mix-warning",
+      "user": "你好",
+      "expect": "pass",
+      "answer": "你那边怎么样？您看这样行吗？"
+    },
+    {
+      "id": "edge-rhythm-ok",
+      "user": "怎么学编程？",
+      "expect": "pass",
+      "answer": "先学一门语言。短句练手感，长一点的段落用来解释概念，比如变量、循环和函数的配合。你会发现节奏自然就出来了。"
+    },
+    {
+      "id": "neg-multiple-courtesy",
+      "user": "帮我看看",
+      "expect": "fail",
+      "answer": "好问题！感谢你的提问。如果还有问题请随时告诉我，欢迎继续交流。"
+    },
+    {
+      "id": "neg-hedge-tight",
+      "user": "这个能上线吗？",
+      "expect": "fail",
+      "answer": "可能或许能上线。"
+    },
+    {
+      "id": "neg-en-density-stack2",
+      "user": "Tell me about the plan",
+      "expect": "fail",
+      "answer": "The plan is crucial and pivotal. Another crucial pivotal aspect is the landscape. Crucial again."
+    },
+    {
+      "id": "neg-bold-multi-para",
+      "user": "解释一下",
+      "expect": "fail",
+      "answer": "第一段有 **加粗** 和 **又一个加粗**。\n\n第二段也有 **加粗**。"
+    },
+    {
+      "id": "neg-dash-three",
+      "user": "说说看",
+      "expect": "fail",
+      "answer": "这个——其实——就是——问题的核心——值得注意。"
+    },
+    {
+      "id": "neg-jiudao-variant",
+      "user": "多久？",
+      "expect": "fail",
+      "answer": "我们等了很远，远到看不见尽头才收到回复。"
+    },
+    {
+      "id": "neg-not-but-pattern",
+      "user": "分析一下",
+      "expect": "fail",
+      "answer": "这不是技术问题而是管理问题。"
+    },
+    {
+      "id": "neg-courtesy-en-stack",
+      "user": "help",
+      "expect": "fail",
+      "answer": "Great question! I hope this helps! Let me know if you have more questions. Of course!"
     }
   ]
 }
