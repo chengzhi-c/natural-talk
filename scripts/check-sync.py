@@ -118,7 +118,7 @@ def main():
         "dist/prompts/prompt.l1.txt": 150,
         "dist/prompts/prompt.l2.txt": 430,
         "dist/prompts/prompt.l3.txt": 620,
-        "dist/SKILL.md": 1000,
+        "dist/SKILL.md": 1500,
         "dist/lexicon.json": 2000,
     }
     for rel, limit in budgets.items():

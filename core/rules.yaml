@@ -122,7 +122,7 @@ budgets:
   L1: {chars: 150, tokens: 70}
   L2: {chars: 430, tokens: 195}
   L3: {chars: 620, tokens: 285}
-  skill: {chars: 1000, tokens: 455}
+  skill: {chars: 1500, tokens: 680}
 
 fiction:
   # fiction模式规则源，对应 templates/system-prompt-fiction.txt

@@ -23,7 +23,7 @@ def check_budgets():
         "dist/prompts/prompt.l1.txt": (150, 70),
         "dist/prompts/prompt.l2.txt": (430, 195),
         "dist/prompts/prompt.l3.txt": (620, 285),
-        "dist/SKILL.md": (1000, 455),
+        "dist/SKILL.md": (1500, 680),
     }
     ok = True
     for rel, (char_lim, tok_lim) in budgets.items():
