@@ -7,8 +7,12 @@
 再用 scripts/check.py 的规则表给两边输出计数违规，汇总对比。
 
 用法：
-    python scripts/eval-llm.py            # 需要 API 配置（见下）
-    python scripts/eval-llm.py --list     # 只列出评测提示词（CI 用，不发请求）
+    python scripts/eval-llm.py                 # 需要 API 配置（见下）
+    python scripts/eval-llm.py --list          # 只列出评测提示词（CI 用，不发请求）
+    python scripts/eval-llm.py --no-save       # 只打印汇总，不写 benchmarks/
+
+本脚本是仓库里唯一会出网的代码；skill 注入路径不上网、不采集用户对话。
+默认把违规计数和模型回复前 500 字写入 benchmarks/（该目录已 gitignore），供本地人工判读。
 
 环境变量（OpenAI 兼容接口，可指向任何兼容服务，如 DeepSeek/Moonshot/Ollama）：
     OPENAI_API_KEY   必填
@@ -104,7 +108,7 @@ def save_report(model_name, results):
         }, f, ensure_ascii=False, indent=2)
     print(f"[存档] {path.relative_to(ROOT)}")
 
-def run_for_model(model_name, timeout):
+def run_for_model(model_name, timeout, no_save=False):
     os.environ["OPENAI_MODEL"] = model_name
     print(f"\n=== 模型 {model_name} ===")
     results = []
@@ -139,7 +143,8 @@ def run_for_model(model_name, timeout):
     if w_n and b_n:
         print(f"  降幅：{(b_total-w_total)/max(1,b_total)*100:.1f}%")
     print("注：违规计数只测客观信号；'像不像人'仍需人工读输出下判断。")
-    save_report(model_name, results)
+    if not no_save:
+        save_report(model_name, results)
     return results
 
 def main():
@@ -157,8 +162,9 @@ def main():
     timeout = int(os.environ.get("EVAL_TIMEOUT", "60"))
     models_str = os.environ.get("EVAL_MODELS", os.environ.get("OPENAI_MODEL", "gpt-4o-mini"))
     models = [m.strip() for m in models_str.split(",") if m.strip()]
+    no_save = "--no-save" in sys.argv
     for m in models:
-        run_for_model(m, timeout)
+        run_for_model(m, timeout, no_save=no_save)
     return 0
 
 if __name__ == "__main__":

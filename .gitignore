@@ -28,3 +28,8 @@ __pycache__/
 
 # Project-specific
 PROJECT-STRUCTURE.md
+
+# Secrets and local eval output
+.env
+.env.*
+benchmarks/
