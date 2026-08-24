@@ -124,6 +124,26 @@ budgets:
   L3: {chars: 620, tokens: 285}
   skill: {chars: 1000, tokens: 455}
 
+fiction:
+  # fiction模式规则源，对应 templates/system-prompt-fiction.txt
+  trigger: ["小说","故事","扮演","同人","情感向","角色卡","roleplay","fiction"]
+  inherits: [principles.absolute, tiers, extensions.iron_rule, extensions.action_compact]
+  overrides:
+    elastic: null  # fiction不使用对话场景的弹性上限
+  additions:
+    perspective:
+      sensory_boundary: "只写角色此刻直接感知（视/听/触/嗅），不在场信息需传递路径"
+      cognitive_boundary: "角色认知受身份/时代/世界观限定，不超域，不读心"
+    metaphor_limit: {limit: 3, unit: 次/千字, consecutive_ban: 2, words: ["像","仿佛","宛如","如同"]}
+    emotion_externalize: "情感只通过身体动作呈现，禁旁白定论（她从未/他终于明白/这是第一次）"
+    env_cap: {limit: 3, unit: 句/次, desc: "环境描写单次≤3句，抓核心感官"}
+    micro_action: {limit: 1, unit: 次/场景, desc: "攥紧又松开/指节泛白/喉结滚动等套路同场景≤1"}
+    anti_symmetric: "连续3段禁同句法收尾"
+    sensory_numbers: "精确数字感官化（5分钟→过了一会儿；0.5米→一臂之遥）"
+    banned_words: ["那+量词直接写名词", "x了x叠词改单动词"]
+    banned_lines: ["看着我→不看看我吗", "你知道你在干什么吗", "你怕什么", "你会后悔的"]
+    forced_progress: "每次输出与前文形成显著差异，禁不同措辞重述同一情节"
+
 extensions:
   iron_rule: {desc: "铁律：先否定后肯定（不是…而是/与其…不如/很久…久到…）删否定留肯定，直接说Y；角色语句除外", fix: "不是优化而是重构→重构；等了很久久到忘记→等了三周"}
   action_compact: {desc: "一动作一句话：连续动作尽量一句写完（伸手按下按钮）；仅紧张/暧昧/恐惧/受伤需慢放时可拆解", level: "提示，不计违规"}

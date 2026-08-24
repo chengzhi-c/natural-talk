@@ -6,71 +6,32 @@
 
 ### 1. 报告问题
 
-如果你发现文档中的错误或不清楚的地方：
+如果你发现规则有误判或遗漏：
 
 - 在 GitHub 开 Issue
-- 说明具体是哪部分有问题
-- 如果可能，提供改进建议
+- 说明具体场景和触发条件
+- 附上 before/after 文本片段
 
 ### 2. 提交案例
 
-如果你有好的 before/after 对比案例：
+好的 before/after 对比案例帮助校准规则边界：
 
-- Fork 仓库
-- 在 `docs/examples.md` 添加你的案例
-- 确保案例包含：
-  - 场景说明
-  - AI 腔版本 + 问题标注
-  - 自然版本 + 优化点
-- 提交 Pull Request
-
-**案例格式**：
-
-```markdown
-## 案例 X：[场景名称]
-
-**场景**：[具体描述]
-
-### ❌ AI 腔（得分：X/10）
-
-```
-[AI 腔内容]
-```
-
-**问题标注**：
-- ❌ [具体问题]
-- ❌ [具体问题]
-
-### ✅ 自然（得分：X/10）
-
-```
-[自然版本]
-```
-
-**优化点**：
-- ✅ [具体改进]
-- ✅ [具体改进]
-```
+- 在 Issue 中提交，标注 `case` 标签
+- 包含：场景说明、AI 腔版本（标注问题）、自然版本（标注改进点）
 
 ### 3. 改进规则
 
-如果你想改进或补充规则：
-
-- 先开 Issue 讨论
-- 说明为什么需要这条规则
-- 提供实际案例支撑
+- 先开 Issue 讨论，说明为什么需要这条规则，提供实际案例支撑
 - 等待反馈后再提交 PR
 
 **规则修改流程**：
 
 1. 只改 `core/rules.yaml`（规则唯一源）
-2. 运行 `python scripts/build.py` 生成 `dist/*` 并同步 `SKILL.md`（与 `dist/SKILL.md` 保持一致）
+2. 运行 `python scripts/build.py` 生成 `dist/*` 并同步 `SKILL.md`
 3. 为新增规则补测试用例到 `tests/cases.json`
 4. 本地运行 `python scripts/check.py` 和 `python scripts/check-sync.py`，全绿再提交
 
 ### 4. 翻译
-
-如果你想贡献其他语言版本：
 
 - Fork 仓库
 - 创建 `docs/[language-code]/` 目录
@@ -79,13 +40,10 @@
 
 ## 提交前检查
 
-- [ ] 遵循现有文档风格
-- [ ] 补充的案例有明确的 before/after 对比
-- [ ] 新增规则有实际支撑（不是猜测）
-- [ ] 规则改动已同步到全部相关文件（以 `python scripts/check-sync.py` 通过为准）
-- [ ] `python scripts/check.py` 全绿（正例通过、反例命中、边缘用例符合预期）
-- [ ] 没有拼写错误
-- [ ] Markdown 格式正确
+- [ ] 规则改动已同步（`python scripts/check-sync.py` 通过）
+- [ ] `python scripts/check.py` 全绿（正例通过、反例命中）
+- [ ] 新增规则有实际案例支撑
+- [ ] Markdown 格式正确，无拼写错误
 
 ## 文件职责
 
@@ -95,9 +53,8 @@
 | SKILL.md / dist/SKILL.md | 注入（skill 触发时进入 context） | 由 build.py 生成，保持同步；无 emoji；加粗仅标题 |
 | dist/prompts/*.txt | 注入（分级 system prompt） | 由 build.py 生成；纯文本 |
 | templates/*.txt | 注入（system prompt 预设） | 纯平文本：无 emoji、无加粗 |
-| docs/full-guide.md | 阅读参考（非唯一源） | 允许格式；勿整体注入 |
-| docs/ 其余文件 | 阅读 | 允许格式 |
-| README / CONTRIBUTING | 阅读 | 允许格式 |
+| docs/full-guide.md | 阅读参考（完整规则指南） | 允许格式；勿整体注入 |
+| docs/misjudgments.md | 阅读参考（防矫枉案例） | 允许格式 |
 | scripts/*.py | 机器校验 | 只依赖 Python 标准库 |
 | tests/cases.json | 校验数据 | JSON |
 
@@ -106,14 +63,6 @@
 - 纯理论讨论，没有实际案例
 - 过于主观的风格偏好（没有普遍性）
 - 与现有规则严重冲突的建议
-- 商业推广或广告内容
-
-## 行为准则
-
-- 尊重他人的观点
-- 建设性地讨论分歧
-- 专注于改进项目本身
-- 不进行人身攻击或侮辱
 
 ## 版权说明
 
@@ -121,15 +70,8 @@
 
 - 你的贡献将采用 MIT License
 - 你拥有贡献内容的版权或已获得授权
-- 你的贡献可以被项目维护者修改或删除
 
 ## 联系方式
 
-如果有任何问题，可以：
-
 - 在 [GitHub](https://github.com/chengzhi-c/natural-talk) 开 Issue
 - 通过 GitHub Discussions 讨论
-
----
-
-再次感谢你的贡献！

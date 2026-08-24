@@ -4,260 +4,41 @@
   <img src="assets/natural-talk.png" alt="Natural Talk" width="100%">
 </p>
 
-> **English**: A complete ruleset to make AI conversations sound natural and human-like. Removes AI-speak, lecture tone, over-politeness, and robotic collaboration phrases. Works with Claude, ChatGPT, and all conversational AI. Supports bilingual rules (Chinese & English). | [中文文档见下方 ↓](#这是什么)
-
----
-
-**让 AI 像人说话的完整指南**
-
-> **文章版**：去除文章中的 AI 腔（空泛标题、段落同构、强行升华）→ [`article` 分支](https://github.com/chengzhi-c/natural-talk/tree/article)
-
-一套针对对话场景的 AI 腔清理规则。适用于 Claude Code、ChatGPT、Cursor 等所有支持 system prompt 的 AI 工具。
-
-## 这是什么
-
-Natural Talk 是一套完整的对话风格规则，让 AI 的回复更自然、更像人。不编造、不装懂、不过度礼貌、不讲义腔。
-
-## 核心价值
-
-✅ **诚实优先**：不知道就说不知道，不编造，不模糊其辞  
-✅ **直接表达**：零开场零收尾，直奔主题  
-✅ **自然对话**：像朋友聊天，不像客服或演讲者；一个动作尽量一句话说完  
-✅ **可自查信号**：破折号≤2次（仅悬念/未说完）、路标词≤2次、开场白≤1句（自查清单，非精确断言）  
-✅ **中英双语**：通用规则 + 语言特定规则  
+让 AI 像人一样说话、创作的规则集。适用于 Claude、ChatGPT 及所有支持 system prompt 的工具。
 
 ## 快速开始
 
-### 方式 1：完整版（推荐深度使用）
+按场景选择注入模板：
 
-复制 [`docs/full-guide.md`](docs/full-guide.md) 的内容到你的 system prompt 或 CLAUDE.md。
+| 场景 | 文件 | 说明 |
+|------|------|------|
+| 日常对话 | `templates/system-prompt-standard.txt` | 默认推荐 |
+| Fiction创作 | `templates/system-prompt-fiction.txt` | 小说/扮演/同人/情感向 |
+| Token敏感 | `templates/system-prompt-lite.txt` | 最小化核心规则 |
 
-适合：需要完整理解规则，或作为参考文档查阅。
+复制对应文件内容到 system prompt 即可。
 
-### 方式 2：精简版（推荐日常使用）
+**分级 prompt**：`dist/prompts/` 下 L0-L3 四档，按需选用或由 `engine/selector.py` 自动选档。
 
-复制 [`templates/system-prompt-standard.txt`](templates/system-prompt-standard.txt) 到 system prompt。
-
-适合：日常对话、技术答疑、即时沟通。
-
-### 方式 3：轻量版（最小化）
-
-复制 [`templates/system-prompt-lite.txt`](templates/system-prompt-lite.txt) 到 system prompt。
-
-适合：对 token 敏感的场景，或只需核心规则。
-
-> 分级按需：`dist/prompts/` 下提供 L0 41c/19tok 常驻极轻 · L1 144c/66tok 默认 · L2 415c/189tok 投诉时 · L3 582c/265tok 显式调用，可由 `engine/selector.py` 按上下文自动选档。参见 [`docs/full-guide.md`](docs/full-guide.md)。
-
-### 方式 4：Claude Code Skill
+### Claude Code Skill
 
 ```bash
-# 项目级：克隆到项目的 .claude/skills/ 目录
-cd /path/to/your/project/.claude/skills/
-git clone https://github.com/chengzhi-c/natural-talk.git
-
-# 全局使用：克隆到用户目录
 cd ~/.claude/skills/
 git clone https://github.com/chengzhi-c/natural-talk.git
 ```
 
-## 三种用法
+### RikkaHub / SillyTavern
 
-1. **作为 System Prompt**：复制 `templates/system-prompt-standard.txt`（日常）或 `templates/system-prompt-lite.txt`（对 token 敏感）到 system prompt / 自定义指令
-2. **作为评估标准**：用 5 个测试检查 AI 输出是否自然——开场测试（删掉第一段，内容是否完整）、收尾测试、朋友测试、诚实测试、节奏测试。详见 [docs/checklist.md](docs/checklist.md)
-3. **作为风格参考**：完整规则见 [docs/full-guide.md](docs/full-guide.md)；检测 AI 输出信号见 [docs/detection.md](docs/detection.md)
+导入 [Release](https://github.com/chengzhi-c/natural-talk/releases) 中的发布 zip（`natural-talk.zip`）即可。
 
-## 目录结构
+发布包已将 `SKILL.md` 打平到 zip 根层级，应用可直接识别。
 
-```
-natural-talk/
-├── README.md                        # 项目说明（本文件）
-├── LICENSE                          # MIT License
-├── SKILL.md                         # Claude Code Skill 入口（与 dist/SKILL.md 同步）
-├── core/
-│   └── rules.yaml                  # 规则唯一源（仅此文件可手改）
-├── dist/                           # 生成产物（linguist-generated）
-│   ├── SKILL.md
-│   ├── lexicon.json                # 词表（含 _generated 标记）
-│   └── prompts/
-│       ├── prompt.l0.txt           # 41c 常驻极轻
-│       ├── prompt.l1.txt           # 144c 默认
-│       ├── prompt.l2.txt           # 415c 投诉升档
-│       └── prompt.l3.txt           # 600c 显式调用
-├── engine/
-│   ├── detector.py                 # Trie+Regex+密度 检测器
-│   ├── fixer.py
-│   ├── selector.py
-│   └── trie.py
-├── docs/
-│   ├── full-guide.md               # 完整指南（阅读参考）
-│   ├── quick-reference.md          # 快速参考
-│   ├── examples.md                 # 改善案例（6 组）
-│   ├── misjudgments.md             # 常见误判（防矫枉）
-│   ├── checklist.md                # 自检清单
-│   └── detection.md                # 检测信号
-├── templates/
-│   ├── system-prompt-lite.txt
-│   ├── system-prompt-standard.txt
-│   ├── preset-tech-blog.txt        # 场景预设：技术博客
-│   ├── preset-customer-service.txt # 场景预设：客服
-│   └── preset-social-media.txt     # 场景预设：社媒
-├── benchmarks/                     # 评测存档（eval-llm.py 输出）
-├── scripts/
-│   ├── build.py                    # 唯一源 → dist 构建器
-│   ├── check.py                    # 规则校验（含节奏检测）
-│   ├── check-sync.py               # 同步防漂移（含语义覆盖）
-│   ├── eval-llm.py                 # LLM A/B 评测（分Tier存档）
-│   └── bench.py                    # Token/速度/F1 门禁
-├── tests/
-│   └── cases.json                  # 58 条校验用例
-└── CONTRIBUTING.md
-```
-
-## 适用场景
-
-✅ **推荐使用**：
-- Claude Code / ChatGPT 的日常对话
-- 技术答疑、代码审查
-- 客服回复、用户沟通
-- Slack / Discord / 微信群的 AI 助手
-- 即时通讯工具
-
-❌ **不适用范围（不推荐使用）**：
-- 学术论文润色 → 用其他学术润色工具
-- 长文改写 → 用专门的改写工具
-- 英文博客写作 → 用英文写作优化工具
-- 正式文档、法律文件、营销文案
-- 演讲稿等需要相反风格的场景，本规则让位
-
-## 三秒记忆口诀
-
-**三不说**：
-- 不说"作为AI"
-- 不说"希望帮助"
-- 不说"好问题"
-
-**三要做**：
-- 直接回答
-- 不知道就说不知道
-- 像人不像机器
-
-**一个标准**：
-- 会对朋友这样说吗？
-
-## 核心规则速览
-
-### 原则层（绝对规则，无例外）
-
-1. **不编造**：不知道就说不知道，不模糊，不装懂
-2. **不评判人**：不替对方做心理判断，不给身份认证式夸奖
-3. **不装机器人**：避免暴露 AI 身份的协作痕迹
-
-**铁律**：`不是…而是 / 与其…不如 / 很久…久到…` 这类先否定后肯定的句子，直接删否定留肯定（例：`不是优化而是重构` → `重构`），角色引号内除外。
-
-**身份披露例外**：用户直接问及你的身份、能力边界或知识截止时间时，如实简短作答，不回避。
-
-### 表达层（弹性规则，有明确上限）
-
-| 规则 | 上限 | 说明 |
-|------|------|------|
-| 开场白 | ≤1句 | 第一句应是实质内容 |
-| 客套收尾 | ≤1次 | 最后一句是事实/建议，不是客套 |
-| 协作口吻 | ≤1次/全文 | "作为AI" / "希望帮助" / "好问题" |
-| 讲义腔 | ≤1次/全文 | "让我来" / "首先其次" / "综上所述" |
-| 路标词 | ≤2次/全文 | "值得注意" / "事实上" / "归根结底" |
-| 破折号 | ≤2次/全文 | em dash (—) 和 en dash (–)，只用于未说完/延长/悬念 |
-| 感叹号 | ≤3次/全文 | 避免过度热情 |
-
-## 效果对比
-
-### 示例 1：技术问题
-
-❌ **AI 腔**：
-```
-你好！感谢你的提问。这是一个很好的问题！让我来帮你详细分析一下。
-
-首先，值得注意的是，Docker 容器启动失败的原因是多方面的。其次，
-我们需要系统梳理可能的问题点。最后，我会给出具体的排查建议。
-
-综上所述，建议你按照以上三个方向逐一排查。希望这能帮助你解决问题！
-```
-
-✅ **自然**：
-```
-看下日志里的错误信息。常见的一般有三种情况：
-
-1. 端口被占用 - 试试改端口或停掉占用的进程
-2. 镜像拉不下来 - 检查网络或换国内镜像源
-3. 权限不够 - 可以用 sudo 或把用户加到 docker 组
-
-要是有完整报错可以贴给我，我看看能不能给更具体的建议。
-```
-
-### 示例 2：不确定时
-
-❌ **AI 腔**：
-```
-虽然我的训练数据截至 2023 年 10 月，没有 2024 年的精确统计数据，
-但根据行业趋势和一般经验来看，Rust 的采用率应该在持续增长。
-
-通常来说，在系统编程领域，Rust 可能已经达到了 15-20% 左右的市场
-份额。当然，这只是一个大致的估算，实际情况可能会有所不同。
-```
-
-✅ **自然**：
-```
-我不知道 2024 年的具体数字。
-
-不过你可以试试去查 Stack Overflow 年度开发者调查、Rust 官方博客的
-年度回顾，以及具体公司的技术博客，看看谁在用。
-
-或者去 r/rust 问，那边可能有人追踪这个。
-```
-
-
-### 示例 3：情绪场景
-
-❌ **AI 腔**：
-
-```
-我完全理解你的感受。失去亲人是人生中最艰难的经历之一。
-让我们一起面对这个困难时期。首先，你需要允许自己悲伤。
-其次，建议寻求专业心理支持。希望你能早日走出来！
-```
-
-✅ **自然**：
-
-```
-听到这个消息很难过。
-
-如果你想的话，我可以陪你聊聊。不想说也没关系。
-```
-
-更多案例见 [`docs/examples.md`](docs/examples.md)。
-
-## 平台使用指南
-
-### Claude Code
-
-将此仓库作为 skill 添加：
-
-```bash
-# 复制到项目的 .claude/skills/ 目录
-cp -r natural-talk /your/project/.claude/skills/
-```
-
-或在全局 CLAUDE.md 中引用精简版规则。
-
-### ChatGPT
-
-复制 `templates/system-prompt-standard.txt` 到：
-- 自定义指令（Custom Instructions）
-- 或 GPTs 的 Instructions 字段
+> 不要直接导入本仓库完整源码——开发目录结构会导致应用无法正确加载入口文件。
 
 ### API 调用
 
 ```python
-system_prompt = open('templates/system-prompt-standard.txt').read()
+system_prompt = open('templates/system-prompt-fiction.txt').read()
 
 response = client.chat.completions.create(
     model="gpt-4",
@@ -268,66 +49,36 @@ response = client.chat.completions.create(
 )
 ```
 
-### Cursor / Continue / Windsurf
+## 目录结构
 
-将 `templates/system-prompt-standard.txt` 添加到项目的 AI 配置文件。
-
-## 效果评测（可选）
-
-想验证这套规则对真实 LLM 输出的效果，用 [`scripts/eval-llm.py`](scripts/eval-llm.py)：
-
-```bash
-export OPENAI_API_KEY=...   # OpenAI 兼容接口均可（DeepSeek / Moonshot / Ollama 等）
-python scripts/eval-llm.py
+```
+natural-talk/
+├── SKILL.md                         # Claude Code Skill 入口
+├── core/rules.yaml                  # 规则唯一源
+├── templates/
+│   ├── system-prompt-standard.txt   # 对话场景注入
+│   ├── system-prompt-fiction.txt    # Fiction创作注入
+│   ├── system-prompt-lite.txt       # 轻量版
+│   └── preset-*.txt                 # 场景预设
+├── dist/prompts/                    # L0-L3 分级 prompt
+├── engine/                          # 检测/修复/选档引擎
+├── scripts/                         # 构建/校验/评测脚本
+├── docs/                            # 完整指南/防矫枉参考
+└── tests/cases.json                 # 校验用例
 ```
 
-## 自检清单
+## 核心理念
 
-改写前快速检查（完整清单见 [`docs/checklist.md`](docs/checklist.md)）：
+三不说：不说"作为AI"、不说"希望帮助"、不说"好问题"
 
-### 硬性检查（必须通过）
-- [ ] 不确定的事是否说得很确定？ → 改成"不确定"或"不知道"
-- [ ] 有没有编造具体数字、来源、案例？ → 删掉或标明不确定
-- [ ] 有没有评判对方（"你很敏感" / "你问得好"）？ → 只回应内容
+三要做：直接回答、不知道就说不知道、像人不像机器
 
-### 弹性检查（按上限控制）
-- [ ] 开场白：第一句是不是实质内容？ → 删掉铺垫（最多留 1 句）
-- [ ] 协作口吻："作为AI" / "希望帮助" / "好问题"？ → 全文最多 1 次
-- [ ] 讲义腔："让我来" / "首先其次" / "综上所述"？ → 全文最多 1 次
-- [ ] 路标词："值得注意" / "事实上"？ → 全文不超过 2 次
-- [ ] 破折号：有几个 em dash (—)？ → 全文不超过 2 次
+终极标准：会对朋友这样说吗？
 
-## 组合使用
+## 不适用
 
-Natural Talk 可以与其他 skill **同时使用**：
-
-✅ 学术论文润色的 skill  
-✅ 代码审查类 skill  
-✅ 客服回复/话术类 skill  
-
-## 贡献
-
-欢迎贡献案例、改进建议或翻译。详见 [CONTRIBUTING.md](https://github.com/chengzhi-c/natural-talk/blob/main/CONTRIBUTING.md)。
-
-提交前请确保：
-- [ ] 遵循现有文档风格
-- [ ] 补充的案例有明确的 before/after 对比
-- [ ] 新增规则有实际支撑（不是猜测）
+学术论文 / 公文 / 法律 / 营销文案 / 演讲稿——需要相反风格的场景，本规则让位。
 
 ## License
 
-MIT License - 自由使用、修改、分发。详见 [LICENSE](https://github.com/chengzhi-c/natural-talk/blob/main/LICENSE)。
-
-## 致谢
-
-本项目受以下项目启发：
-- [shuorenhua](https://github.com/search?q=shuorenhua) - 文本改写引擎
-- [stop-slop](https://github.com/maypop/stop-slop) - 英文写作去味
-- [humanizer](https://github.com/search?q=humanizer) - 维基百科式内容改善
-- [Wikipedia "Signs of AI writing"](https://en.wikipedia.org/wiki/Wikipedia:Signs_of_AI_writing) - 系统化的 AI 痕迹分类
-
----
-
-**核心理念**：像人说话，不知道就说不知道。
-
-**终极标准**：删掉开场和结尾后，内容仍然完整 + 会对朋友这样说。
+MIT
