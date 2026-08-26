@@ -1,7 +1,5 @@
 # 贡献指南
 
-感谢你考虑为 Natural Talk 贡献！
-
 ## 贡献方式
 
 ### 1. 报告问题
@@ -26,10 +24,9 @@
 
 **规则修改流程**：
 
-1. 只改 `core/rules.yaml`（规则唯一源）
-2. 运行 `python scripts/build.py` 生成 `dist/*` 并同步 `SKILL.md`
-3. 为新增规则补测试用例到 `tests/cases.json`
-4. 本地运行 `python scripts/check.py` 和 `python scripts/check-sync.py`，全绿再提交
+1. 改 `SKILL.md` 或 `templates/*.txt`（运行时实际读取的文件），并同步 `core/rules.yaml` 规则总表
+2. 这条规则容易被过度执行时，往 `docs/misjudgments.md` 补一条「什么不该改」；判断类规则往 `docs/self-check.md` 补自检做法
+3. 拿改后的规则实际生成一段，人工读：规则真的咬住了，且没伤到正常写法
 
 ### 4. 翻译
 
@@ -40,8 +37,8 @@
 
 ## 提交前检查
 
-- [ ] 规则改动已同步（`python scripts/check-sync.py` 通过）
-- [ ] `python scripts/check.py` 全绿（正例通过、反例命中）
+- [ ] 规则改动已同步到运行时文件（`SKILL.md` / `templates/*.txt`）与 `core/rules.yaml`
+- [ ] 拿改后的规则实际生成一段，人工读：规则真的咬住了，且没伤到正常写法
 - [ ] 新增规则有实际案例支撑
 - [ ] Markdown 格式正确，无拼写错误
 
@@ -49,14 +46,13 @@
 
 | 文件 | 定位 | 格式要求 |
 |------|------|----------|
-| core/rules.yaml | 唯一源（仅此文件可手改） | YAML 极简子集，含 severity/rationale |
-| SKILL.md / dist/SKILL.md | 注入（skill 触发时进入 context） | 由 build.py 生成，保持同步；无 emoji；加粗仅标题 |
-| dist/prompts/*.txt | 注入（分级 system prompt） | 由 build.py 生成；纯文本 |
+| core/rules.yaml | 规则总表（供人阅读，运行时不读） | YAML 极简子集，含 severity/rationale |
+| SKILL.md | 注入（skill 触发时进入 context） | 无 emoji；加粗仅标题 |
 | templates/*.txt | 注入（system prompt 预设） | 纯平文本：无 emoji、无加粗 |
 | docs/full-guide.md | 阅读参考（完整规则指南） | 允许格式；勿整体注入 |
 | docs/misjudgments.md | 阅读参考（防矫枉案例） | 允许格式 |
-| scripts/*.py | 机器校验 | 只依赖 Python 标准库 |
-| tests/cases.json | 校验数据 | JSON |
+| docs/self-check.md | 阅读参考（生成后自查） | 允许格式 |
+| scripts/*.py | 真实生成评测 | 只依赖标准库，需 OPENAI_API_KEY |
 
 ## 不接受的贡献
 

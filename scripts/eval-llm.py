@@ -2,9 +2,9 @@
 """natural-talk LLM 级效果评测。
 
 回答"加载本 skill 后，模型输出是否真的更自然"：
-对同一批用户提问分别调用 LLM 两次——一次带 natural-talk system prompt
-（templates/system-prompt-standard.txt），一次带中性 system prompt——
-再用 scripts/check.py 的规则表给两边输出计数违规，汇总对比。
+对同一批用户提问分别调用 LLM 两次，一次带 natural-talk system prompt
+（templates/system-prompt-standard.txt），一次带中性 system prompt，
+两边输出成对存档，交给 scripts/eval-judge.py 盲评多数票判断哪个更像真人。
 
 用法：
     python scripts/eval-llm.py                 # 需要 API 配置（见下）
@@ -12,7 +12,7 @@
     python scripts/eval-llm.py --no-save       # 只打印汇总，不写 benchmarks/
 
 本脚本是仓库里唯一会出网的代码；skill 注入路径不上网、不采集用户对话。
-默认把违规计数和模型回复前 500 字写入 benchmarks/（该目录已 gitignore），供本地人工判读。
+默认把成对回复全文写入 benchmarks/（该目录已 gitignore），供盲评与人工判读。
 
 环境变量（OpenAI 兼容接口，可指向任何兼容服务，如 DeepSeek/Moonshot/Ollama）：
     OPENAI_API_KEY   必填
@@ -21,23 +21,22 @@
     EVAL_TIMEOUT     可选，单次请求超时秒数，默认 60
     EVAL_MODELS      可选，逗号分隔的多模型批量（如 "gpt-4o,deepseek-chat"）
 
-结果口径：violations 越少越接近规则要求；关注 with-skill 相对 baseline 的
-零违规率提升与违规总数下降，而不是单条输出的绝对分数。违规计数只测客观
-信号（禁用词、密度、格式），"像不像人"仍需人工读输出下最终判断。
+结果口径：本脚本只负责取样，不打分。"像不像人"由 eval-judge.py 的多裁判
+盲评多数票给出，或人工读 benchmarks/ 里的成对输出判断。正则计数测不出
+语境（同一个词在不同语境有对有错），所以这里不做违规计数。
 """
 import json
 import os
 import sys
 import time
 import urllib.error
-import urllib.request
 from pathlib import Path
 from datetime import datetime
 
-ROOT = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(ROOT / "scripts"))
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from _llm import chat  # noqa: E402
 
-from check import run_checks  # noqa: E402
+ROOT = Path(__file__).resolve().parent.parent
 
 STANDARD_PROMPT = (ROOT / "templates" / "system-prompt-standard.txt").read_text(encoding="utf-8")
 NEUTRAL_PROMPT = "You are a helpful assistant."
@@ -49,52 +48,6 @@ PROMPTS = [
     {"id": "complaint", "prompt": "我的 Docker 容器启动失败，折腾一天了，帮帮我"},
     {"id": "emotion", "prompt": "我父亲去世了，我很难受"},
 ]
-
-# Tier 映射用于分级统计
-TIER_ORDER = ["Tier1", "Tier2", "Tier3", "Tier4", "Tier5", "Tier6", "路标词", "破折号", "感叹号"]
-
-def chat(system, user, timeout):
-    body = json.dumps({
-        "model": os.environ.get("OPENAI_MODEL", "gpt-4o-mini"),
-        "messages": [
-            {"role": "system", "content": system},
-            {"role": "user", "content": user},
-        ],
-    }).encode("utf-8")
-    url = os.environ.get("OPENAI_BASE_URL", "https://api.openai.com/v1").rstrip("/") + "/chat/completions"
-    req = urllib.request.Request(
-        url,
-        data=body,
-        headers={
-            "Content-Type": "application/json",
-            "Authorization": "Bearer " + os.environ["OPENAI_API_KEY"],
-        },
-    )
-    with urllib.request.urlopen(req, timeout=timeout) as resp:
-        data = json.loads(resp.read().decode("utf-8"))
-    return data["choices"][0]["message"]["content"]
-
-def summarize_by_tier(violations):
-    counts = {}
-    for name, _ in violations:
-        key = name.split()[0] if name else "other"
-        counts[key] = counts.get(key, 0) + 1
-        # also aggregate road sign
-        if "路标" in name:
-            counts["路标词"] = counts.get("路标词", 0) + 0  # already handled
-    # severity grouping
-    critical = sum(1 for n,_ in violations if "编造" in n or "评判" in n)
-    high = sum(1 for n,_ in violations if "Tier1" in n or "Tier4" in n)
-    medium = sum(1 for n,_ in violations if "Tier2" in n or "Tier3" in n or "Tier5" in n)
-    low = sum(1 for n,_ in violations if "Tier6" in n or "破折号" in n or "感叹号" in n or "路标" in n)
-    parts = []
-    if critical: parts.append(f"[critical] {critical}")
-    if high: parts.append(f"[high] {high}")
-    if medium: parts.append(f"[medium] {medium}")
-    if low: parts.append(f"[low] {low}")
-    detail = ", ".join(f"{k}×{v}" for k,v in sorted(counts.items())) or "无"
-    tier_line = " ".join(parts) if parts else "无"
-    return tier_line, detail
 
 def save_report(model_name, results):
     out_dir = ROOT / "benchmarks"
@@ -122,27 +75,15 @@ def run_for_model(model_name, timeout, no_save=False):
                 row[tag] = None
                 row[tag+"_answer"] = ""
                 continue
-            violations, _ = run_checks(p["prompt"], answer)
-            tier_line, detail = summarize_by_tier(violations)
-            print(f"[{p['id']}] {tag} 违规 {len(violations)} 条 {tier_line} ｜ {detail}")
-            row[tag] = [{"tier": n, "msg": m} for n,m in violations]
-            row[tag+"_answer"] = answer[:500]
+            print(f"[{p['id']}] {tag} 取样 {len(answer)} 字")
+            row[tag] = "ok"
+            row[tag+"_answer"] = answer
             time.sleep(0.3)
         results.append(row)
-    def zero_rate(tag):
-        scored = [r[tag] for r in results if r[tag] is not None]
-        if not scored:
-            return (0, 0, 0)
-        return (sum(1 for v in scored if not v), len(scored), sum(len(v) for v in scored))
-    w_zero, w_n, w_total = zero_rate("with_skill")
-    b_zero, b_n, b_total = zero_rate("baseline")
+    ok = sum(1 for r in results if r.get("with_skill") and r.get("baseline"))
     print()
-    print(f"汇总 {model_name}：")
-    print(f"  with_skill 零违规率：{w_zero}/{w_n}，违规总数 {w_total}")
-    print(f"  baseline   零违规率：{b_zero}/{b_n}，违规总数 {b_total}")
-    if w_n and b_n:
-        print(f"  降幅：{(b_total-w_total)/max(1,b_total)*100:.1f}%")
-    print("注：违规计数只测客观信号；'像不像人'仍需人工读输出下判断。")
+    print(f"汇总 {model_name}：{ok}/{len(results)} 对取样成功")
+    print("本脚本不打分。跑 `python scripts/eval-judge.py` 盲评，或人工读 benchmarks/ 里的成对输出。")
     if not no_save:
         save_report(model_name, results)
     return results
