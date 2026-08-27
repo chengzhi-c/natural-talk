@@ -37,7 +37,7 @@
 
 ## 提交前检查
 
-- [ ] 规则改动已同步 `SKILL.md` 与 `templates/*.txt`；有评测条件时跑 `scripts/eval-regression.py` 确认无回归
+- [ ] 规则改动已同步 `SKILL.md` 与 `templates/*.txt`
 - [ ] 拿改后的规则实际生成一段，人工读：规则是否生效，有没有误伤正常写法
 - [ ] 新增规则有实际案例支撑
 - [ ] Markdown 格式正确，无拼写错误
@@ -51,8 +51,6 @@
 | docs/full-guide.md | 阅读指引（指向 SKILL.md，不承载规则） | 允许格式；勿整体注入 |
 | docs/misjudgments.md | 阅读参考（防矫枉案例） | 允许格式 |
 | docs/self-check.md | 阅读参考（生成后自查） | 允许格式 |
-| scripts/*.py | 真实生成评测 | 只依赖标准库，需 OPENAI_API_KEY |
-| benchmarks/summary.md | 评测证据摘要（完整 transcript 不入库） | 有结论有数字，注明样本量 |
 
 ## 不接受的贡献
 

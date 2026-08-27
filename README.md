@@ -65,7 +65,6 @@ natural-talk/
 │   ├── system-prompt-fiction.txt    # Fiction创作注入（含范文标注）
 │   ├── system-prompt-lite.txt       # 轻量版
 │   └── preset-*.txt                 # 场景预设
-├── scripts/                         # 真实生成评测脚本
 └── docs/
     ├── full-guide.md                # 阅读指引（指向 SKILL.md）
     ├── self-check.md                # 自检清单

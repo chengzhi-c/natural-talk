@@ -22,23 +22,5 @@ $RECYCLE.BIN/
 *-old.*
 *-backup.*
 
-# Python
-__pycache__/
-*.py[cod]
-
 # Project-specific
 PROJECT-STRUCTURE.md
-
-# Secrets and local eval output
-.env
-.env.*
-benchmarks/*
-!benchmarks/baseline-src/
-!benchmarks/baseline-src/**
-!benchmarks/summary.md
-!benchmarks/summary-20260828.md
-!benchmarks/regression-deepseek-v4-flash-0731-20260828_033654.json
-!benchmarks/multimodel-runner.py
-!benchmarks/recheck.py
-!benchmarks/retry-runner.py
-!benchmarks/adjudication.txt
