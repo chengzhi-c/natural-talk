@@ -36,3 +36,7 @@ benchmarks/*
 !benchmarks/baseline-src/
 !benchmarks/baseline-src/**
 !benchmarks/summary.md
+!benchmarks/multimodel-runner.py
+!benchmarks/recheck.py
+!benchmarks/retry-runner.py
+!benchmarks/adjudication.txt
