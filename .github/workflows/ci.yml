@@ -11,6 +11,12 @@ jobs:
         with:
           python-version: "3.11"
       - name: Compile check (no network)
-        run: python -m py_compile scripts/*.py
+        run: python -m py_compile scripts/*.py benchmarks/*.py
+      - name: Import check (no network)
+        run: python scripts/check-imports.py
+      - name: Conservation selftest (no network)
+        run: python scripts/check-conservation.py --selftest
+      - name: Fiction redline selftest (no network)
+        run: python scripts/check-fiction-redline.py --selftest
       - name: Eval smoke (no network)
         run: python scripts/eval-llm.py --list

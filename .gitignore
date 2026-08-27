@@ -32,4 +32,7 @@ PROJECT-STRUCTURE.md
 # Secrets and local eval output
 .env
 .env.*
-benchmarks/
+benchmarks/*
+!benchmarks/baseline-src/
+!benchmarks/baseline-src/**
+!benchmarks/summary.md
