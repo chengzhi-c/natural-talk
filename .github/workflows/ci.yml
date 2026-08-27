@@ -10,5 +10,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+      - name: Compile check (no network)
+        run: python -m py_compile scripts/*.py
       - name: Eval smoke (no network)
         run: python scripts/eval-llm.py --list

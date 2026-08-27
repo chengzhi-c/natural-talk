@@ -68,7 +68,7 @@ natural-talk/
 │   └── preset-*.txt                 # 场景预设
 ├── scripts/                         # 真实生成评测脚本
 └── docs/
-    ├── full-guide.md                # 完整指南
+    ├── full-guide.md                # 阅读指引（指向 SKILL.md）
     ├── self-check.md                # 自检清单
     └── misjudgments.md              # 防矫枉过正参考
 ```

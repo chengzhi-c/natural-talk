@@ -97,7 +97,7 @@ fiction 通路上词表的实际覆盖面只有比喻标记词（像/象/仿佛/
 
 ## 改规则
 
-`core/rules.yaml` 是给人读的规则总表，运行时不读它。真正进 context 的是
-`SKILL.md` 和 `templates/*.txt`。改规则必须改这两处，只改 rules.yaml 不生效。
+`core/rules.yaml` 已冻结为历史存档。规则权威源是 `SKILL.md`，注入用蒸馏版在
+`templates/*.txt`，改规则两处同步，只改一处不生效。
 
 改完必须实际生成一段验证：规则真的咬住了，且没伤到正常写法。
