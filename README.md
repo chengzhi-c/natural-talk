@@ -77,9 +77,17 @@ natural-talk/
 
 学术论文 / 公文 / 法律 / 营销文案 / 演讲稿，这些需要相反风格的场景本规则让位。
 
+## 局限
+
+模型写作的"AI 味"多是模型预训练的缺陷。skill 与 prompt 目前只能提醒、警示模型尽量避免，效果也依赖模型本身的解读能力。
+
 ## 贡献
 
 欢迎报告误判、提交案例或改进规则，流程见 [CONTRIBUTING.md](CONTRIBUTING.md)。
+
+## 致谢
+
+文本层规则与反清单的判定依据来自 [lieflat-less-ai-tone](https://github.com/larashero3-dotcom/lieflat-less-ai-tone) 的对照研究（629 篇、约 283 万字，26 项候选特征仅 11 项成立）。感谢这项工作。
 
 ## License
 
