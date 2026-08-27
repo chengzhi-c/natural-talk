@@ -1,5 +1,7 @@
 # Natural Talk
 
+[English](README.en.md) | 中文
+
 <p align="center">
   <img src="assets/natural-talk.png" alt="Natural Talk" width="100%">
 </p>
