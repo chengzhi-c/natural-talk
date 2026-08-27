@@ -11,7 +11,7 @@ jobs:
         with:
           python-version: "3.11"
       - name: Compile check (no network)
-        run: python -m py_compile scripts/*.py benchmarks/*.py
+        run: python scripts/check-imports.py --compile-only
       - name: Import check (no network)
         run: python scripts/check-imports.py
       - name: Conservation selftest (no network)
