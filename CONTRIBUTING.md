@@ -37,7 +37,7 @@
 
 ## 提交前检查
 
-- [ ] 规则改动已同步 `SKILL.md` 与 `templates/*.txt`，且跑了 `scripts/eval-regression.py` 无回归
+- [ ] 规则改动已同步 `SKILL.md` 与 `templates/*.txt`；有评测条件时跑 `scripts/eval-regression.py` 确认无回归
 - [ ] 拿改后的规则实际生成一段，人工读：规则真的咬住了，且没伤到正常写法
 - [ ] 新增规则有实际案例支撑
 - [ ] Markdown 格式正确，无拼写错误
