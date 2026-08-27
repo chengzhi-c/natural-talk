@@ -60,7 +60,6 @@ response = client.chat.completions.create(
 ```
 natural-talk/
 ├── SKILL.md                         # 规则唯一权威源（生成/清理/fiction 三模式）
-├── core/rules.yaml                  # 已冻结的历史存档，勿参照
 ├── templates/
 │   ├── system-prompt-standard.txt   # 对话场景注入
 │   ├── system-prompt-fiction.txt    # Fiction创作注入（含范文标注）

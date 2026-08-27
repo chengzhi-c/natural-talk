@@ -46,7 +46,6 @@
 
 | 文件 | 定位 | 格式要求 |
 |------|------|----------|
-| core/rules.yaml | 已冻结的历史存档 | 勿参照、勿更新 |
 | SKILL.md | 规则唯一权威源（生成/清理/fiction 三模式） | 无 emoji；加粗仅标题 |
 | templates/*.txt | 注入（system prompt 预设，SKILL.md 的蒸馏版） | 纯平文本：无 emoji、无加粗 |
 | docs/full-guide.md | 阅读指引（指向 SKILL.md，不承载规则） | 允许格式；勿整体注入 |
