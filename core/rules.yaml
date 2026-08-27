@@ -1,6 +1,9 @@
 # natural-talk 规则总表 — 原则/弹性阈值/分层定义的完整记录，供人阅读
 # 运行时不读本文件：实际进 context 的是 SKILL.md 和 templates/*.txt，改规则须改那两处
 # 编码：UTF-8  格式：YAML  依赖：无（标准库可解析的极简YAML子集）
+# ARCHIVED：elastic 节与 tiers 节的上限数字（破折号≤2、感叹号≤3、路标词≤2 等）
+# 已被 SKILL.md 触发标记体系取代，无实测依据。本文件冻结为历史存档，勿参照、勿更新。
+# 绝对原则三节仍然有效；判定权威源是 SKILL.md
 
 principles:
   absolute:

@@ -20,7 +20,7 @@ python scripts/eval-judge.py                   # 读上一步产物，多裁判�
 ## 单段自查
 
 写完一段，对着清单逐条读自己的输出。对话场景用
-`templates/system-prompt-standard.txt` 结尾的自检项，fiction 用下面五条：
+`templates/system-prompt-standard.txt` 的"对话自查"五条加"落笔避雷"，fiction 用下面五条：
 
 1. 每个比喻的喻体能不能看见？复现时换了属性没有？空泛的、原地重复的砍掉
 2. 搜一遍"而是"：凡"不是X而是Y / 没有X而是Y / 不是X，是Y"，删否定留肯定，直接说 Y（角色台词除外）。
