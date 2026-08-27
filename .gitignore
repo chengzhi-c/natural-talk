@@ -36,6 +36,8 @@ benchmarks/*
 !benchmarks/baseline-src/
 !benchmarks/baseline-src/**
 !benchmarks/summary.md
+!benchmarks/summary-20260828.md
+!benchmarks/regression-deepseek-v4-flash-0731-20260828_033654.json
 !benchmarks/multimodel-runner.py
 !benchmarks/recheck.py
 !benchmarks/retry-runner.py
