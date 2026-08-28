@@ -68,4 +68,3 @@
 ## 联系方式
 
 - 在 [GitHub](https://github.com/chengzhi-c/natural-talk) 开 Issue
-- 通过 GitHub Discussions 讨论
