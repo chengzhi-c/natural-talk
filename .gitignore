@@ -24,3 +24,7 @@ $RECYCLE.BIN/
 
 # Project-specific
 PROJECT-STRUCTURE.md
+corpus/
+
+# Python
+__pycache__/

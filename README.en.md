@@ -10,6 +10,7 @@ A rule set for making AI speak and write like a person. Works with Claude, ChatG
 
 > The rules themselves are written for Chinese output. English users can still apply the framework; the trigger markers and examples target Chinese text.
 
+
 ## Core Principles
 
 Three don'ts: no "as an AI", no "I hope this helps", no "great question".
@@ -63,17 +64,34 @@ response = client.chat.completions.create(
 
 ```
 natural-talk/
-├── SKILL.md                         # Single source of truth (generation / cleanup / fiction modes)
+├── SKILL.md                         # Single source of truth (D/B/C/F/N rules; generation / cleanup / fiction modes)
+├── references/                      # Rule details (fixes / examples / boundaries), read on demand
+│   ├── rules-text.md                # Text layer B1–B11
+│   ├── rules-dialogue.md            # Dialogue layer D1–D5 and experience layer C1–C5
+│   └── fiction.md                   # Full fiction rules
 ├── templates/
 │   ├── system-prompt-standard.txt   # Chat injection
 │   ├── system-prompt-fiction.txt    # Fiction injection (with annotated examples)
-│   ├── system-prompt-lite.txt       # Lightweight version
+│   ├── system-prompt-lite.txt       # Lightweight version (D-layer quota + top-5 upstream B rules)
 │   └── preset-*.txt                 # Scenario presets
+├── scripts/
+│   ├── scan-mechanical.py           # Deterministic scan of mechanical rules (B4/B6/B10/B11 FIX tier + B1/B3 REVIEW candidates; exit 1 = hits found)
+│   ├── test-scan-mechanical.py      # Scanner red-light self-test (planted defects must be caught)
+│   ├── check-sync.py                # Sync check (presence + criterion anchors + rule fingerprints)
+│   ├── test-sync.py                 # Injection-attack self-test (semantic reversals must be caught)
+│   ├── measure-fiction.py           # Fiction A/B measurement (per-thousand-character frequencies)
+│   └── sync-manifest.json           # Rule ids, trigger markers, anchors, fingerprints
 └── docs/
     ├── full-guide.md                # Reading guide (points to SKILL.md)
-    ├── self-check.md                # Self-check list
-    └── misjudgments.md              # Against over-correction
+    ├── self-check.md                # Self-check list & regression gate
+    ├── misjudgments.md              # Against over-correction
+    ├── porting-map.md               # Upstream mapping & trim rationale (lieflat)
+    ├── regression-baseline.md       # Regression sets (cleanup / fiction / dialogue)
+    ├── d-layer-research.md          # Dialogue-domain paired-sampling study
+    └── fiction-research.md          # Fiction public-corpus A/B study
 ```
+
+After changing rules: run `python scripts/check-sync.py --update-fingerprints` to recompute fingerprints, run `python scripts/test-sync.py` to make sure the sync check still catches semantic reversals, then re-run the regression gate described in `docs/regression-baseline.md`.
 
 ## Not For
 

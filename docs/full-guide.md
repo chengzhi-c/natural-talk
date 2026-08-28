@@ -6,10 +6,13 @@
 
 | 想做什么 | 去哪读 |
 |---------|--------|
-| 看/改实际生效的规则 | `SKILL.md`（对话层 5 条、文本层 B1–B11、经验层 C1–C7、反清单、Fiction 章） |
+| 看/改实际生效的规则 | `SKILL.md`（对话层 D1–D5、文本层 B1–B11、经验层 C1–C5、fiction 红线 F1–F5、反清单 N1–N11、规则×模式适用表） |
 | 给聊天应用注入 system prompt | `templates/system-prompt-standard.txt`，轻量用 `-lite`，小说用 `-fiction` |
 | 规则误伤了正常写法 | `docs/misjudgments.md` |
 | 生成后自查与评测方法 | `docs/self-check.md` |
+| 改规则后的回归验证 | `docs/regression-baseline.md` |
+| 上游来源与裁剪理由 | `docs/porting-map.md` |
+| 模板与权威源的同步校验 | `scripts/check-sync.py` + `scripts/sync-manifest.json` |
 
 ## 三条一直不变的原则
 
