@@ -26,7 +26,7 @@
 |------|------|------|
 | 日常对话 | `templates/system-prompt-standard.txt` | 默认推荐 |
 | Fiction创作 | `templates/system-prompt-fiction.txt` | 小说/扮演/同人/情感向 |
-| Token敏感 | `templates/system-prompt-lite.txt` | 最小化核心规则 |
+| Token敏感 | `templates/system-prompt-lite.txt` | 高收益核心＋定向 B5/C6 |
 
 `templates/preset-*.txt` 是客服/技术博客/社交媒体/Fiction 四个场景预设，在上面模板之上叠加。
 
@@ -61,34 +61,28 @@ response = client.chat.completions.create(
 
 ```
 natural-talk/
-├── SKILL.md                         # 规则唯一权威源·核心页（D/B/C/F/N 编号，生成/清理/fiction 三模式）
+├── SKILL.md                         # 规则唯一权威源·核心页（D/B/C/F/N 编号，生成/清理/fiction 生成/fiction 清理四条路径）
 ├── references/                      # 规则详情（改法/示例/边界），命中后按需读取
 │   ├── rules-text.md                # 文本层 B1–B11
-│   ├── rules-dialogue.md            # 对话层 D1–D5 与经验层 C1–C5
+│   ├── rules-dialogue.md            # 对话层 D1–D5 与经验层 C1–C6
 │   └── fiction.md                   # Fiction 章完整规则
 ├── templates/
 │   ├── system-prompt-standard.txt   # 对话场景注入
 │   ├── system-prompt-fiction.txt    # Fiction创作注入（含范文标注）
-│   ├── system-prompt-lite.txt       # 轻量版（D 层分层配额＋上游 B 层倍率 top-5）
+│   ├── system-prompt-lite.txt       # 轻量版（高收益核心＋定向 B5/C6）
 │   └── preset-*.txt                 # 场景预设
-├── scripts/
-│   ├── scan-mechanical.py           # 机械规则确定性扫描（B4/B6/B10/B11 FIX 级＋B1/B3 REVIEW 级候选；退出码 1=有命中）
-│   ├── test-scan-mechanical.py      # 扫描器红灯自测（种植病灶必须捕获、人类成文零 FIX 误伤）
-│   ├── check-sync.py                # 同步校验（在场＋判据锚＋规则指纹三层）
-│   ├── test-sync.py                 # 注入攻击自测（语义反转必须被抓到）
-│   ├── measure-fiction.py           # fiction 对照测量（人类/生成每千字频率）
-│   └── sync-manifest.json           # 规则编号、触发词、判据锚与指纹清单
-└── docs/
-    ├── full-guide.md                # 阅读指引（指向 SKILL.md）
-    ├── self-check.md                # 自检清单与回归门
-    ├── misjudgments.md              # 防矫枉过正参考
-    ├── porting-map.md               # 上游对照与裁剪理由（lieflat）
-    ├── regression-baseline.md       # 回归集（清理/fiction/对话三组）与改后回归
-    ├── d-layer-research.md          # 对话域成对采样研究
-    └── fiction-research.md          # fiction 公版语料对照研究
+├── scripts/                          # 维护者校验（不参与模型加载）
+│   ├── check-sync.py                 # 规则与模板同步校验
+│   ├── scan-mechanical.py            # 机械触发候选扫描
+│   ├── test-scan-mechanical.py       # 扫描器固定样例测试
+│   ├── test-sync.py                  # 同步反向指令测试
+│   ├── test-skill-contract.py        # 发布文件契约测试
+│   ├── sync-manifest.json             # 规则、锚点与指纹清单
+│   └── fixtures/fiction-sample.txt    # fiction 扫描边界样例
+└── assets/
+    └── natural-talk.png             # 品牌图片
 ```
 
-改规则后：`python scripts/check-sync.py --update-fingerprints` 重算指纹，`python scripts/test-sync.py` 过一遍注入自测，再按 `docs/regression-baseline.md` 重跑回归门。
 
 ## 不适用
 
@@ -96,7 +90,7 @@ natural-talk/
 
 ## 局限
 
-模型写作的"AI 味"多是模型预训练的缺陷。skill 与 prompt 目前只能提醒、警示模型尽量避免，效果也依赖模型本身的解读能力。
+模型写作中的"AI 味"多半来自预训练形成的表达缺陷。现阶段，skill 与 prompt 主要只能通过提醒和警示，让模型尽量避免这些问题；实际效果仍取决于模型自身的解读能力。
 
 ## 贡献
 

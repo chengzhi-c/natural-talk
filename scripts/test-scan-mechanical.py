@@ -1,19 +1,21 @@
 """scan-mechanical.py 自测：回归集红灯测试。
 
 设计原则：先证明脚本能捕获已知缺陷（红灯真红），再采信"零命中"结论。
-- 人类组（A1–A5、C1，取自 docs/regression-baseline.md）：FIX 级必须 0 命中；
-  REVIEW 级只允许 A4 的"其实"报一个 B1 候选（候选≠误伤，改写判断在模型）。
+- 人类组（A1–A5、C1）：FIX 级必须 0 命中；
+  A4 的"其实"与叙述破折号可报 B1/B5 候选（候选不授权自动改写）。
 - AI 腔组 AI-1：必须命中 B10(FIX)＋B1(REVIEW)——测不出即脚本失效。
   AI-1 为单段文本，B3 按规则定义（非首段）不触发。
 - AI 腔组 AI-2：病灶是 B2（非机械规则），必须 0 命中——误命中即误伤。
-- 种植病灶组：B1/B3/B4/B6/B11 各一处，缺一即脚本漏检。
-- 边界组：引用块豁免、B4 触发词不越规则文本、BOM、GBK 回退、B3 无空行告警。
+- 种植病灶组：B1/B3/B4/B5/B6/B11/F7 各一处，缺一即脚本漏检。
+- 边界组：引用与行内引文豁免、行内代码、表格、B4 触发词、BOM、GBK、B3 分段。
 
 运行：python scripts/test-scan-mechanical.py
 """
 import importlib.util
+import os
 import subprocess
 import sys
+from collections import Counter
 from pathlib import Path
 
 _spec = importlib.util.spec_from_file_location(
@@ -41,6 +43,11 @@ PLANTED_B6 = "## 一、先找出模糊在哪里\n\n正文。\n\n## 二、把需�
 PLANTED_B11 = "系统负责采集、存储、展示。"
 PLANTED_B1 = "真正的瓶颈不是技术，而是耐心。"
 PLANTED_B3 = "第一段说完了。\n\n值得注意的是，配置管理往往被忽视。"
+PLANTED_B5 = "答案已经很清楚——继续等。"
+PLANTED_B5_SINGLE = "答案已经很清楚—继续等。"
+PLANTED_F7 = "里面沉默了很久，久到他以为不会有回应。"
+PLANTED_F7_PERIOD = "里面沉默了很久。久到他以为不会有回应。"
+PLANTED_F7_SEMICOLON = "里面沉默了很久；久到他以为不会有回应。"
 
 # ---------- 白名单豁免组（FIX 级预期 0 命中） ----------
 WHITELIST = """---
@@ -69,7 +76,7 @@ https://example.com/说白了、说穿了、先看这里
 failures = []
 
 
-def check(name, text, expect_fix, expect_review=()):
+def check(name, text, expect_fix, expect_review=(), expect_counts=None):
     hits = scan(text)
     got_fix = sorted({h["rule"] for h in hits if h["tier"] == "FIX"})
     got_review = sorted({h["rule"] for h in hits if h["tier"] == "REVIEW"})
@@ -79,12 +86,17 @@ def check(name, text, expect_fix, expect_review=()):
             f"实际 FIX {got_fix or '无'} REVIEW {got_review or '无'}\n"
             + "\n".join(f"  行{h['line']} {h['rule']} {h['tier']} {h['snippet']}"
                         for h in hits))
+    if expect_counts is not None:
+        got_counts = Counter(h["rule"] for h in hits)
+        if got_counts != Counter(expect_counts):
+            failures.append(
+                f"{name}: 预期命中数 {dict(expect_counts)}，实际 {dict(got_counts)}")
 
 
 # 人类组：FIX 零命中是绿灯，但须先由红灯组证明脚本没瞎
 for name, t in [("A1", A1), ("A2", A2), ("A3", A3), ("A5", A5), ("C1", C1)]:
     check(name, t, [])
-check("A4", A4, [], ["B1"])  # "其实"报候选，改写判断在模型
+check("A4", A4, [], ["B1", "B5"])
 
 # AI 腔组
 check("AI-1", AI_1, ["B10"], ["B1"])
@@ -95,8 +107,14 @@ check("种植-B1", PLANTED_B1, [], ["B1"])
 check("种植-B3", PLANTED_B3, [], ["B3"])
 check("种植-B4a", PLANTED_B4A, ["B4"])
 check("种植-B4b", PLANTED_B4B, ["B4"])
-check("种植-B6", PLANTED_B6, ["B6"])
-check("种植-B11", PLANTED_B11, ["B11"])
+check("种植-B5", PLANTED_B5, [], ["B5"], {"B5": 1})
+check("种植-B5-单破折号", PLANTED_B5_SINGLE, [], ["B5"], {"B5": 1})
+check("种植-B6", PLANTED_B6, ["B6"], [], {"B6": 3})
+check("种植-B11", PLANTED_B11, ["B11"], [], {"B11": 1})
+
+_b3_hits = scan(PLANTED_B3)
+if any("加一个" in h["note"] for h in _b3_hits if h["rule"] == "B3"):
+    failures.append("B3 改法仍在机械补‘这’字，会生成‘这值得注意的是’一类病句")
 
 # 白名单（frontmatter 里的"其实"等不在豁免列，此处只验 FIX 级零误伤）
 check("白名单豁免", WHITELIST, [])
@@ -107,9 +125,62 @@ QUOTE_MID = "正文一句交代背景。\n\n> 值得注意的是，配置管理�
 check("引用块-首", QUOTE_FIRST, [])
 check("引用块-段中", QUOTE_MID, [])
 
+INLINE_QUOTE = "他说：“一句话总结：采集、存储、展示——不是归档，而是上线。”"
+DOUBLE_BACKTICK = "``采集、存储、展示`` 是配置原文。"
+TABLE_NO_LEADING_PIPE = "名称 | 说明\n--- | ---\n采集、存储、展示 | 说白了，这是原始表格内容\n"
+check("行内引文", INLINE_QUOTE, [])
+check("双反引号代码", DOUBLE_BACKTICK, [])
+check("无前导竖线表格", TABLE_NO_LEADING_PIPE, [])
+
+FOUR_BACKTICK_FENCE = """````markdown
+```
+说白了，采集、存储、展示。
+````
+"""
+MIXED_FENCE = """```text
+~~~
+说白了，采集、存储、展示。
+```
+"""
+check("四反引号围栏", FOUR_BACKTICK_FENCE, [])
+check("混合围栏字符", MIXED_FENCE, [])
+
+LIST_CONTINUATION = """- 本项包括：
+  采集、存储、展示。
+"""
+check("列表续行", LIST_CONTINUATION, [])
+
 # ---------- B4 触发词不越规则文本（脚本不得扩权） ----------
 check("B4-换句话说", "留存率涨到了72%。换句话说：产品找到了PMF。\n", [])
 check("B4-结论如下", "结论如下：这个方案不行。\n", [])
+check("B3-未授权开头", "第一段交代背景。\n\n意味着，配置仍需人工维护。\n", [])
+
+# B6 要求连续编号小标题；普通小标题打断后，散落的三个编号不得合并计数。
+SCATTERED_B6 = """## 一、第一部分
+
+正文。
+
+## 普通标题
+
+正文。
+
+## 二、第二部分
+
+正文。
+
+## 另一个标题
+
+## 三、第三部分
+"""
+check("B6-分散编号", SCATTERED_B6, [])
+
+MIXED_LEVEL_B6 = """## 一、一级
+
+### 二、二级
+
+## 三、又回一级
+"""
+check("B6-混合标题层级", MIXED_LEVEL_B6, [])
 
 # 触发词一致性：B4A_PROMPTS 每个词必须在 rules-text.md 的 B4 触发行中
 _RULES_TEXT = (Path(__file__).resolve().parent.parent
@@ -142,15 +213,21 @@ def check_mode(name, text, mode, expect_fix, expect_review=()):
 
 check_mode("fixture-fiction", FICTION_FIXTURE, "fiction", ["B6"], ["B1"])
 check_mode("fixture-prose", FICTION_FIXTURE, "prose", ["B6", "B11"], ["B1"])
+check_mode("fiction-叙述破折号", PLANTED_B5, "fiction", [], ["B5"])
+check_mode("fiction-久到回环", PLANTED_F7, "fiction", [], ["F7"])
+check_mode("fiction-句号久到回环", PLANTED_F7_PERIOD, "fiction", [], ["F7"])
+check_mode("fiction-分号久到回环", PLANTED_F7_SEMICOLON, "fiction", [], ["F7"])
 
 # ---------- CLI：stdin 模式与 --mode 透传 ----------
 _SCRIPT = Path(__file__).resolve().parent / "scan-mechanical.py"
 
 
 def _cli(*argv, stdin=""):
+    env = os.environ.copy()
+    env["PYTHONIOENCODING"] = "utf-8"
     return subprocess.run([sys.executable, str(_SCRIPT), *argv], input=stdin,
-                          capture_output=True, text=True, encoding="utf-8",
-                          errors="replace")
+                           capture_output=True, text=True, encoding="utf-8",
+                           errors="strict", env=env)
 
 _r = _cli("-", stdin=PLANTED_B11)
 if _r.returncode != 1 or "B11" not in _r.stdout:
@@ -183,6 +260,15 @@ with tempfile.TemporaryDirectory() as _td:
     if _r.returncode != 0 or "未检出空行分段" not in _r.stdout:
         failures.append(f"CLI B3 告警: 预期 exit 0 且输出无空行分段提示，实际 exit {_r.returncode}\n{_r.stdout}")
 
+    _scan_dir = Path(_td) / "scan-dir"
+    (_scan_dir / "nested").mkdir(parents=True)
+    (_scan_dir / "clean.md").write_text("正文没有触发项。", encoding="utf-8")
+    (_scan_dir / "nested" / "hit.txt").write_text(PLANTED_B5_SINGLE, encoding="utf-8")
+    (_scan_dir / "ignored.bin").write_bytes(b"\x00\xff\x00")
+    _r = _cli(str(_scan_dir))
+    if _r.returncode != 1 or "hit.txt" not in _r.stdout or "B5" not in _r.stdout:
+        failures.append(f"CLI 目录递归: 预期只扫描文本文件并报 nested/hit.txt 的 B5，实际 exit {_r.returncode}\n{_r.stdout}{_r.stderr}")
+
 # ---------- 同点双报抑制（删除优先于加回指） ----------
 # B4/B10 的改法是删掉段首提示语/起手式，删后 B3 的触发对象不复存在，
 # 同线双中时 B3 不得再报（规则优先级见 references/rules-text.md B3）。
@@ -195,4 +281,4 @@ if failures:
     print("红灯测试未通过：")
     print("\n".join(failures))
     sys.exit(1)
-print("红灯测试通过：人类组 FIX 零命中、AI-1 捕获 B10+B1、种植病灶 B1/B3/B4/B6/B11 全部捕获、白名单零误伤")
+print("红灯测试通过：人类组 FIX 零命中，重点病灶全部捕获，白名单与边界样例零误伤")

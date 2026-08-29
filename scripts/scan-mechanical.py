@@ -1,4 +1,4 @@
-"""机械规则确定性扫描器：B4 / B6 / B10 / B11（FIX 级）＋ B1 / B3（REVIEW 级）。
+"""机械规则确定性扫描器：确定命中与语境复核候选。
 
 定位：生成候选命中清单，供 LLM 复核语境后决定是否改写。
 脚本只报触发标记，不做自动改写——语境判断（如 B4 提示语是否承接上文、
@@ -11,9 +11,11 @@ B11 是否法规条目）仍由模型或人完成。依据 SKILL.md 执行要求
   B6  序数词通篇编号小标题（连续 ≥3 个才报）
   B10 起手式：说白了 / 说穿了 / 先说结论（句首位置）
   B11 顿号罗列过密：一个分句内 ≥2 个顿号串 ≥3 项并列
-  REVIEW 级（[机械] 标签但须复核语境，只报候选）：
+  REVIEW 级（只报候选，必须复核语境）：
   B1  翻案腔：句中含"而是/其实/恰恰"——被否定的观点是否存在须读上下文
   B3  段首零回指评论：非首段以评论语开头且整句无"这/那/其/此/上面"
+  B5  叙述中的破折号：逐处核对是否只是解释、列举、因果或同位补充
+  F7  fiction 中的"很久……久到……"等空泛回环候选
 
 白名单（绝对原则，完全豁免）：围栏代码块、行内代码、YAML frontmatter、
 表格行、引用块（> 起首）、URL、Markdown 列表内部（B11）。
@@ -29,7 +31,7 @@ B11 是否法规条目）仍由模型或人完成。依据 SKILL.md 执行要求
 
 模式（对应 SKILL.md 清理 / fiction 清理两种清理流程的带入集）：
   prose（默认）  全量规则
-  fiction        只报 fiction 清理带入集内可机械定位的 B6(FIX) 与 B1(REVIEW)；
+  fiction        报 fiction 清理带入集内的 B6(FIX)、B1/B5/F7(REVIEW)；
                  B3/B4/B10/B11 的倍率来自非虚构论述文体对照，fiction 不带入，
                  一律不报（对小说照报即越界误伤）
 """
@@ -51,7 +53,7 @@ B1_WORDS = ("而是", "其实", "恰恰")
 
 # B3（REVIEW 级）：段首评论语与回指词
 B3_OPENERS = ("听起来", "看起来", "值得注意的是", "更重要的是",
-              "关键在于", "问题在于", "说白了", "意味着", "不难看出")
+              "关键在于", "问题在于", "说白了")
 B3_REFERENTS = ("这", "那", "其", "此", "上面")
 
 # B6：编号小标题（一、二、三 / 第一、第二）
@@ -61,26 +63,85 @@ _NUM_PREFIX = re.compile(r"^(?:[一二三四五六七八九十]+、|第[一二�
 
 # 列表行（B4b 判定下文是否列表；B11 对列表内部豁免）
 _LIST_ITEM = re.compile(r"^\s*(?:[-*+]|\d+[.、)）])\s")
+_LIST_CONTINUATION = re.compile(r"^(?:\t| {2,})\S")
 
 # 分句切分（B11 按分句判顿号密度；B10 按句判句首）
 _CLAUSE_SPLIT = re.compile(r"[，。；：！？\n]")
 _SENT_SPLIT = re.compile(r"[。！？；\n]")
 
 _URL = re.compile(r"https?://\S+|www\.\S+")
-_INLINE_CODE = re.compile(r"`[^`]*`")
+_INLINE_CODE = re.compile(r"(?P<fence>`+).*?(?P=fence)")
+_INLINE_QUOTES = (
+    re.compile(r"“[^”]*”"),
+    re.compile(r"‘[^’]*’"),
+    re.compile(r"「[^」]*」"),
+    re.compile(r"『[^』]*』"),
+    re.compile(r'"[^"\n]*"'),
+)
+_TABLE_SEPARATOR = re.compile(
+    r"^\s*\|?\s*:?-{3,}:?\s*(?:\|\s*:?-{3,}:?\s*)+\|?\s*$")
+_FENCE_OPEN = re.compile(r"^\s{0,3}(`{3,}|~{3,})")
+_FENCE_CLOSE = re.compile(r"^\s{0,3}(`+|~+)\s*$")
+_F7_LOOP = re.compile(
+    r"(?:很久[，,、；;。.!！？?…\s]{0,4}久到|"
+    r"安静[，,、；;。.!！？?…\s]{0,4}静[到得]|"
+    r"寂静[，,、；;。.!！？?…\s]{0,4}静[到得]|"
+    r"沉默[，,、；;。.!！？?…\s]{0,4}沉默到|"
+    r"(?P<degree>冷|黑|痛|累|远|慢|快)"
+    r"[，,、；;。.!！？?…\s]{0,4}(?P=degree)[到得])")
+_TEXT_SUFFIXES = {".md", ".markdown", ".txt"}
 
 # 各模式的报告集（见模块 docstring"模式"节）
 FIX_RULES = {"prose": ("B4", "B6", "B10", "B11"), "fiction": ("B6",)}
-REVIEW_RULES = {"prose": ("B1", "B3"), "fiction": ("B1",)}
+REVIEW_RULES = {
+    "prose": ("B1", "B3", "B5"),
+    "fiction": ("B1", "B5", "F7"),
+}
 
 
 def _mask_line(line):
-    """行内代码与 URL 替换为等长占位，避免误命中。"""
+    """行内代码、URL 与行内引文替换为等长占位。"""
     def _blank(m):
         return " " * len(m.group(0))
     line = _INLINE_CODE.sub(_blank, line)
     line = _URL.sub(_blank, line)
+    for pattern in _INLINE_QUOTES:
+        line = pattern.sub(_blank, line)
     return line
+
+
+def _table_lines(lines):
+    """返回 Markdown 表格占用的零基行号，兼容无前导竖线写法。"""
+    result = set()
+    for idx, raw in enumerate(lines):
+        if not _TABLE_SEPARATOR.match(raw):
+            continue
+        result.add(idx)
+        if idx and "|" in lines[idx - 1]:
+            result.add(idx - 1)
+        pos = idx + 1
+        while pos < len(lines) and lines[pos].strip() and "|" in lines[pos]:
+            result.add(pos)
+            pos += 1
+    return result
+
+
+def _list_content_lines(lines):
+    """返回 Markdown 列表项及其缩进续行的零基行号。"""
+    result = set()
+    in_item = False
+    for idx, raw in enumerate(lines):
+        if _LIST_ITEM.match(raw):
+            result.add(idx)
+            in_item = True
+            continue
+        if not raw.strip():
+            continue
+        if in_item and _LIST_CONTINUATION.match(raw):
+            result.add(idx)
+            continue
+        in_item = False
+    return result
 
 
 def _read_text(path):
@@ -93,11 +154,27 @@ def _read_text(path):
     return None
 
 
+def _expand_target(target):
+    """把单文件或目录展开为稳定排序的文本文件列表。"""
+    path = Path(target)
+    if path.is_file():
+        return [path]
+    if path.is_dir():
+        return sorted(
+            (item for item in path.rglob("*")
+             if item.is_file() and item.suffix.lower() in _TEXT_SUFFIXES),
+            key=lambda item: str(item).lower(),
+        )
+    return None
+
+
 def _iter_scannable_lines(text):
     """逐行产出 (行号, 原文, 屏蔽后文本)，跳过白名单区。"""
-    in_code = False
+    fence_char = None
+    fence_len = 0
     in_yaml = False
     lines = text.splitlines()
+    table_lines = _table_lines(lines)
     for idx, raw in enumerate(lines, 1):
         stripped = raw.strip()
         if idx == 1 and stripped == "---":
@@ -107,27 +184,40 @@ def _iter_scannable_lines(text):
             if stripped == "---":
                 in_yaml = False
             continue
-        if stripped.startswith("```") or stripped.startswith("~~~"):
-            in_code = not in_code
+        if fence_char is not None:
+            close = _FENCE_CLOSE.match(raw)
+            if (close and close.group(1)[0] == fence_char
+                    and len(close.group(1)) >= fence_len):
+                fence_char = None
+                fence_len = 0
             continue
-        if in_code:
+        opened = _FENCE_OPEN.match(raw)
+        if opened:
+            fence = opened.group(1)
+            fence_char = fence[0]
+            fence_len = len(fence)
             continue
-        if stripped.startswith("|"):  # 表格行豁免
+        if idx - 1 in table_lines or stripped.startswith("|"):  # 表格行豁免
             continue
         if stripped.startswith(">"):  # 引用块与引文豁免：引的是他人原文
             continue
         yield idx, raw, _mask_line(raw)
 
 
-def _is_heading(masked):
-    """返回小标题文字，非小标题返回 None。"""
+def _heading_info(masked):
+    """返回 (层级, 小标题文字)，非小标题返回 None。"""
     m = _HEADING_MD.match(masked.strip())
     if m:
-        return m.group(2).strip()
+        return len(m.group(1)), m.group(2).strip()
     m = _HEADING_BOLD.match(masked.strip())
     if m:
-        return m.group(1).strip()
+        return 0, m.group(1).strip()
     return None
+
+
+def _is_heading(masked):
+    info = _heading_info(masked)
+    return info[1] if info else None
 
 
 def scan(text, mode="prose"):
@@ -140,17 +230,38 @@ def scan(text, mode="prose"):
     fix_on = set(FIX_RULES[mode])
     review_on = set(REVIEW_RULES[mode])
     scannable = list(_iter_scannable_lines(text))
+    list_lines = _list_content_lines(text.splitlines())
 
-    # ---- B6：编号小标题，全篇统计 ≥3 才报 ----
-    numbered = []
+    # ---- B6：连续编号小标题，普通标题会打断编号序列 ----
+    heading_stream = []
     for idx, raw, masked in scannable:
-        title = _is_heading(masked)
-        if title and _NUM_PREFIX.match(title):
-            numbered.append((idx, title))
-    if "B6" in fix_on and len(numbered) >= 3:
-        for idx, title in numbered:
-            hits.append(dict(line=idx, rule="B6", tier="FIX", snippet=title,
-                             note=f"全篇编号小标题共 {len(numbered)} 个（≥3 触发）"))
+        info = _heading_info(masked)
+        if info:
+            level, title = info
+            heading_stream.append((idx, level, title, bool(_NUM_PREFIX.match(title))))
+    numbered_runs = []
+    run = []
+    run_level = None
+    for idx, level, title, is_numbered in heading_stream:
+        if is_numbered:
+            if run and level != run_level:
+                if len(run) >= 3:
+                    numbered_runs.append(run)
+                run = []
+            run.append((idx, title))
+            run_level = level
+        else:
+            if len(run) >= 3:
+                numbered_runs.append(run)
+            run = []
+            run_level = None
+    if len(run) >= 3:
+        numbered_runs.append(run)
+    if "B6" in fix_on:
+        for numbered in numbered_runs:
+            for idx, title in numbered:
+                hits.append(dict(line=idx, rule="B6", tier="FIX", snippet=title,
+                                 note=f"连续编号小标题共 {len(numbered)} 个（≥3 触发）"))
 
     # ---- B3（REVIEW）：非首段段首零回指评论 ----
     if "B3" in review_on:
@@ -173,8 +284,8 @@ def scan(text, mode="prose"):
                                 hits.append(dict(
                                     line=idx, rule="B3", tier="REVIEW",
                                     snippet=sentence[:40],
-                                    note="段首评论无回指：多数情况加一个“这”字；"
-                                         "首段与引语内部不改"))
+                                    note="段首评论无明确承接：恢复具体对象，或删掉空评论；"
+                                         "不得机械补一个‘这’字"))
                             break
             prev_blank = False
 
@@ -182,7 +293,7 @@ def scan(text, mode="prose"):
         stripped = masked.strip()
         if not stripped:
             continue
-        is_list_line = bool(_LIST_ITEM.match(masked))
+        is_list_line = idx - 1 in list_lines
         heading = _is_heading(masked)
 
         # ---- B10：句首起手式 ----
@@ -205,6 +316,22 @@ def scan(text, mode="prose"):
                                          note=f"含“{w}”：核对被否定的观点是否真实存在，"
                                               f"不存在删否定留肯定；角色台词内不改"))
                         break
+
+        # ---- B5（REVIEW）：叙述破折号逐处复核用途 ----
+        if "B5" in review_on and "—" in masked:
+            hits.append(dict(
+                line=idx, rule="B5", tier="REVIEW", snippet=stripped[:40],
+                note="叙述破折号：若右侧只是解释、列举、同位、原因、结果或补充，"
+                     "保留内容并改用完整句或常规标点；台词中断与未完不改"))
+
+        # ---- F7（REVIEW）：fiction 空泛程度回环 ----
+        if "F7" in review_on:
+            match = _F7_LOOP.search(masked)
+            if match:
+                hits.append(dict(
+                    line=idx, rule="F7", tier="REVIEW", snippet=match.group(0),
+                    note="程度回环候选：改掉‘很久，久到’等表层句式；"
+                         "保留具体结果并改为直述，没有信息增量则删后半"))
 
         # ---- B4a：提示语＋冒号 ----
         if "B4" in fix_on and not heading:
@@ -246,10 +373,10 @@ def scan(text, mode="prose"):
 
 def main():
     parser = argparse.ArgumentParser(
-        description="机械规则确定性扫描器（FIX 级 B4/B6/B10/B11；REVIEW 级 B1/B3）")
-    parser.add_argument("files", nargs="*", help="待扫描文件；单独的 - 读 stdin")
+        description="机械规则扫描器（确定命中 B4/B6/B10/B11；复核候选 B1/B3/B5/F7）")
+    parser.add_argument("files", nargs="*", help="待扫描文件或目录（目录递归）；单独的 - 读 stdin")
     parser.add_argument("--mode", choices=("prose", "fiction"), default="prose",
-                        help="prose=论述清理（默认，全量）；fiction=fiction 清理（只报 B6/B1）")
+                        help="prose=论述清理；fiction=fiction 清理（B6/B1/B5/F7）")
     args = parser.parse_args()
     if not args.files:
         parser.print_help(file=sys.stderr)
@@ -257,26 +384,29 @@ def main():
     total = 0
     for target in args.files:
         if target == "-":
-            text, name = sys.stdin.read(), "<stdin>"
+            expanded = [("<stdin>", sys.stdin.read())]
         else:
-            path = Path(target)
-            if not path.is_file():
-                print(f"找不到文件：{target}", file=sys.stderr)
+            paths = _expand_target(target)
+            if paths is None:
+                print(f"找不到文件或目录：{target}", file=sys.stderr)
                 sys.exit(2)
-            text = _read_text(path)
-            if text is None:
-                print(f"{target}: 无法解码（非 UTF-8/GBK），跳过", file=sys.stderr)
-                continue
-            name = str(path)
-        hits = scan(text, mode=args.mode)
-        for h in hits:
-            print(f"{name}:{h['line']}\t{h['rule']}\t{h['tier']}\t{h['snippet']}\t{h['note']}")
-        total += len(hits)
-        if "B3" in REVIEW_RULES[args.mode]:
-            _lines = [l for l in text.splitlines() if l.strip()]
-            _chunks = [c for c in re.split(r"\n\s*\n", text) if c.strip()]
-            if len(_lines) > 1 and len(_chunks) < 2:
-                print("# 提示：未检出空行分段，B3 未执行")
+            expanded = []
+            for path in paths:
+                text = _read_text(path)
+                if text is None:
+                    print(f"{path}: 无法解码（非 UTF-8/GBK），跳过", file=sys.stderr)
+                    continue
+                expanded.append((str(path), text))
+        for name, text in expanded:
+            hits = scan(text, mode=args.mode)
+            for h in hits:
+                print(f"{name}:{h['line']}\t{h['rule']}\t{h['tier']}\t{h['snippet']}\t{h['note']}")
+            total += len(hits)
+            if "B3" in REVIEW_RULES[args.mode]:
+                _lines = [line for line in text.splitlines() if line.strip()]
+                _chunks = [chunk for chunk in re.split(r"\n\s*\n", text) if chunk.strip()]
+                if len(_lines) > 1 and len(_chunks) < 2:
+                    print(f"# 提示：{name} 未检出空行分段，B3 未执行")
     sys.exit(1 if total else 0)
 
 

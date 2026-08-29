@@ -1,12 +1,13 @@
 """校验注入物与规则权威源 SKILL.md 的同步。
 
-三层检测：
+四层检测：
   1. 在场检查（原有）：manifest 声明的规则编号与触发词必须在文件中出现
   2. 判据锚（anchor）：每条规则在 manifest 存模板侧判据原文短串，归一化后
      必须在模板文本中出现。语义反转（如「删空预告」改成「空预告保留」）
      会破坏判据锚，即被抓到
   3. 规则指纹（fingerprint）：SKILL.md 每条规则正文的归一化哈希存 manifest，
      权威源被改动而 manifest 未更新即报错，强制显式确认同步
+  4. 反向短语（forbidden）：拒绝已知的明确反转，避免正确锚和相反指令同时存在
 
 不校验全都在，也不做语义理解——只让「改了规则但没同步」必须显式确认，
 而不是静默通过。
@@ -127,6 +128,7 @@ def main():
             failures.append(f"SKILL.md: 指纹表存在规则 {rule} 但 rules 清单未收录")
 
     anchor_count = 0
+    forbidden_count = 0
     for rel, spec in sorted(manifest.items()):
         if rel == "SKILL.md":
             continue
@@ -147,11 +149,16 @@ def main():
                 if normalize(anchor) not in tn:
                     failures.append(f"{rel}: 规则 {rule} 判据锚失配「{anchor}」"
                                     f"（语义漂移或漏同步）")
+        for forbidden in spec.get("forbidden", []):
+            forbidden_count += 1
+            if normalize(forbidden) in tn:
+                failures.append(f"{rel}: 出现反向指令「{forbidden}」")
 
     if failures:
         print("\n".join(failures))
         sys.exit(1)
-    print(f"同步校验通过：{len(manifest)} 个文件（指纹 {len(fps)} 条，判据锚 {anchor_count} 处）")
+    print(f"同步校验通过：{len(manifest)} 个文件（指纹 {len(fps)} 条，"
+          f"判据锚 {anchor_count} 处，反向短语 {forbidden_count} 条）")
 
 
 if __name__ == "__main__":

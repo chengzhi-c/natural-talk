@@ -29,7 +29,7 @@ Pick a template for your scenario and paste its contents into your system prompt
 |----------|------|-------|
 | Everyday chat | `templates/system-prompt-standard.txt` | Default recommendation |
 | Fiction | `templates/system-prompt-fiction.txt` | Novels, roleplay, fanfic, emotional writing |
-| Token-sensitive | `templates/system-prompt-lite.txt` | Minimal core rules |
+| Token-sensitive | `templates/system-prompt-lite.txt` | High-yield core + targeted B5/C6 |
 
 `templates/preset-*.txt` are four scenario presets (customer service, tech blog, social media, fiction) layered on top of the templates above.
 
@@ -64,34 +64,28 @@ response = client.chat.completions.create(
 
 ```
 natural-talk/
-├── SKILL.md                         # Single source of truth (D/B/C/F/N rules; generation / cleanup / fiction modes)
+├── SKILL.md                         # Single source of truth (D/B/C/F/N rules; generation / cleanup / fiction generation / fiction cleanup)
 ├── references/                      # Rule details (fixes / examples / boundaries), read on demand
 │   ├── rules-text.md                # Text layer B1–B11
-│   ├── rules-dialogue.md            # Dialogue layer D1–D5 and experience layer C1–C5
+│   ├── rules-dialogue.md            # Dialogue layer D1–D5 and experience layer C1–C6
 │   └── fiction.md                   # Full fiction rules
 ├── templates/
 │   ├── system-prompt-standard.txt   # Chat injection
 │   ├── system-prompt-fiction.txt    # Fiction injection (with annotated examples)
-│   ├── system-prompt-lite.txt       # Lightweight version (D-layer quota + top-5 upstream B rules)
+│   ├── system-prompt-lite.txt       # Lightweight version (high-yield core + targeted B5/C6)
 │   └── preset-*.txt                 # Scenario presets
-├── scripts/
-│   ├── scan-mechanical.py           # Deterministic scan of mechanical rules (B4/B6/B10/B11 FIX tier + B1/B3 REVIEW candidates; exit 1 = hits found)
-│   ├── test-scan-mechanical.py      # Scanner red-light self-test (planted defects must be caught)
-│   ├── check-sync.py                # Sync check (presence + criterion anchors + rule fingerprints)
-│   ├── test-sync.py                 # Injection-attack self-test (semantic reversals must be caught)
-│   ├── measure-fiction.py           # Fiction A/B measurement (per-thousand-character frequencies)
-│   └── sync-manifest.json           # Rule ids, trigger markers, anchors, fingerprints
-└── docs/
-    ├── full-guide.md                # Reading guide (points to SKILL.md)
-    ├── self-check.md                # Self-check list & regression gate
-    ├── misjudgments.md              # Against over-correction
-    ├── porting-map.md               # Upstream mapping & trim rationale (lieflat)
-    ├── regression-baseline.md       # Regression sets (cleanup / fiction / dialogue)
-    ├── d-layer-research.md          # Dialogue-domain paired-sampling study
-    └── fiction-research.md          # Fiction public-corpus A/B study
+├── scripts/                          # Maintainer checks (not loaded by the model)
+│   ├── check-sync.py                 # Rule/template synchronization check
+│   ├── scan-mechanical.py            # Mechanical trigger candidate scan
+│   ├── test-scan-mechanical.py       # Scanner fixture tests
+│   ├── test-sync.py                  # Sync reversal tests
+│   ├── test-skill-contract.py        # Release-file contract test
+│   ├── sync-manifest.json             # Rule, anchor, and fingerprint manifest
+│   └── fixtures/fiction-sample.txt    # Fiction scanning boundary fixture
+└── assets/
+    └── natural-talk.png             # Brand image
 ```
 
-After changing rules: run `python scripts/check-sync.py --update-fingerprints` to recompute fingerprints, run `python scripts/test-sync.py` to make sure the sync check still catches semantic reversals, then re-run the regression gate described in `docs/regression-baseline.md`.
 
 ## Not For
 
@@ -99,7 +93,7 @@ Academic papers, official documents, legal writing, marketing copy, speeches —
 
 ## Limitations
 
-Most "AI flavor" in model output traces back to pretraining. A skill or prompt can only remind and warn; the effect also depends on the model's own ability to interpret instructions.
+Most "AI flavor" in model writing comes from expression flaws formed during pretraining. At this stage, a skill or prompt can mainly remind and warn the model to avoid these issues; the actual effect still depends on the model's own ability to interpret instructions.
 
 ## Contributing
 

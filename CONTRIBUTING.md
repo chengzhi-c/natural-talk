@@ -25,14 +25,14 @@
 **规则修改流程**：
 
 1. 改 `SKILL.md`（规则唯一权威源），并同步 `templates/*.txt`（注入用蒸馏版，两处必须一致）
-2. 这条规则容易被过度执行时，往 `docs/misjudgments.md` 补一条「什么不该改」；判断类规则往 `docs/self-check.md` 补自检做法
+2. 这条规则容易被过度执行时，往 `references/` 补一条「什么不该改」；判断类规则直接补充 `SKILL.md` 或对应参考文件中的自检做法
 3. 拿改后的规则实际生成一段，人工读：规则是否生效，有没有误伤正常写法
 
 ### 4. 翻译
 
 - Fork 仓库
-- 创建 `docs/[language-code]/` 目录
-- 翻译核心文档
+- 创建 `README.[language-code].md`
+- 翻译 README 与核心规则说明
 - 提交 Pull Request
 
 ## 提交前检查
@@ -48,9 +48,8 @@
 |------|------|----------|
 | SKILL.md | 规则唯一权威源（生成/清理/fiction 三模式） | 无 emoji；加粗仅标题 |
 | templates/*.txt | 注入（system prompt 预设，SKILL.md 的蒸馏版） | 纯平文本：无 emoji、无加粗 |
-| docs/full-guide.md | 阅读指引（指向 SKILL.md，不承载规则） | 允许格式；勿整体注入 |
-| docs/misjudgments.md | 阅读参考（防矫枉案例） | 允许格式 |
-| docs/self-check.md | 阅读参考（生成后自查） | 允许格式 |
+| references/*.md | 规则详情、边界与示例 | 按需读取；勿整体注入 |
+| assets/natural-talk.png | 品牌图片 | 保持文件名与相对路径 |
 
 ## 不接受的贡献
 
