@@ -39,6 +39,12 @@ git clone https://github.com/chengzhi-c/natural-talk.git
 
 `SKILL.md` 在仓库根层级，clone 完即可识别。
 
+有终端能力的宿主可在生成前对自身草稿运行机械自查（FIX 命中即改，REVIEW 命中复核后决定）：
+
+```bash
+python scripts/scan-mechanical.py <文件> --mode gen
+```
+
 ### RikkaHub / SillyTavern
 
 导入 [Release](https://github.com/chengzhi-c/natural-talk/releases) 中的 `natural-talk.zip`
@@ -64,7 +70,7 @@ natural-talk/
 ├── SKILL.md                         # 规则唯一权威源·核心页（D/B/C/F/N 编号，生成/清理/fiction 生成/fiction 清理四条路径）
 ├── references/                      # 规则详情（改法/示例/边界），命中后按需读取
 │   ├── rules-text.md                # 文本层 B1–B11
-│   ├── rules-dialogue.md            # 对话层 D1–D5 与经验层 C1–C6
+│   ├── rules-dialogue.md            # 对话层 D1–D6 与经验层 C1–C6
 │   └── fiction.md                   # Fiction 章完整规则
 ├── templates/
 │   ├── system-prompt-standard.txt   # 对话场景注入

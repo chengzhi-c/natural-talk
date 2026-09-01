@@ -16,6 +16,11 @@ B11 是否法规条目）仍由模型或人完成。依据 SKILL.md 执行要求
   B3  段首零回指评论：非首段以评论语开头且整句无"这/那/其/此/上面"
   B5  叙述中的破折号：逐处核对是否只是解释、列举、因果或同位补充
   F7  fiction 中的"很久……久到……"等空泛回环候选
+  gen 模式追加 REVIEW 候选（既有规则补机械触发，改写判断在模型）：
+  B9  装饰性喻体：明喻标记＋"一＋量词"引出的铺陈喻体
+  C2  结尾拔高、C4 hedging 叠加、C5 宏观开场、C6 空泛气氛总结
+  D2  服务腔开场收尾（句首）、D3 免责包装、D4 万能收尾、
+  D5  元话语空预告、D6 模糊归因
 
 白名单（绝对原则，完全豁免）：围栏代码块、行内代码、YAML frontmatter、
 表格行、引用块（> 起首）、URL、Markdown 列表内部（B11）。
@@ -24,16 +29,19 @@ B11 是否法规条目）仍由模型或人完成。依据 SKILL.md 执行要求
 文件解码按 utf-8-sig（兼容 BOM）→ gbk 依序尝试，均失败打印跳过说明并继续。
 
 用法：
-  python scripts/scan-mechanical.py <文件> [文件...] [--mode prose|fiction]
+  python scripts/scan-mechanical.py <文件> [文件...] [--mode prose|fiction|gen]
   python scripts/scan-mechanical.py -          # 读 stdin
 退出码：0 无命中，1 有命中，2 用法错误。
 自测：python scripts/test-scan-mechanical.py
 
-模式（对应 SKILL.md 清理 / fiction 清理两种清理流程的带入集）：
-  prose（默认）  全量规则
+模式（对应 SKILL.md 清理 / fiction 清理 / 生成自查三种流程）：
+  prose（默认）  清理全量规则
   fiction        报 fiction 清理带入集内的 B6(FIX)、B1/B5/F7(REVIEW)；
                  B3/B4/B10/B11 的倍率来自非虚构论述文体对照，fiction 不带入，
                  一律不报（对小说照报即越界误伤）
+  gen            生成期自查：FIX 同 prose（B 层生成清理共用）；
+                 REVIEW 增 B1/B3/B5/B9/C2/C4/C5/C6/D2–D6（D/C 层机械候选），
+                 全部只报候选，复核后决定改留
 """
 import argparse
 import re
@@ -91,11 +99,68 @@ _F7_LOOP = re.compile(
     r"[，,、；;。.!！？?…\s]{0,4}(?P=degree)[到得])")
 _TEXT_SUFFIXES = {".md", ".markdown", ".txt"}
 
+# ---------- gen 模式触发标记（既有规则的机械候选，全部 REVIEW 级） ----------
+
+# B9 装饰性喻体：明喻标记＋"一＋量词"引出的铺陈喻体（乐团/导师/灯塔/明月…）。
+# "一个"不报：解释性比喻的常规量词（缓存就像一个仓库）。
+_B9_SIMILE = re.compile(
+    r"(?:就像|如同|宛如|仿佛|犹如|恰似|像)[^，。；！？]{0,6}一"
+    r"[位支场座轮缕双只股颗盏片]")
+
+# C2 结尾拔高：模板化升华与乐观收尾
+_C2_GRAND = re.compile(
+    r"真正重要的是|从更大的角度看|未来可期|"
+    r"迈出了?(?:重要|关键)的一步|开启了?(?:全新|新的?)篇章|"
+    r"这不仅[^。]{0,20}更(?:是|关乎|能)")
+
+# C4 hedging 叠加：两个不确定标记之间无句读
+_C4_HEDGE = re.compile(
+    r"(?:可能|或许|也许|大概|在一定程度上|在某种程度上)[^，。；]{0,10}"
+    r"(?:可能|或许|也许|大概|在一定程度上|在某种程度上)")
+
+# C5 空降宏观开场
+_C5_MACRO = re.compile(
+    r"在(?:当今|当前)[^，。]{0,16}(?:时代|背景|环境)下?|"
+    r"随着[^，。]{0,16}不断(?:发展|演变|进步)")
+
+# C6 空泛气氛总结
+_C6_ATMOS = re.compile(
+    r"(?:声音|寂静|沉默)[^。]{0,8}(?:填满|充满|弥漫)|"
+    r"静[得有][^。]{0,6}重量|世界退回[^。]{0,4}壳")
+
+# D2 服务腔开场收尾（句首匹配）
+_D2_OPENERS = ("好问题", "问得好", "这是个好问题", "这真是个好问题",
+               "感谢提问", "感谢你的提问", "希望这", "希望对你", "希望对您",
+               "如有疑问", "如有任何问题", "欢迎随时")
+
+# D3 免责包装
+_D3_DISCLAIM = re.compile(
+    r"作为一?[个名]?语言模型|根据我的训练数据|我的知识截止|训练数据截止")
+
+# D4 万能收尾
+_D4_BALANCE = re.compile(
+    r"关键在于找到平衡|要结合实际情况|没有绝对的对错")
+
+# D5 元话语空预告（含具体动作的真步骤不在此 pattern 内，复核区分）
+_D5_META = re.compile(
+    r"下面我(?:将|会|就)[^，。]{0,16}(?:展开|介绍|说明|分析)|"
+    r"让我们(?:先|一起|来)?[^，。]{0,12}"
+    r"(?:理解|看看|回顾|进入|梳理|探讨|认识|了解|明白)")
+
+# D6 模糊归因（有可指认来源的不报，复核区分）
+_D6_ATTRIB = re.compile(
+    r"(?:有|相关|多项|大量)研究[^，。；]{0,4}(?:表明|显示|指出)|"
+    r"(?:业内|行业|专家|观察者)[^，。；]{0,4}(?:普遍)?(?:认为|指出|表示)|"
+    r"(?:不少|很多|部分)(?:用户|人)[^，。；]{0,4}(?:反馈|认为|表示)")
+
 # 各模式的报告集（见模块 docstring"模式"节）
-FIX_RULES = {"prose": ("B4", "B6", "B10", "B11"), "fiction": ("B6",)}
+FIX_RULES = {"prose": ("B4", "B6", "B10", "B11"), "fiction": ("B6",),
+             "gen": ("B4", "B6", "B10", "B11")}
 REVIEW_RULES = {
     "prose": ("B1", "B3", "B5"),
     "fiction": ("B1", "B5", "F7"),
+    "gen": ("B1", "B3", "B5", "B9", "C2", "C4", "C5", "C6",
+            "D2", "D3", "D4", "D5", "D6"),
 }
 
 
@@ -333,6 +398,73 @@ def scan(text, mode="prose"):
                     note="程度回环候选：改掉‘很久，久到’等表层句式；"
                          "保留具体结果并改为直述，没有信息增量则删后半"))
 
+        # ---- gen 层（REVIEW）：既有规则的机械候选，逐处报出 ----
+        if "B9" in review_on:
+            for m in _B9_SIMILE.finditer(masked):
+                hits.append(dict(
+                    line=idx, rule="B9", tier="REVIEW", snippet=m.group(0),
+                    note="喻体候选：喻体与本体共享具体属性、删后解释力不减即为装饰，"
+                         "删掉或直说；承载解释的保留"))
+        if "C2" in review_on:
+            for m in _C2_GRAND.finditer(masked):
+                hits.append(dict(
+                    line=idx, rule="C2", tier="REVIEW", snippet=m.group(0),
+                    note="拔高/乐观收尾候选：删后信息不减则删，"
+                         "收尾停在具体事实或下一步"))
+        if "C4" in review_on:
+            m = _C4_HEDGE.search(masked)
+            if m:
+                hits.append(dict(
+                    line=idx, rule="C4", tier="REVIEW", snippet=m.group(0),
+                    note="hedging 叠加：留一个限定词或直说不知道；"
+                         "单个‘可能’是诚实，不删"))
+        if "C5" in review_on:
+            m = _C5_MACRO.search(masked)
+            if m:
+                hits.append(dict(
+                    line=idx, rule="C5", tier="REVIEW", snippet=m.group(0),
+                    note="宏观开场候选：与论点无关的背景删掉，第一句即实质"))
+        if "C6" in review_on:
+            m = _C6_ATMOS.search(masked)
+            if m:
+                hits.append(dict(
+                    line=idx, rule="C6", tier="REVIEW", snippet=m.group(0),
+                    note="空泛气氛总结候选：没有新增感知、动作或结果就删，"
+                         "或换成下一件可感知的事"))
+        if "D2" in review_on:
+            for sent in _SENT_SPLIT.split(masked):
+                s = sent.strip().lstrip(">*#- ")
+                for w in _D2_OPENERS:
+                    if s.startswith(w):
+                        hits.append(dict(
+                            line=idx, rule="D2", tier="REVIEW", snippet=s[:20],
+                            note="服务腔开场/收尾：首句直接给结论，"
+                                 "末句停在事实、建议或边界"))
+                        break
+        if "D3" in review_on:
+            m = _D3_DISCLAIM.search(masked)
+            if m:
+                hits.append(dict(
+                    line=idx, rule="D3", tier="REVIEW", snippet=m.group(0),
+                    note="免责包装：直接答；不确定就说不确定，不用铺垫句式"))
+        if "D4" in review_on:
+            for m in _D4_BALANCE.finditer(masked):
+                hits.append(dict(
+                    line=idx, rule="D4", tier="REVIEW", snippet=m.group(0),
+                    note="万能收尾候选：问什么答什么给出倾向；"
+                         "真两难写清判断条件"))
+        if "D5" in review_on:
+            for m in _D5_META.finditer(masked):
+                hits.append(dict(
+                    line=idx, rule="D5", tier="REVIEW", snippet=m.group(0),
+                    note="元话语候选：空预告删；后接实际内容或真步骤的保留"))
+        if "D6" in review_on:
+            for m in _D6_ATTRIB.finditer(masked):
+                hits.append(dict(
+                    line=idx, rule="D6", tier="REVIEW", snippet=m.group(0),
+                    note="模糊归因候选：有来源写来源，没来源删归因直接陈述；"
+                         "不得补造来源"))
+
         # ---- B4a：提示语＋冒号 ----
         if "B4" in fix_on and not heading:
             for p in B4A_PROMPTS:
@@ -375,8 +507,9 @@ def main():
     parser = argparse.ArgumentParser(
         description="机械规则扫描器（确定命中 B4/B6/B10/B11；复核候选 B1/B3/B5/F7）")
     parser.add_argument("files", nargs="*", help="待扫描文件或目录（目录递归）；单独的 - 读 stdin")
-    parser.add_argument("--mode", choices=("prose", "fiction"), default="prose",
-                        help="prose=论述清理；fiction=fiction 清理（B6/B1/B5/F7）")
+    parser.add_argument("--mode", choices=("prose", "fiction", "gen"), default="prose",
+                        help="prose=论述清理；fiction=fiction 清理（B6/B1/B5/F7）；"
+                             "gen=生成期自查（FIX 同 prose，REVIEW 增 D/C 层候选）")
     args = parser.parse_args()
     if not args.files:
         parser.print_help(file=sys.stderr)

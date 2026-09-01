@@ -218,6 +218,67 @@ check_mode("fiction-久到回环", PLANTED_F7, "fiction", [], ["F7"])
 check_mode("fiction-句号久到回环", PLANTED_F7_PERIOD, "fiction", [], ["F7"])
 check_mode("fiction-分号久到回环", PLANTED_F7_SEMICOLON, "fiction", [], ["F7"])
 
+# ---------- gen 模式：生成期自查候选（既有规则补机械触发，全部 REVIEW 级） ----------
+PLANTED_GEN_B9 = "微服务架构就像一支交响乐团，每个服务是一件乐器，共同奏响数字化的乐章。"
+PLANTED_GEN_B9_ROLE = "它就像一位智慧的导师，不仅传授结论，更传授信任。"
+PLANTED_GEN_C2 = "尽管面临诸多挑战，团队未来可期。"
+PLANTED_GEN_C2_SUB = "这不仅是工具的升级，更关乎工作方式的变革。"
+PLANTED_GEN_C4 = "这项政策可能在一定程度上或许会影响结果。"
+PLANTED_GEN_C5 = "在当今快速发展的时代下，AI 正在改变一切。"
+PLANTED_GEN_C6 = "欢呼声过后，声音填满了整个空间。"
+PLANTED_GEN_D2 = "好问题！\n\n希望这能帮到你。"
+PLANTED_GEN_D3 = "作为一个语言模型，我无法预测股价。"
+PLANTED_GEN_D4 = "关键在于找到平衡，要结合实际情况。"
+PLANTED_GEN_D5 = "让我们先来理解背景。"
+PLANTED_GEN_D6 = "有研究表明，这种方法可以提高效率。"
+
+check_mode("gen-B9-乐团", PLANTED_GEN_B9, "gen", [], ["B9"])
+check_mode("gen-B9-拟人", PLANTED_GEN_B9_ROLE, "gen", [], ["B9"])
+check_mode("gen-C2-未来可期", PLANTED_GEN_C2, "gen", [], ["C2"])
+check_mode("gen-C2-不仅是更", PLANTED_GEN_C2_SUB, "gen", [], ["C2"])
+check_mode("gen-C4-叠加", PLANTED_GEN_C4, "gen", [], ["C4"])
+check_mode("gen-C5-宏观", PLANTED_GEN_C5, "gen", [], ["C5"])
+check_mode("gen-C6-气氛", PLANTED_GEN_C6, "gen", [], ["C6"])
+check_mode("gen-D2-服务腔", PLANTED_GEN_D2, "gen", [], ["D2"])
+check_mode("gen-D3-免责", PLANTED_GEN_D3, "gen", [], ["D3"])
+check_mode("gen-D4-万能收尾", PLANTED_GEN_D4, "gen", [], ["D4"])
+check_mode("gen-D5-空预告", PLANTED_GEN_D5, "gen", [], ["D5"])
+check_mode("gen-D6-模糊归因", PLANTED_GEN_D6, "gen", [], ["D6"])
+
+# 人写组：gen 模式 FIX 必须零命中；REVIEW 命中须为"复核后保留"型
+GEN_HUMAN_METAPHOR = "缓存就像一个仓库，把常用数据放在离 CPU 更近的位置，读得快，写回慢。"
+GEN_HUMAN_SOURCE = "2025 年 3 月接口升级后，旧版客户端无法继续登录。"
+GEN_HUMAN_HEDGE = "这项政策可能影响结果。"
+GEN_HUMAN_LETUS = "让我们看看结果：42% 的请求在 50ms 内返回。"
+GEN_INDUSTRY_WORDS = "这套方案可以赋能开发团队，形成业务闭环，沉淀底层逻辑。"
+
+check_mode("gen-人写-解释性比喻", GEN_HUMAN_METAPHOR, "gen", [], [])
+check_mode("gen-人写-带来源数字", GEN_HUMAN_SOURCE, "gen", [], [])
+check_mode("gen-人写-单个限定词", GEN_HUMAN_HEDGE, "gen", [], [])
+check_mode("gen-人写-让我们看结果", GEN_HUMAN_LETUS, "gen", [], ["D5"])
+check_mode("gen-N11-行业大词", GEN_INDUSTRY_WORDS, "gen", [], [])
+check_mode("gen-人写-A1", A1, "gen", [], [])
+check_mode("gen-AI-1", AI_1, "gen", ["B10"], ["B1", "B9", "D5"])
+
+# 回归：方案文档中的 9 句 AI 腔文本，gen 模式须 ≥7 处命中，且"赋能"不得被当作问题
+GEN_REGRESSION = (
+    "在当今快速发展的时代下，AI 正在改变一切。\n\n"
+    "值得注意的是，配置管理往往被忽视。这套方案可以赋能开发团队。"
+    "它就像一位智慧的导师，不仅传授结论，更传授看待世界的多元视角。"
+    "这不是一次简单的升级，而是一次跨越。\n\n"
+    "首先，我们需要理解背景。其次，让我们深入探讨。真正重要的是，"
+    "我们理解了工具的边界。尽管面临诸多挑战，团队未来可期。"
+)
+check_mode("gen-回归文本", GEN_REGRESSION, "gen", [],
+           ["B1", "B3", "B9", "C2", "C5", "D5"])
+_reg_hits = scan(GEN_REGRESSION, mode="gen")
+if len(_reg_hits) < 7:
+    failures.append(f"gen 回归：预期 ≥7 处命中，实际 {len(_reg_hits)} 处\n"
+                    + "\n".join(f"  {h['rule']} {h['tier']} {h['snippet']}"
+                                for h in _reg_hits))
+if any("赋能" in h["note"] for h in _reg_hits):
+    failures.append("gen 回归：赋能被当作问题写入命中说明（违反 N11 立场）")
+
 # ---------- CLI：stdin 模式与 --mode 透传 ----------
 _SCRIPT = Path(__file__).resolve().parent / "scan-mechanical.py"
 
@@ -235,6 +296,9 @@ if _r.returncode != 1 or "B11" not in _r.stdout:
 _r = _cli("--mode", "fiction", "-", stdin=PLANTED_B11)
 if _r.returncode != 0:
     failures.append(f"CLI stdin fiction: 预期 exit 0（B11 不带入），实际 exit {_r.returncode}")
+_r = _cli("--mode", "gen", "-", stdin=PLANTED_GEN_D6)
+if _r.returncode != 1 or "D6" not in _r.stdout:
+    failures.append(f"CLI stdin gen: 预期 exit 1 且报 D6，实际 exit {_r.returncode}\n{_r.stdout}{_r.stderr}")
 _r = _cli("--mode", "bogus", "-", stdin=PLANTED_B11)
 if _r.returncode != 2:
     failures.append(f"CLI 非法 mode: 预期 exit 2，实际 exit {_r.returncode}")
