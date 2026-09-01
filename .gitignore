@@ -25,6 +25,7 @@ $RECYCLE.BIN/
 # Project-specific
 PROJECT-STRUCTURE.md
 corpus/
+evals/runs/
 
 # Python
 __pycache__/

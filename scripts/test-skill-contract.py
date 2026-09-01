@@ -46,18 +46,35 @@ FORBIDDEN_DIRECTIONS = (
     "把台词与旁白的冲突一律视为连续性错误",
 )
 REQUIRED = {
-    "SKILL.md": ("C6", "F6", "F7", "F8", "F8（含台词）", "D6", "装饰性喻体", "不得补造机构名", "留白", "语义", "只输出正文", "硬事实", "指定动作或检查项", "范围不明时先问", "“给3步/3条”=恰好3", "N9 只保护具体且有共享属性", "fiction 正文中的角色台词不算资料引文", "始终改掉“很久，久到……”这一表层句式", "延后揭示本身不构成豁免", "原因暂未揭示本身不是语义缺失", "角色可以撒谎、误判或不可靠", "F1–F8 只能删除、重排或改写原文已有信息"),
+    "SKILL.md": ("C6", "F6", "F7", "F8", "F8（含台词）", "D6", "装饰性喻体", "不得补造机构名", "留白", "语义", "只输出正文", "硬事实", "指定动作或检查项", "范围不明时先问", "“给3步/3条”=恰好3", "N9 只保护具体且有共享属性", "fiction 正文中的角色台词不算资料引文", "始终改掉“很久，久到……”这一表层句式", "延后揭示本身不构成豁免", "原因暂未揭示本身不是语义缺失", "角色可以撒谎、误判或不可靠", "F1–F8 只能删除、重排或改写原文已有信息", "空降宏观开场", "否定与排除面", "完整成句"),
     "references/fiction.md": ("F6", "F7", "F8", "F8（含台词）", "很久", "久到", "只输出清理后的正文", "指定动作或检查项", "N9 只保护具体且有共享属性", "角色台词不算资料引文", "始终改掉“很久，久到……”这一表层句式", "延后揭示本身不构成豁免", "原因暂未揭示本身不是语义缺失", "角色可以撒谎、误判或不可靠", "F1–F8 只能删除、重排或改写原文已有信息"),
     "references/rules-dialogue.md": ("C6", "D6", "模糊归因", "声音填满空间", "“给3步/3条”=恰好3"),
-    "references/rules-text.md": ("装饰性喻体", "承载解释的比喻", "换算类衍生数字"),
+    "references/rules-text.md": ("装饰性喻体", "承载机制或权衡解释的比喻", "换算类衍生数字", "空降宏观开场", "完整成句"),
     "templates/system-prompt-fiction.txt": ("F6", "F7", "F8", "在台词中只检查句法、指代和已经确立的连续性", "很久", "久到", "只输出清理后的正文", "硬事实", "输出前搜索叙述中的“—”（单个字符也会命中“——”）", "指定动作或检查项", "N9 只保护具体且有共享属性", "fiction 正文中的角色台词不算资料引文", "始终改掉“很久，久到……”这一表层句式", "延后揭示本身不构成豁免", "原因暂未揭示本身不是语义缺失", "角色可以撒谎、误判或不可靠", "F1–F8 只能删除、重排或改写原文已有信息"),
     "templates/system-prompt-standard.txt": ("C6", "D6", "声音填满空间", "“给3步/3条”=恰好3", "只含改写后的全文", "明确作为资料引用的引文", "不得补造来源", "延后揭示本身不构成豁免"),
     "templates/system-prompt-lite.txt": ("C6", "D6", "B5", "“给3步/3条”=恰好3", "定向加入 B5 与 C6", "明确作为资料引用的引文", "延后揭示本身不构成豁免"),
 }
 
 
+def check_frontmatter(path: Path, failures: list) -> None:
+    lines = path.read_text(encoding="utf-8").splitlines()
+    if not lines or lines[0] != "---":
+        failures.append(f"{path.name}: frontmatter 缺起始 --- 分隔符")
+        return
+    try:
+        close = lines.index("---", 1)
+    except ValueError:
+        failures.append(f"{path.name}: frontmatter 缺闭合 --- 分隔符")
+        return
+    block = "\n".join(lines[1:close])
+    for field in ("name:", "description:"):
+        if field not in block:
+            failures.append(f"{path.name}: frontmatter 缺 {field} 字段")
+
+
 def main():
     failures = []
+    check_frontmatter(ROOT / "SKILL.md", failures)
     for path in MODEL_FILES:
         text = path.read_text(encoding="utf-8")
         for phrase in FORBIDDEN_DIRECTIONS:

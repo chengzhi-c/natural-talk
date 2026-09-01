@@ -6,7 +6,7 @@
 - AI 腔组 AI-1：必须命中 B10(FIX)＋B1(REVIEW)——测不出即脚本失效。
   AI-1 为单段文本，B3 按规则定义（非首段）不触发。
 - AI 腔组 AI-2：病灶是 B2（非机械规则），必须 0 命中——误命中即误伤。
-- 种植病灶组：B1/B3/B4/B5/B6/B11/F7 各一处，缺一即脚本漏检。
+- 种植病灶组：B1/B3/B4/B5/B6/B11/B12/F7 各一处，缺一即脚本漏检。
 - 边界组：引用与行内引文豁免、行内代码、表格、B4 触发词、BOM、GBK、B3 分段。
 
 运行：python scripts/test-scan-mechanical.py
@@ -41,6 +41,8 @@ PLANTED_B4A = "一句话总结：这个方案成本太高。"
 PLANTED_B4B = "我见过的几种典型场景：\n\n- 场景一\n- 场景二"
 PLANTED_B6 = "## 一、先找出模糊在哪里\n\n正文。\n\n## 二、把需求写成模块\n\n正文。\n\n## 三、合成第一版 prompt"
 PLANTED_B11 = "系统负责采集、存储、展示。"
+PLANTED_B12 = "在当今快速发展的时代，效率成为核心竞争力。"
+PLANTED_B12_BACKGROUND = "随着供应商切换完成，本月起账单走新渠道。"
 PLANTED_B1 = "真正的瓶颈不是技术，而是耐心。"
 PLANTED_B3 = "第一段说完了。\n\n值得注意的是，配置管理往往被忽视。"
 PLANTED_B5 = "答案已经很清楚——继续等。"
@@ -110,7 +112,9 @@ check("种植-B4b", PLANTED_B4B, ["B4"])
 check("种植-B5", PLANTED_B5, [], ["B5"], {"B5": 1})
 check("种植-B5-单破折号", PLANTED_B5_SINGLE, [], ["B5"], {"B5": 1})
 check("种植-B6", PLANTED_B6, ["B6"], [], {"B6": 3})
-check("种植-B11", PLANTED_B11, ["B11"], [], {"B11": 1})
+check("种植-B11", PLANTED_B11, [], ["B11"], {"B11": 1})
+check("种植-B12", PLANTED_B12, [], ["B12"], {"B12": 1})
+check("种植-B12-带背景", PLANTED_B12_BACKGROUND, [])  # 随着句带具体事件，零命中
 
 _b3_hits = scan(PLANTED_B3)
 if any("加一个" in h["note"] for h in _b3_hits if h["rule"] == "B3"):
@@ -212,7 +216,7 @@ def check_mode(name, text, mode, expect_fix, expect_review=()):
 
 
 check_mode("fixture-fiction", FICTION_FIXTURE, "fiction", ["B6"], ["B1"])
-check_mode("fixture-prose", FICTION_FIXTURE, "prose", ["B6", "B11"], ["B1"])
+check_mode("fixture-prose", FICTION_FIXTURE, "prose", ["B6"], ["B1", "B11"])
 check_mode("fiction-叙述破折号", PLANTED_B5, "fiction", [], ["B5"])
 check_mode("fiction-久到回环", PLANTED_F7, "fiction", [], ["F7"])
 check_mode("fiction-句号久到回环", PLANTED_F7_PERIOD, "fiction", [], ["F7"])

@@ -10,8 +10,10 @@ B11 是否法规条目）仍由模型或人完成。依据 SKILL.md 执行要求
   B4  冒号滥用：提示语引出（一句话总结：/核心是：……）＋空转句引列表
   B6  序数词通篇编号小标题（连续 ≥3 个才报）
   B10 起手式：说白了 / 说穿了 / 先说结论（句首位置）
-  B11 顿号罗列过密：一个分句内 ≥2 个顿号串 ≥3 项并列
+  B12 空降宏观开场：在当今 / 众所周知（句首位置；是否含具体背景信息语义判断）
   REVIEW 级（只报候选，必须复核语境）：
+  B11 顿号罗列过密：一个分句内 ≥2 个顿号串 ≥3 项并列（法规条目、配置项、
+      技术操作枚举须保留，语义判断在模型——降级 REVIEW 防误授权）
   B1  翻案腔：句中含"而是/其实/恰恰"——被否定的观点是否存在须读上下文
   B3  段首零回指评论：非首段以评论语开头且整句无"这/那/其/此/上面"
   B5  叙述中的破折号：逐处核对是否只是解释、列举、因果或同位补充
@@ -52,6 +54,8 @@ from pathlib import Path
 
 # B10：句首起手式
 B10_WORDS = ("说白了", "说穿了", "先说结论")
+# B12：句首空降宏观开场（"随着"类不进机械层，误伤具体事件句）
+B12_WORDS = ("在当今", "众所周知")
 
 # B4a：提示语＋冒号（每个词必须出现在 references/rules-text.md 的 B4 触发行，见自测断言）
 B4A_PROMPTS = ("一句话总结", "核心是", "关键在于", "原因如下", "本质上")
@@ -153,13 +157,13 @@ _D6_ATTRIB = re.compile(
     r"(?:业内|行业|专家|观察者)[^，。；]{0,4}(?:普遍)?(?:认为|指出|表示)|"
     r"(?:不少|很多|部分)(?:用户|人)[^，。；]{0,4}(?:反馈|认为|表示)")
 
-# 各模式的报告集（见模块 docstring"模式"节）
-FIX_RULES = {"prose": ("B4", "B6", "B10", "B11"), "fiction": ("B6",),
-             "gen": ("B4", "B6", "B10", "B11")}
+# 各模式的报告集（见模块 docstring"模式"节；B11 需语义判断，prose/gen 均 REVIEW）
+FIX_RULES = {"prose": ("B4", "B6", "B10"), "fiction": ("B6",),
+             "gen": ("B4", "B6", "B10")}
 REVIEW_RULES = {
-    "prose": ("B1", "B3", "B5"),
+    "prose": ("B1", "B3", "B5", "B11", "B12"),
     "fiction": ("B1", "B5", "F7"),
-    "gen": ("B1", "B3", "B5", "B9", "C2", "C4", "C5", "C6",
+    "gen": ("B1", "B3", "B5", "B9", "B11", "C2", "C4", "C5", "C6",
             "D2", "D3", "D4", "D5", "D6"),
 }
 
@@ -371,6 +375,16 @@ def scan(text, mode="prose"):
                                          note="句首起手式，删后直接给判断"))
                         break
 
+        # ---- B12（REVIEW）：句首空降宏观开场 ----
+        if "B12" in review_on and not heading:
+            for sent in _SENT_SPLIT.split(masked):
+                s = sent.strip().lstrip(">*#- ")
+                for w in B12_WORDS:
+                    if s.startswith(w):
+                        hits.append(dict(line=idx, rule="B12", tier="REVIEW", snippet=w,
+                                         note="句首宏观开场候选：核对句内是否含具体背景信息"))
+                        break
+
         # ---- B1（REVIEW）：翻案腔候选 ----
         if "B1" in review_on and not heading:
             for sent in _SENT_SPLIT.split(masked):
@@ -485,13 +499,14 @@ def scan(text, mode="prose"):
                                      note="空转句引列表：删后信息不减则改写或删除"))
                 break
 
-        # ---- B11：分句内 ≥2 顿号（Markdown 列表内部豁免） ----
-        if "B11" in fix_on and not is_list_line and not heading:
+        # ---- B11：分句内 ≥2 顿号（REVIEW：语义判断在模型；列表内部豁免） ----
+        if "B11" in review_on and not is_list_line and not heading:
             for clause in _CLAUSE_SPLIT.split(masked):
                 if clause.count("、") >= 2:
-                    hits.append(dict(line=idx, rule="B11", tier="FIX",
+                    hits.append(dict(line=idx, rule="B11", tier="REVIEW",
                                      snippet=clause.strip(),
-                                     note="分句内 ≥2 顿号串 ≥3 项：能概括就概括"))
+                                     note="分句内 ≥2 顿号串 ≥3 项：能概括就概括，"
+                                          "法规条目/配置项/操作枚举保留"))
                     break
 
     # 同点双报抑制：B4/B10 的改法是删掉段首提示语/起手式，删后 B3 的触发
@@ -505,7 +520,7 @@ def scan(text, mode="prose"):
 
 def main():
     parser = argparse.ArgumentParser(
-        description="机械规则扫描器（确定命中 B4/B6/B10/B11；复核候选 B1/B3/B5/F7）")
+        description="机械规则扫描器（确定命中 B4/B6/B10；复核候选 B1/B3/B5/B11/F7）")
     parser.add_argument("files", nargs="*", help="待扫描文件或目录（目录递归）；单独的 - 读 stdin")
     parser.add_argument("--mode", choices=("prose", "fiction", "gen"), default="prose",
                         help="prose=论述清理；fiction=fiction 清理（B6/B1/B5/F7）；"
