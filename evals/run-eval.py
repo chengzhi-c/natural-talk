@@ -65,9 +65,12 @@ def resolve_credentials(args):
 
 
 def build_messages(entry, case_text):
-    system = (ROOT / "templates" /
-              ("system-prompt-fiction.txt" if entry.get("system") == "fiction"
-               else "system-prompt-standard.txt")).read_text(encoding="utf-8")
+    skill_main = (ROOT / "SKILL.md").read_text(encoding="utf-8")
+    if entry.get("system") == "fiction":
+        fiction_ref = (ROOT / "references" / "fiction.md").read_text(encoding="utf-8")
+        system = skill_main + "\n\n" + fiction_ref
+    else:
+        system = skill_main
     if entry["prompt_type"] == "retell":
         user = RETELL_INSTRUCTION + "\n\n" + case_text
     else:

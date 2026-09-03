@@ -14,8 +14,8 @@
 
 ## 注入类型
 
-- `clean`：system=standard（fiction 样例用 fiction 模板），user=“请清理这段文字，只输出正文：<样例>”——走清理流程，D/C 层豁免是规则本身的行为，正属被测对象
-- `retell`：system=standard，user=“用自然的话复述以下材料：<样例>”——走生成流程，D 层生效（SF-07 用此路径验证 D6 尾部 clause）
+- `clean`：注入主规则 `SKILL.md`（fiction 样例附加 `references/fiction.md`），user=“请清理这段文字，只输出正文：<样例>”——走清理流程，D/C 层豁免是规则本身的行为，正属被测对象
+- `retell`：注入主规则 `SKILL.md`，user=“用自然的话复述以下材料：<样例>”——走生成流程，D 层生效（SF-07 用此路径验证 D6 尾部 clause）
 
 ## 三层判分
 
@@ -52,7 +52,7 @@ Windows 上 `Path.write_text` 会把 LF 翻译成 CRLF，导致含校验和的
 ## 密钥纪律
 
 - 凭据从 `--credentials` 文件（用户自管路径）或 `NT_BASE`/`NT_KEY` 环境变量运行时读取
-- 任何输出文件不落密钥、不落 prompt 全文（只记 prompt SHA256 与模板 SHA256，足够复现）
+- 任何输出文件不落密钥、不落 prompt 全文（只记 prompt SHA256 与规则 SHA256，足够复现）
 - 测试产物目录 `runs/` 已在 .gitignore 排除，不入 git
 
 ## 席位与降级策略

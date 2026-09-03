@@ -57,7 +57,7 @@ B10_WORDS = ("说白了", "说穿了", "先说结论")
 # B12：句首空降宏观开场（"随着"类不进机械层，误伤具体事件句）
 B12_WORDS = ("在当今", "众所周知")
 
-# B4a：提示语＋冒号（每个词必须出现在 references/rules-text.md 的 B4 触发行，见自测断言）
+# B4a：提示语＋冒号（见 SKILL.md 与 references/dialogue.md 的 B4）
 B4A_PROMPTS = ("一句话总结", "核心是", "关键在于", "原因如下", "本质上")
 
 # B1（REVIEW 级）：翻案腔候选词
@@ -510,7 +510,7 @@ def scan(text, mode="prose"):
                     break
 
     # 同点双报抑制：B4/B10 的改法是删掉段首提示语/起手式，删后 B3 的触发
-    # 对象不复存在，同线命中时 B3 不报（优先级见 references/rules-text.md B3）
+    # 对象不复存在，同线命中时 B3 不报（优先级见 SKILL.md B3）
     if "B3" in review_on:
         drop = {h["line"] for h in hits if h["rule"] in ("B4", "B10")}
         hits = [h for h in hits if not (h["rule"] == "B3" and h["line"] in drop)]

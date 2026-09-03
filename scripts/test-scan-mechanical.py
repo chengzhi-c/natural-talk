@@ -339,7 +339,7 @@ with tempfile.TemporaryDirectory() as _td:
 
 # ---------- 同点双报抑制（删除优先于加回指） ----------
 # B4/B10 的改法是删掉段首提示语/起手式，删后 B3 的触发对象不复存在，
-# 同线双中时 B3 不得再报（规则优先级见 references/rules-text.md B3）。
+# 同线双中时 B3 不得再报（规则优先级见 SKILL.md B3）。
 OVERLAP_B4 = "第一段铺垫，没有任何问题。\n\n关键在于：预算不够。\n"
 OVERLAP_B10 = "第一段铺垫，没有任何问题。\n\n说白了，预算不够。\n"
 check("双报-B4", OVERLAP_B4, ["B4"], [])
