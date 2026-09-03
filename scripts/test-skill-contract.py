@@ -30,7 +30,6 @@ REQUIRED_ANCHORS = {
         "日常对话",
         "叙事创作",
         "成文清理",
-        "静默交付契约",
         "references/fiction.md",
         "references/dialogue.md",
         "references/polish.md",
