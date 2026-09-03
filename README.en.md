@@ -8,7 +8,7 @@ English | [中文](README.md)
 
 Make AI speak and write like a real person: genuine, direct, immersive, and free of synthetic tropes.
 
-> **Editions**: The default branch is the lightweight edition; for the strict edition, see [`natural-talk-strict`](https://github.com/chengzhi-c/natural-talk/tree/strict).
+> **Editions**: For the strict edition, see [`natural-talk-strict`](https://github.com/chengzhi-c/natural-talk/tree/strict).
 
 ---
 
