@@ -12,11 +12,11 @@ Make AI speak and write like a real person: genuine, direct, immersive, and free
 
 ## Core Design
 
-- **Rule Zero**: Fact & setting conservation, dialogue complete exemption, style freedom (eliminates synthetic AI tropes only).
-- **Three Mental Models**:
-  - **Conversational**: Direct answers, zero corporate platitudes, honest boundaries.
-  - **Fiction & Narrative**: Camera-eye viewpoint (Show, don't tell), characters living in scene, no authorial moralizing.
-  - **Text Polishing**: Non-destructive micro-tuning, preserving original facts, length, and authentic voice.
+- **Rule Zero: Interaction Stance**: Converse as an experienced peer: direct answers, zero corporate platitudes, disclaimer wrappers, or performative praise.
+- **Three Scenario Routes**:
+  - **Conversational**: Conclusion first, natural paragraph development, total ban on antithetical lecturing (only affirmative statements), strict quantity compliance.
+  - **Fiction & Narrative**: Camera-eye viewpoint (limited POV, Show, don't tell), no authorial mind-reading or moralizing, physical resistance, anti-cliché repetitive phrasing.
+  - **Text Polishing**: Non-destructive micro-tuning, strictly preserving length (80%~100%) and facts, authentic human voice.
 
 ---
 
@@ -28,28 +28,26 @@ Make AI speak and write like a real person: genuine, direct, immersive, and free
 # Option 1: One-line install via npx skills
 npx skills add chengzhi-c/natural-talk
 
-# Option 2: Clone into Claude Code / Cursor / Codex skills directory
+# Option 2: Clone into Claude Code / Cursor / Codex / Antigravity skills directory
 git clone https://github.com/chengzhi-c/natural-talk.git ~/.claude/skills/natural-talk
 ```
 
-### 2. System Prompt Injection
+### 2. System Prompt or Agent Tool Usage
 
-Pick a template from `templates/` matching your scenario:
-
-| Scenario | Template File | Description |
-| :--- | :--- | :--- |
-| **Everyday Chat & General** | [`templates/system-prompt-standard.txt`](templates/system-prompt-standard.txt) | Eliminates customer-service platitudes |
-| **Fiction & Storytelling** | [`templates/system-prompt-fiction.txt`](templates/system-prompt-fiction.txt) | Viewpoint immersion, subtext in dialogue |
-| **Token-Sensitive / Lite** | [`templates/system-prompt-lite.txt`](templates/system-prompt-lite.txt) | Concentrated high-yield core rules |
-
-`templates/preset-*.txt` provide presets for customer support, tech blogging, and social media.
+Read `SKILL.md` directly as the primary prompt and attach scenario guides from `references/` on demand:
 
 **API Example**:
 ```python
+from pathlib import Path
 from openai import OpenAI
 
 client = OpenAI()
-system_prompt = open('templates/system-prompt-fiction.txt', encoding='utf-8').read()
+root = Path("path/to/natural-talk")
+
+# Load primary rules, append scenario references as needed
+system_prompt = (root / "SKILL.md").read_text(encoding="utf-8")
+# For fiction storytelling:
+# system_prompt += "\n\n" + (root / "references" / "fiction.md").read_text(encoding="utf-8")
 
 response = client.chat.completions.create(
     model="your-model-name",
@@ -71,17 +69,12 @@ Import `natural-talk.zip` from [Releases](https://github.com/chengzhi-c/natural-
 
 ```
 natural-talk/
-├── SKILL.md                         # Single source of truth (Conversational / Fiction / Polishing)
-├── references/                      # Detailed guidance and case library (on-demand reading)
-│   ├── polish.md                    # Text cleanup & polishing reference
+├── SKILL.md                         # Primary specification & conversational core (Agent entry point)
+├── references/                      # Vertical scenario reference guides (on-demand reading)
 │   ├── dialogue.md                  # Dialogue & character voice guidelines
-│   └── fiction.md                   # Fiction writing reference
-├── templates/                       # Injection prompt templates
-│   ├── system-prompt-standard.txt   # Everyday chat template
-│   ├── system-prompt-fiction.txt    # Fiction template
-│   ├── system-prompt-lite.txt       # Minimalist compact template
-│   └── preset-*.txt                 # Scenario presets
-├── scripts/                         # Maintenance, linter, and verification scripts
+│   ├── fiction.md                   # Fiction narrative & literary tension reference
+│   └── polish.md                    # Text cleanup & fidelity polishing reference
+├── scripts/                         # Automated contract & repository verification suite (verify_repo.py)
 ├── evals/                           # Evaluation benchmark and cases
 └── assets/                          # Static assets
 ```
