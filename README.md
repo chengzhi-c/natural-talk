@@ -36,8 +36,6 @@
 | :---: | :---: |
 | <img src="assets/detection-before.png" width="480" alt="优化前"> | <img src="assets/detection-after.png" width="480" alt="优化后"> |
 
-右边是注入提示词的效果。
-
 <details>
 <summary><b>查看生成原文详情（点击展开）</b></summary>
 
