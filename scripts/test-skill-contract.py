@@ -18,7 +18,6 @@ ROOT = Path(os.environ.get("NATURAL_TALK_ROOT", Path(__file__).resolve().parent.
 MODEL_FILES = [
     ROOT / "SKILL.md",
     *sorted((ROOT / "references").glob("*.md")),
-    *sorted((ROOT / "templates").glob("*.txt")),
 ]
 
 REQUIRED_ANCHORS = {
@@ -56,26 +55,6 @@ REQUIRED_ANCHORS = {
         "篇幅保护",
         "80%~100%",
         "静默成文交付",
-    ),
-    "templates/system-prompt-fiction.txt": (
-        "事实与设定守恒",
-        "台词人设主权",
-        "摄影机视点在场",
-        "比喻极度克制",
-        "反塑料套路红线",
-    ),
-    "templates/system-prompt-standard.txt": (
-        "事实与设定守恒",
-        "台词人设主权",
-        "第一句直奔主题",
-        "拒绝发奖状",
-        "去翻案套话",
-    ),
-    "templates/system-prompt-lite.txt": (
-        "首句直入主题",
-        "拒绝发奖状",
-        "静默交付",
-        "反塑料红线",
     ),
 }
 

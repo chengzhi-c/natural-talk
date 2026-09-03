@@ -59,17 +59,11 @@ def test_contract():
         if not p.exists() or p.stat().st_size == 0:
             failures.append(f"缺少参考指南或文件为空: references/{ref_name}")
             
-    # 3. Check templates
-    for t_name in ["system-prompt-fiction.txt", "system-prompt-standard.txt", "system-prompt-lite.txt"]:
-        p = ROOT / "templates" / t_name
-        if not p.exists() or p.stat().st_size == 0:
-            failures.append(f"缺少系统模板: templates/{t_name}")
-
     if failures:
         for f in failures:
             print(f"  ❌ 失败: {f}")
         return False
-    print("  🟢 PASS: SKILL.md、参考文件与模板结构契约 100% 完整有效！")
+    print("  🟢 PASS: SKILL.md 与参考文件结构契约 100% 完整有效！")
     return True
 
 def test_regression():
@@ -144,7 +138,6 @@ def test_zip_package():
     }
     allowed_dirs = (
         "natural-talk/references/",
-        "natural-talk/templates/",
     )
     
     forbidden_hits = []
