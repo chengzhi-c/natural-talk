@@ -2,7 +2,7 @@
 """verify_repo.py - natural-talk 仓库一键全量自动化体检与契约测试工具 (纯标准库)
 
 运行本脚本将执行四层严苛自检：
-  1. 结构与契约体检 (SKILL.md frontmatter、导航死链、references与templates完备性)
+  1. 结构与契约体检 (SKILL.md frontmatter、导航死链、references完备性)
   2. 离线回归与反套路测试 (22个不变性用例 0 误杀 + 57个AI塑料套路 100% 捕获)
   3. 隐私与安全审查 (全仓库扫描 API Key、敏感端点与过程草稿)
   4. 压缩分发包一致性 (校验 natural-talk.zip 是否纯净、无冗余开发文件)
@@ -67,6 +67,7 @@ def test_contract():
     return True
 
 def test_regression():
+    print("\n[2/4] 正在执行：离线回归与反套路测试...")
     from importlib.machinery import SourceFileLoader
     test_rules = SourceFileLoader("test_rules_local", str(SCRIPTS_DIR / "test-rules-local.py")).load_module()
     INVARIANT_SAMPLES, AI_SLOP_SAMPLES = test_rules.INVARIANT_SAMPLES, test_rules.AI_SLOP_SAMPLES

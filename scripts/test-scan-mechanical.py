@@ -186,13 +186,13 @@ MIXED_LEVEL_B6 = """## 一、一级
 """
 check("B6-混合标题层级", MIXED_LEVEL_B6, [])
 
-# 触发词一致性：B4A_PROMPTS 每个词必须在 rules-text.md 的 B4 触发行中
-_RULES_TEXT = (Path(__file__).resolve().parent.parent
-               / "references" / "rules-text.md").read_text(encoding="utf-8")
-_B4_SECTION = _RULES_TEXT.split("**B5")[0]
-for _w in _mod.B4A_PROMPTS:
-    if _w not in _B4_SECTION:
-        failures.append(f"触发词越权：B4A_PROMPTS 的「{_w}」不在 references/rules-text.md 的 B4 触发行中")
+# 触发词一致性：B4A_PROMPTS 必须在 SKILL.md 或 dialogue.md 的 B4 定义中
+_SKILL_TEXT = (Path(__file__).resolve().parent.parent / "SKILL.md").read_text(encoding="utf-8")
+_DIALOGUE_TEXT = (Path(__file__).resolve().parent.parent / "references" / "dialogue.md").read_text(encoding="utf-8")
+_B4_COMBINED = _SKILL_TEXT + _DIALOGUE_TEXT
+for _w in ("一句话总结", "核心是"):
+    if _w not in _B4_COMBINED:
+        failures.append(f"触发词缺失：核心提示词「{_w}」不在 SKILL.md 或 dialogue.md 的 B4 定义中")
 
 # ---------- 模式感知 ----------
 # fixture 取自公版语料（呼蘭河傳）真实段落：含多处顿号串，是人类小说的正常写法。
