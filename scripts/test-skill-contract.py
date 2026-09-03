@@ -27,9 +27,9 @@ REQUIRED_ANCHORS = {
         "description:",
         "零号原则",
         "交互姿态",
+        "日常对话",
         "叙事创作",
         "成文清理",
-        "全局通杀红线",
         "静默交付契约",
         "references/fiction.md",
         "references/dialogue.md",
@@ -42,6 +42,7 @@ REQUIRED_ANCHORS = {
         "比喻极度克制",
         "小动作代偿",
         "台词人设主权",
+        "全局通杀红线",
     ),
     "references/dialogue.md": (
         "第一句直奔核心",
