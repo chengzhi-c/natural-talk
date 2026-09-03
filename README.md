@@ -20,16 +20,16 @@
 
 ---
 
-## 效果实测对比
+## 效果对比
 
 > **测试模型**：`deepseek-v4-flash-0731`  
-> **统一输入 Prompt**：`豆包豆包，我要看女生谈恋爱，500字左右。`  
-> **检测工具**：腾讯朱雀 AI 文本检测助手
+> **统一提示词**：`豆包豆包，我要看女生谈恋爱，500字左右。`
 
-| 默认生成（未加 Skill · **AI 特征 100%**） | 遵循 Natural Talk（注入 Skill · **人工特征 100%**） |
+| 默认生成 | 注入提示词后 |
 | :---: | :---: |
-| <img src="assets/detection-before.png" width="480" alt="未加 Skill - AI 特征 100%"> | <img src="assets/detection-after.png" width="480" alt="遵循 Natural Talk - 人工特征 100%"> |
-| **典型 AI 腔**：套路比喻（“像只狼狈的小猫”）、空泛排比、全知读心 | **自然人味**：视点在场、客观感官与动作推进、实体细节闭环 |
+| <img src="assets/detection-before.png" width="480" alt="默认生成"> | <img src="assets/detection-after.png" width="480" alt="注入提示词后"> |
+
+右边是注入提示词的效果。
 
 ---
 
