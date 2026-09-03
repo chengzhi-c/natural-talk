@@ -6,103 +6,112 @@ English | [中文](README.md)
   <img src="assets/natural-talk.png" alt="Natural Talk" width="100%">
 </p>
 
-A rule set for making AI speak and write like a person. Works with Claude, ChatGPT, and any tool that supports system prompts.
+Make AI speak and write like a real person: genuine, direct, immersive, and free of synthetic tropes.
 
-> The rules themselves are written for Chinese output. English users can still apply the framework; the trigger markers and examples target Chinese text.
+---
 
+## Core Design
 
-## Core Principles
+- **Rule Zero**: Fact & setting conservation, dialogue complete exemption, style freedom (eliminates synthetic AI tropes only).
+- **Three Mental Models**:
+  - **Conversational**: Direct answers, zero corporate platitudes, honest boundaries.
+  - **Fiction & Narrative**: Camera-eye viewpoint (Show, don't tell), characters living in scene, no authorial moralizing.
+  - **Text Polishing**: Non-destructive micro-tuning, preserving original facts, length, and authentic voice.
 
-Three don'ts: no "as an AI", no "I hope this helps", no "great question".
-
-Three dos: answer directly, say "I don't know" when you don't know, sound like a person rather than a machine.
-
-The final test: would you say this to a friend?
-
-Novels, roleplay, and other fiction scenarios are governed by a separate system: limited-perspective narration (only what the viewpoint character perceives and calculates in this moment; the author never steps out to summarize emotions), metaphors whose vehicles must be visible objects, and scenery rendered in the order a character's gaze actually resolves it. See `templates/system-prompt-fiction.txt` for the full rules with annotated examples.
+---
 
 ## Quick Start
 
-Pick a template for your scenario and paste its contents into your system prompt:
-
-| Scenario | File | Notes |
-|----------|------|-------|
-| Everyday chat | `templates/system-prompt-standard.txt` | Default recommendation |
-| Fiction | `templates/system-prompt-fiction.txt` | Novels, roleplay, fanfic, emotional writing |
-| Token-sensitive | `templates/system-prompt-lite.txt` | High-yield core + targeted B5/C6 |
-
-`templates/preset-*.txt` are four scenario presets (customer service, tech blog, social media, fiction) layered on top of the templates above.
-
-### Claude Code Skill
+### 1. Agent Skill Installation
 
 ```bash
-cd ~/.claude/skills/
-git clone https://github.com/chengzhi-c/natural-talk.git
+# Option 1: One-line install via npx skills
+npx skills add chengzhi-c/natural-talk
+
+# Option 2: Clone into Claude Code / Cursor / Codex skills directory
+git clone https://github.com/chengzhi-c/natural-talk.git ~/.claude/skills/natural-talk
 ```
 
-`SKILL.md` sits at the repository root and is recognized as soon as the clone finishes.
+### 2. System Prompt Injection
 
-### RikkaHub / SillyTavern
+Pick a template from `templates/` matching your scenario:
 
-Import `natural-talk.zip` from the [Releases](https://github.com/chengzhi-c/natural-talk/releases) page.
+| Scenario | Template File | Description |
+| :--- | :--- | :--- |
+| **Everyday Chat & General** | [`templates/system-prompt-standard.txt`](templates/system-prompt-standard.txt) | Eliminates customer-service platitudes |
+| **Fiction & Storytelling** | [`templates/system-prompt-fiction.txt`](templates/system-prompt-fiction.txt) | Viewpoint immersion, subtext in dialogue |
+| **Token-Sensitive / Lite** | [`templates/system-prompt-lite.txt`](templates/system-prompt-lite.txt) | Concentrated high-yield core rules |
 
-### API
+`templates/preset-*.txt` provide presets for customer support, tech blogging, and social media.
 
+**API Example**:
 ```python
-system_prompt = open('templates/system-prompt-fiction.txt').read()
+from openai import OpenAI
+
+client = OpenAI()
+system_prompt = open('templates/system-prompt-fiction.txt', encoding='utf-8').read()
 
 response = client.chat.completions.create(
-    model="<your-model>",
+    model="your-model-name",
     messages=[
         {"role": "system", "content": system_prompt},
-        {"role": "user", "content": "your question"}
+        {"role": "user", "content": "Your prompt here"}
     ]
 )
+print(response.choices[0].message.content)
 ```
+
+### 3. RikkaHub / SillyTavern
+
+Import `natural-talk.zip` from [Releases](https://github.com/chengzhi-c/natural-talk/releases).
+
+---
 
 ## Repository Layout
 
 ```
 natural-talk/
-├── SKILL.md                         # Single source of truth (D/B/C/F/N rules; generation / cleanup / fiction generation / fiction cleanup)
-├── references/                      # Rule details (fixes / examples / boundaries), read on demand
-│   ├── rules-text.md                # Text layer B1–B11
-│   ├── rules-dialogue.md            # Dialogue layer D1–D5 and experience layer C1–C6
-│   └── fiction.md                   # Full fiction rules
-├── templates/
-│   ├── system-prompt-standard.txt   # Chat injection
-│   ├── system-prompt-fiction.txt    # Fiction injection (with annotated examples)
-│   ├── system-prompt-lite.txt       # Lightweight version (high-yield core + targeted B5/C6)
+├── SKILL.md                         # Single source of truth (Conversational / Fiction / Polishing)
+├── references/                      # Detailed guidance and case library (on-demand reading)
+│   ├── polish.md                    # Text cleanup & polishing reference
+│   ├── dialogue.md                  # Dialogue & character voice guidelines
+│   └── fiction.md                   # Fiction writing reference
+├── templates/                       # Injection prompt templates
+│   ├── system-prompt-standard.txt   # Everyday chat template
+│   ├── system-prompt-fiction.txt    # Fiction template
+│   ├── system-prompt-lite.txt       # Minimalist compact template
 │   └── preset-*.txt                 # Scenario presets
-├── scripts/                          # Maintainer checks (not loaded by the model)
-│   ├── check-sync.py                 # Rule/template synchronization check
-│   ├── scan-mechanical.py            # Mechanical trigger candidate scan
-│   ├── test-scan-mechanical.py       # Scanner fixture tests
-│   ├── test-sync.py                  # Sync reversal tests
-│   ├── test-skill-contract.py        # Release-file contract test
-│   ├── sync-manifest.json             # Rule, anchor, and fingerprint manifest
-│   └── fixtures/fiction-sample.txt    # Fiction scanning boundary fixture
-└── assets/
-    └── natural-talk.png             # Brand image
+├── scripts/                         # Maintenance, linter, and verification scripts
+├── evals/                           # Evaluation benchmark and cases
+└── assets/                          # Static assets
 ```
 
+---
 
 ## Not For
 
 Academic papers, official documents, legal writing, marketing copy, speeches — scenarios that call for the opposite register. The rules yield to genre conventions there.
 
+---
+
 ## Limitations
 
 Most "AI flavor" in model writing comes from expression flaws formed during pretraining. At this stage, a skill or prompt can mainly remind and warn the model to avoid these issues; the actual effect still depends on the model's own ability to interpret instructions.
+
+---
 
 ## Contributing
 
 Misjudgment reports, before/after cases, and rule improvements are welcome — see [CONTRIBUTING.md](CONTRIBUTING.md).
 
+---
+
 ## Acknowledgements
 
-The text-layer rules and the counter-list are grounded in the corpus study behind [lieflat-less-ai-tone](https://github.com/larashero3-dotcom/lieflat-less-ai-tone) (629 articles, ~2.83 million characters; 11 of 26 candidate features survived testing). Credit to that work.
+Text-layer rules and negative whitelist criteria are based on comparative research from [lieflat-less-ai-tone](https://github.com/larashero3-dotcom/lieflat-less-ai-tone) (629 articles, ~2.83M words, 11 of 26 candidate features confirmed). Thanks for this work.
+
+---
 
 ## License
 
-MIT
+[MIT](LICENSE)
