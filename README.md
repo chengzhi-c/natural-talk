@@ -20,11 +20,16 @@
 
 ---
 
-## 效果对比
+## 效果实测对比
 
-| 优化前（传统 AI 腔，AI 特征 100%） | 优化后（遵循 Natural Talk，人工特征 100%） |
+> **测试模型**：`deepseek-v4-flash-0731`  
+> **统一输入 Prompt**：`豆包豆包，我要看女生谈恋爱，500字左右。`  
+> **检测工具**：腾讯朱雀 AI 文本检测助手
+
+| 默认生成（未加 Skill · **AI 特征 100%**） | 遵循 Natural Talk（注入 Skill · **人工特征 100%**） |
 | :---: | :---: |
-| ![优化前](assets/detection-before.png) | ![优化后](assets/detection-after.png) |
+| <img src="assets/detection-before.png" width="480" alt="未加 Skill - AI 特征 100%"> | <img src="assets/detection-after.png" width="480" alt="遵循 Natural Talk - 人工特征 100%"> |
+| **典型 AI 腔**：套路比喻（“像只狼狈的小猫”）、空泛排比、全知读心 | **自然人味**：视点在场、客观感官与动作推进、实体细节闭环 |
 
 ---
 
