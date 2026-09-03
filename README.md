@@ -22,12 +22,12 @@
 
 ## 效果对比
 
-> **测试模型**：`deepseek-v4-flash-0731`  
+> **测试模型**：`大肥鲸-flash`  
 > **统一提示词**：`豆包豆包，我要看女生谈恋爱，500字左右。`
 
-| 默认生成 | 注入提示词后 |
+| 优化前 | 优化后 |
 | :---: | :---: |
-| <img src="assets/detection-before.png" width="480" alt="默认生成"> | <img src="assets/detection-after.png" width="480" alt="注入提示词后"> |
+| <img src="assets/detection-before.png" width="480" alt="优化前"> | <img src="assets/detection-after.png" width="480" alt="优化后"> |
 
 右边是注入提示词的效果。
 
