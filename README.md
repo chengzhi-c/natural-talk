@@ -8,6 +8,8 @@
 
 让 AI 的表达回归真实人类状态：真诚、直接、有在场感、无塑料套路。
 
+> **版本选择**：默认分支为轻量版；强规则版见 [`natural-talk-strict`](https://github.com/chengzhi-c/natural-talk/tree/strict)。
+
 ---
 
 ## 核心设计
