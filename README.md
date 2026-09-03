@@ -20,6 +20,14 @@
 
 ---
 
+## 效果对比
+
+| 优化前（传统 AI 腔，AI 特征 100%） | 优化后（遵循 Natural Talk，人工特征 100%） |
+| :---: | :---: |
+| ![优化前](assets/detection-before.png) | ![优化后](assets/detection-after.png) |
+
+---
+
 ## 快速使用
 
 ### 1. Agent Skill 安装
