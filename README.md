@@ -8,7 +8,7 @@
 
 让 AI 像人一样说话、创作的规则集。适用于 Claude、ChatGPT 及所有支持 system prompt 的工具。
 
-**强规则版**（natural-talk-strict）。与轻量版 [natural-talk](https://github.com/chengzhi-c/natural-talk) 相比：规则密度更高，区分生成/清理/fiction 三种模式，带信息守恒、最小改动、白名单豁免三条硬约束，附机械自查脚本与评测环；适合成稿清理、长文写作与 fiction 创作。日常轻量对话用轻量版即可。
+**强规则版**。
 
 ## 核心理念
 

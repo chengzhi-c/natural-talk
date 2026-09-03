@@ -8,7 +8,7 @@ English | [中文](README.md)
 
 A rule set for making AI speak and write like a person. Works with Claude, ChatGPT, and any tool that supports system prompts.
 
-**Strict edition** (natural-talk-strict). Compared with the lightweight edition [natural-talk](https://github.com/chengzhi-c/natural-talk): denser rules, three modes (generation / cleanup / fiction), three hard constraints (information conservation, minimal edits, whitelist exemptions), plus a mechanical scanning script and eval harness. Best for draft cleanup, long-form writing, and fiction. For everyday chat, the lightweight edition is enough.
+**Strict edition.**
 
 > The rules themselves are written for Chinese output. English users can still apply the framework; the trigger markers and examples target Chinese text.
 
