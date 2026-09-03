@@ -1,0 +1,457 @@
+{
+  "frozen_at": "2026-09-02T00:49:13+0800",
+  "cases": {
+    "SF-01": {
+      "case": "cases/SF-01.txt",
+      "sha256": "6c51b480fd792b2a345a34cebb6c1685a1386c4cdc6a9198c75ce6d683f4f08f",
+      "assertions": [
+        {
+          "type": "require_final_regex",
+          "pattern": "云原生",
+          "level": "l1"
+        },
+        {
+          "type": "require_final_regex",
+          "pattern": "微服务",
+          "level": "l1"
+        },
+        {
+          "type": "forbid_final_regex",
+          "pattern": "不是在维护过去",
+          "level": "l2"
+        },
+        {
+          "type": "forbid_final_regex",
+          "pattern": "不是爱好",
+          "level": "l2"
+        }
+      ],
+      "retention_min": 0.5
+    },
+    "SF-02": {
+      "case": "cases/SF-02.txt",
+      "sha256": "bd9a9e2db2f8047c3af625406c1308dcdf0764c9098b5180de185647bae20e6e",
+      "assertions": [
+        {
+          "type": "require_final_regex",
+          "pattern": "档口",
+          "level": "l1"
+        },
+        {
+          "type": "require_final_regex",
+          "pattern": "传菜窗口",
+          "level": "l1"
+        },
+        {
+          "type": "require_final_regex",
+          "pattern": "网络接口",
+          "level": "l1"
+        },
+        {
+          "type": "require_final_regex",
+          "pattern": "单体",
+          "level": "l1"
+        },
+        {
+          "type": "forbid_final_regex",
+          "pattern": "——",
+          "level": "l2"
+        }
+      ],
+      "retention_min": 0.8
+    },
+    "SF-03": {
+      "case": "cases/SF-03.txt",
+      "sha256": "ce71618ce20be06ab3f922ed4703fefb63c0fa73ed4e228c31d68f4eed26d236",
+      "assertions": [
+        {
+          "type": "require_final_regex",
+          "pattern": "字典",
+          "level": "l1"
+        },
+        {
+          "type": "require_final_regex",
+          "pattern": "二分查找",
+          "level": "l1"
+        },
+        {
+          "type": "require_final_regex",
+          "pattern": "全表扫描",
+          "level": "l1"
+        },
+        {
+          "type": "require_final_regex",
+          "pattern": "树",
+          "level": "l1"
+        },
+        {
+          "type": "forbid_final_regex",
+          "pattern": "——",
+          "level": "l2"
+        }
+      ],
+      "retention_min": 0.8
+    },
+    "SF-04": {
+      "case": "cases/SF-04.txt",
+      "sha256": "ba5e2e94949f698363b67e5ecb9301ca692d2cd182d5ae7e4fd95a00c22be67a",
+      "assertions": [
+        {
+          "type": "require_final_regex",
+          "pattern": "迎宾员",
+          "level": "l1"
+        },
+        {
+          "type": "require_final_regex",
+          "pattern": "负载均衡",
+          "level": "l1"
+        },
+        {
+          "type": "require_final_regex",
+          "pattern": "服务器",
+          "level": "l1"
+        }
+      ],
+      "retention_min": 0.85
+    },
+    "SF-05": {
+      "case": "cases/SF-05.txt",
+      "sha256": "cd531ed80eea5b215a2c67d9edcf613011d7e01f2618b8d5e6f070b61b6eeb07",
+      "assertions": [
+        {
+          "type": "forbid_final_regex",
+          "pattern": "在当今",
+          "level": "l2"
+        },
+        {
+          "type": "forbid_final_regex",
+          "pattern": "说白了",
+          "level": "l2"
+        },
+        {
+          "type": "forbid_final_regex",
+          "pattern": "一句话总结",
+          "level": "l2"
+        },
+        {
+          "type": "forbid_final_regex",
+          "pattern": "智慧的导师",
+          "level": "l2"
+        },
+        {
+          "type": "forbid_final_regex",
+          "pattern": "——",
+          "level": "l2"
+        }
+      ],
+      "retention_min": 0.5
+    },
+    "SF-06": {
+      "case": "cases/SF-06.txt",
+      "sha256": "6f4e1c0dab7fbedce7d268ed124c7360c21c360076c396d6d41e6d7ed738dba7",
+      "assertions": [
+        {
+          "type": "require_final_regex",
+          "pattern": "U盘",
+          "level": "l1"
+        },
+        {
+          "type": "require_final_regex",
+          "pattern": "你姐姐让我来的",
+          "level": "l1"
+        },
+        {
+          "type": "require_final_regex",
+          "pattern": "她还活着",
+          "level": "l1"
+        },
+        {
+          "type": "require_final_regex",
+          "pattern": "十一点",
+          "level": "l1"
+        },
+        {
+          "type": "forbid_final_regex",
+          "pattern": "瞳孔",
+          "level": "l2"
+        },
+        {
+          "type": "forbid_final_regex",
+          "pattern": "无声的拷问",
+          "level": "l2"
+        },
+        {
+          "type": "forbid_final_regex",
+          "pattern": "不是因为冷",
+          "level": "l2"
+        },
+        {
+          "type": "forbid_final_regex",
+          "pattern": "——",
+          "level": "l2"
+        }
+      ],
+      "retention_min": 0.7
+    },
+    "SF-07": {
+      "case": "cases/SF-07.txt",
+      "sha256": "9d7feadd42d3ea1b89ea9bdfca1f30e84dfa51afc0e9fd37e1936f5129e97726",
+      "assertions": [
+        {
+          "type": "min_output_chars",
+          "value": 10,
+          "level": "l1"
+        },
+        {
+          "type": "forbid_final_regex",
+          "pattern": "有研究表明|业内普遍认为|专家指出|不少用户反馈",
+          "level": "l2"
+        },
+        {
+          "type": "forbid_final_regex",
+          "pattern": "很多用户",
+          "level": "l2"
+        },
+        {
+          "type": "forbid_final_regex",
+          "pattern": "不少用户",
+          "level": "l2"
+        },
+        {
+          "type": "forbid_final_regex",
+          "pattern": "40%",
+          "level": "l2"
+        }
+      ],
+      "retention_min": null
+    },
+    "SF-08": {
+      "case": "cases/SF-08.txt",
+      "sha256": "9de1c6b72f368bd422cb463eb4eabcc73ce3bb26b7d9eb2c0a962b7923dde1d2",
+      "assertions": [
+        {
+          "type": "require_final_regex",
+          "pattern": "不是数据库",
+          "level": "l1"
+        },
+        {
+          "type": "require_final_regex",
+          "pattern": "连接池",
+          "level": "l1"
+        },
+        {
+          "type": "require_final_regex",
+          "pattern": "锁竞争",
+          "level": "l1"
+        },
+        {
+          "type": "require_final_regex",
+          "pattern": "工作流",
+          "level": "l1"
+        },
+        {
+          "type": "forbid_final_regex",
+          "pattern": "不只是",
+          "level": "l2"
+        },
+        {
+          "type": "forbid_final_regex",
+          "pattern": "而是耐心",
+          "level": "l2"
+        },
+        {
+          "type": "forbid_final_regex",
+          "pattern": "而是更稳定",
+          "level": "l2"
+        },
+        {
+          "type": "forbid_final_regex",
+          "pattern": "而是整个工作流",
+          "level": "l2"
+        }
+      ],
+      "retention_min": 0.65
+    },
+    "SNF-01": {
+      "case": "cases/SNF-01.txt",
+      "sha256": "0b7e83fad068466945ae8e07dbf927289874c4a3aef8d59c34daacf4d7801fa7",
+      "assertions": [
+        {
+          "type": "require_final_regex",
+          "pattern": "rebalance",
+          "level": "l1"
+        },
+        {
+          "type": "require_final_regex",
+          "pattern": "(?<!\\d)20(?!\\d)",
+          "level": "l1"
+        },
+        {
+          "type": "require_final_regex",
+          "pattern": "(?<!\\d)50(?!\\d)",
+          "level": "l1"
+        }
+      ],
+      "retention_min": 0.9
+    },
+    "SNF-02": {
+      "case": "cases/SNF-02.txt",
+      "sha256": "04a4f0cb131574040f9c424e867e3698ab1a12f928668871a6e9ff1c9eab1417",
+      "assertions": [
+        {
+          "type": "require_final_regex",
+          "pattern": "十四岁",
+          "level": "l1"
+        },
+        {
+          "type": "require_final_regex",
+          "pattern": "半片药",
+          "level": "l1"
+        },
+        {
+          "type": "require_final_regex",
+          "pattern": "保鲜盒",
+          "level": "l1"
+        }
+      ],
+      "retention_min": 0.9
+    },
+    "SNF-03": {
+      "case": "cases/SNF-03.txt",
+      "sha256": "235d78eab8c216593135587efd033e0954cf8fb86d5d9361242724e2e61a5695",
+      "assertions": [
+        {
+          "type": "require_final_regex",
+          "pattern": "首先",
+          "level": "l1"
+        },
+        {
+          "type": "require_final_regex",
+          "pattern": "手刹",
+          "level": "l1"
+        },
+        {
+          "type": "require_final_regex",
+          "pattern": "卡钳",
+          "level": "l1"
+        }
+      ],
+      "retention_min": 0.9
+    },
+    "SNF-04": {
+      "case": "cases/SNF-04.txt",
+      "sha256": "e727a70c927753f2a7fb275d7cd8cb2f474ac45b955d88c6c51392e1629dc2b9",
+      "assertions": [
+        {
+          "type": "require_final_regex",
+          "pattern": "切蛋糕",
+          "level": "l1"
+        },
+        {
+          "type": "require_final_regex",
+          "pattern": "分布式事务",
+          "level": "l1"
+        },
+        {
+          "type": "require_final_regex",
+          "pattern": "权限模型",
+          "level": "l1"
+        }
+      ],
+      "retention_min": 0.9
+    },
+    "SNF-05": {
+      "case": "cases/SNF-05.txt",
+      "sha256": "acac27c48f87d93e513bb7d24050c28548ed390fcc6b5319fd0f451780da0619",
+      "assertions": [
+        {
+          "type": "require_final_regex",
+          "pattern": "上线当晚",
+          "level": "l1"
+        },
+        {
+          "type": "require_final_regex",
+          "pattern": "泡面",
+          "level": "l1"
+        }
+      ],
+      "retention_min": 0.9
+    },
+    "SNF-06": {
+      "case": "cases/SNF-06.txt",
+      "sha256": "10ed45384cc080b04f8bda0b5c2d8bd110ee353e7cac92f6bbdde4e48c9f7cfe",
+      "assertions": [
+        {
+          "type": "require_final_regex",
+          "pattern": "金银首饰店",
+          "level": "l1"
+        },
+        {
+          "type": "require_final_regex",
+          "pattern": "拔牙的洋医生",
+          "level": "l1"
+        }
+      ],
+      "retention_min": 0.9
+    },
+    "SNF-07": {
+      "case": "cases/SNF-07.txt",
+      "sha256": "c58fa54d9cfff604712b5b2833e6093cab759d164fa14f29c306d2f2403ac95d",
+      "assertions": [
+        {
+          "type": "require_final_regex",
+          "pattern": "赋能",
+          "level": "l1"
+        },
+        {
+          "type": "require_final_regex",
+          "pattern": "闭环",
+          "level": "l1"
+        },
+        {
+          "type": "require_final_regex",
+          "pattern": "底层逻辑",
+          "level": "l1"
+        }
+      ],
+      "retention_min": 0.9
+    },
+    "SNF-08": {
+      "case": "cases/SNF-08.txt",
+      "sha256": "7b8fb7c348790d1a12fb6d7ed069758bfe673807c19f7d5a3c2cc6aef08517c2",
+      "assertions": [
+        {
+          "type": "require_final_regex",
+          "pattern": "仓库",
+          "level": "l1"
+        },
+        {
+          "type": "require_final_regex",
+          "pattern": "CPU",
+          "level": "l1"
+        }
+      ],
+      "retention_min": 0.9
+    }
+  },
+  "changes": [
+    {
+      "date": "2026-09-02",
+      "case": "SF-05",
+      "change": "require 在当今快速发展的时代 → forbid 在当今(l2)",
+      "reason": "实测3/5模型行为分裂暴露规则覆盖缺口：空降宏观开场原属C5(生成模式软建议)，清理模式白名单未覆盖，但它是高频AI腔。R1修复新增B12纳入清理射程后，断言同步反转。非为达标移动层级。"
+    },
+    {
+      "date": "2026-09-02",
+      "case": "SNF-01",
+      "change": "require 从 20 调到 50 → require (?<!\\d)20(?!\\d) + (?<!\\d)50(?!\\d)",
+      "reason": "qwen3.7将调到改写为调至，数字20/50均保留，等义改写非信息丢失；原断言锁功能词过严。硬事实保护只应锁数字本身。"
+    },
+    {
+      "date": "2026-09-02",
+      "case": "SF-08",
+      "change": "retention_min 0.85 → 0.65",
+      "reason": "修复后跨模型实测（deepseek/qwen3.7/longcat 0.69-0.75）：SF-08 四句全为翻案结构，B1 删否定留肯定正确执行的应得缩水，require 断言（不是数据库/连接池/锁竞争/工作流）已验证信息面完整，非误删。同 SF-01 装饰比喻密集下限 0.5 的先例。"
+    }
+  ]
+}

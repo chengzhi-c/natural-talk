@@ -1,0 +1,31 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Backup files
+*.bak
+*.tmp
+*-old.*
+*-backup.*
+
+# Project-specific
+PROJECT-STRUCTURE.md
+corpus/
+evals/runs/
+
+# Python
+__pycache__/
