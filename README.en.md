@@ -107,6 +107,12 @@ Text-layer rules and negative whitelist criteria are based on comparative resear
 
 ---
 
+## Community
+
+Join the [LINUX DO](https://linux.do) community — "a new ideal type of community".
+
+---
+
 ## License
 
 [MIT](LICENSE)

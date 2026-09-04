@@ -182,6 +182,12 @@ natural-talk/
 
 ---
 
+## 社区
+
+欢迎加入 [LINUX DO](https://linux.do) 社区，一个「新的理想型社区」。
+
+---
+
 ## License
 
 [MIT](LICENSE)
