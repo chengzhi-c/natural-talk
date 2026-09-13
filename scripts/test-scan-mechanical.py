@@ -18,6 +18,14 @@ import sys
 from collections import Counter
 from pathlib import Path
 
+# Ensure UTF-8 output on Windows
+if sys.platform == "win32":
+    try:
+        sys.stdout.reconfigure(encoding="utf-8")
+        sys.stderr.reconfigure(encoding="utf-8")
+    except Exception:
+        pass
+
 _spec = importlib.util.spec_from_file_location(
     "scan_mechanical", Path(__file__).resolve().parent / "scan-mechanical.py")
 _mod = importlib.util.module_from_spec(_spec)

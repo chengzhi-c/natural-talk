@@ -4,8 +4,7 @@
   1. 留存率边界：84% 报警与 86% 通过恰好相反；膨胀上限 124% 通过与 126% 报警恰好相反
   2. 断言解析：require/forbid 命中与漏报
   3. SHA256 冻结：篡改样例一字节必须拒绝判分
-  4. Windows 换行：write_bytes 写出的样例可正常冻结与校验（
- 翻译会导致校验和失配）
+  4. Windows 换行：write_bytes 写出的样例可正常冻结与校验（CRLF 翻译会导致校验和失配）
   5. 扫描判分接线：FIX 残留计入 L2，REVIEW 残留只计数
 
 红灯验证方式：临时注释掉 check-eval.py 的 forbid 分支或 check-retention.py 的
@@ -20,6 +19,14 @@ import subprocess
 import sys
 import tempfile
 from pathlib import Path
+
+# Ensure UTF-8 output on Windows
+if sys.platform == "win32":
+    try:
+        sys.stdout.reconfigure(encoding="utf-8")
+        sys.stderr.reconfigure(encoding="utf-8")
+    except Exception:
+        pass
 
 ROOT = Path(__file__).resolve().parent.parent
 SCRIPTS = ROOT / "scripts"

@@ -58,12 +58,28 @@ def test_contract():
         p = ROOT / "references" / ref_name
         if not p.exists() or p.stat().st_size == 0:
             failures.append(f"缺少参考指南或文件为空: references/{ref_name}")
+
+    # 3. Check critical anchor contracts
+    try:
+        from importlib.machinery import SourceFileLoader
+        contract_mod = SourceFileLoader("test_skill_contract", str(SCRIPTS_DIR / "test-skill-contract.py")).load_module()
+        for rel_path, anchors in contract_mod.REQUIRED_ANCHORS.items():
+            file_path = ROOT / rel_path
+            if not file_path.exists():
+                failures.append(f"文件不存在: {rel_path}")
+                continue
+            content = file_path.read_text(encoding="utf-8")
+            for anchor in anchors:
+                if anchor not in content:
+                    failures.append(f"{rel_path}: 缺少必选锚点「{anchor}」")
+    except Exception as e:
+        failures.append(f"无法加载或执行契约锚点测试: {e}")
             
     if failures:
         for f in failures:
             print(f"  ❌ 失败: {f}")
         return False
-    print("  🟢 PASS: SKILL.md 与参考文件结构契约 100% 完整有效！")
+    print("  🟢 PASS: SKILL.md 与参考文件结构及 28 处核心契约锚点 100% 完整有效！")
     return True
 
 def test_regression():

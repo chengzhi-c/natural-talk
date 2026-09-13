@@ -20,6 +20,14 @@ import re
 import sys
 from pathlib import Path
 
+# Ensure UTF-8 output on Windows
+if sys.platform == "win32":
+    try:
+        sys.stdout.reconfigure(encoding="utf-8")
+        sys.stderr.reconfigure(encoding="utf-8")
+    except Exception:
+        pass
+
 RETENTION_FLOOR = 0.85
 RETENTION_CEILING = 1.25
 
