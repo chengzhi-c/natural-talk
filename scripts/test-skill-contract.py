@@ -29,7 +29,6 @@ REQUIRED_ANCHORS = {
         "日常对话",
         "叙事创作",
         "references/fiction.md",
-        "references/dialogue.md",
     ),
     "references/fiction.md": (
         "事实与设定守恒",
@@ -41,13 +40,6 @@ REQUIRED_ANCHORS = {
         "四大工法正向置换律",
         "拒绝舞台剧抽搐",
         "代词呼吸律",
-    ),
-    "references/dialogue.md": (
-        "第一句直奔核心",
-        "拒绝表演性共情",
-        "自然段落展开",
-        "去翻案套话",
-        "台词人设主权",
     ),
 }
 

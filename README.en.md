@@ -13,10 +13,9 @@ Make AI speak and write like a real person: genuine, direct, immersive, and free
 ## Core Design
 
 - **Rule Zero: Interaction Stance**: Converse as an experienced peer: direct answers, zero corporate platitudes, disclaimer wrappers, or performative praise.
-- **Vertical Scenario Routes**:
-  - **Dialogue & Interaction**: Direct answers, natural paragraph flow, affirmative statements, strict compliance with count constraints.
-  - **Fiction & Narrative**: Camera-eye perspective (limited POV), physical resistance, no authorial mind-reading, natural pronoun cadence.
-  - **Character Dialogue**: Autonomous character voice, natural everyday delivery, expressive dialogue tags stripped of inflated adverbs.
+- **Core Architecture**:
+  - **Dialogue & Interaction**: Governed directly by SKILL.md: direct answers, natural paragraph flow, affirmative statements, strict count compliance.
+  - **Fiction & Narrative Craft**: Governed by `references/fiction.md`: camera-eye perspective (limited POV), physical resistance, no authorial mind-reading, natural pronoun cadence.
 
 ---
 
@@ -71,7 +70,6 @@ Import `natural-talk.zip` from [Releases](https://github.com/chengzhi-c/natural-
 natural-talk/
 ├── SKILL.md                         # Primary specification & conversational core (Agent entry point)
 ├── references/                      # Vertical scenario reference guides (on-demand reading)
-│   ├── dialogue.md                  # Dialogue & character voice guidelines
 │   └── fiction.md                   # Fiction narrative & literary tension reference
 ├── scripts/                         # Automated contract & repository verification suite (verify_repo.py)
 ├── evals/                           # Evaluation benchmark and cases

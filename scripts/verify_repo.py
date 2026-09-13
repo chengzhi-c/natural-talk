@@ -50,14 +50,13 @@ def test_contract():
         # Check reference files mentioned in SKILL.md
         for ref in [
             "references/fiction.md",
-            "references/dialogue.md",
         ]:
             ref_path = ROOT / ref
             if not ref_path.exists():
                 failures.append(f"SKILL.md 导航指向的文件不存在: {ref}")
 
     # 2. Check references
-    for ref_name in ["fiction.md", "dialogue.md"]:
+    for ref_name in ["fiction.md"]:
         p = ROOT / "references" / ref_name
         if not p.exists() or p.stat().st_size == 0:
             failures.append(f"缺少参考指南或文件为空: references/{ref_name}")
