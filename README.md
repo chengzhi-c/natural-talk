@@ -149,8 +149,9 @@ natural-talk/
 ├── SKILL.md                         # 核心规范与日常对话（Agent 入口与单一事实源）
 ├── references/                      # 垂直场景深度参考库（按需读取）
 │   ├── dialogue.md                  # 对白与交互深度参考
-│   ├── fiction.md                   # 叙事创作与文学张力指南
-│   └── polish.md                    # 文本成文清洗与保真润色参考
+│   ├── fiction.md                   # 叙事创作与小说工法指南
+│   ├── polish.md                    # 文本成文清洗与保真润色参考
+│   └── specialized/                 # 隐忍克制情感张力特供参考
 ├── scripts/                         # 自动化契约与全量体检脚本 (verify_repo.py)
 ├── evals/                           # 评测基准与用例
 └── assets/                          # 静态资源

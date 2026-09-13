@@ -212,10 +212,4 @@ description: 自然人味交互与去 AI 腔。消除客服腔、谄媚评判、
 ### 专项扩展参考
 - **高张力克制与生涩潜台词**：读取 `references/specialized/restrained_subtext.md`（当明确设定为生涩试探、内敛戒备、创伤照护与不油腻的隐忍情感表达时按需参考）。
 
-### 模型特异性适配参考
-不同大模型存在各自的写作偏好，按需参考对应说明：
-- **DeepSeek 宿主模型**：参考 `references/models/deepseek.md`
-- **Kimi 宿主模型**：参考 `references/models/kimi.md`
-- **Qwen 宿主模型**：参考 `references/models/qwen.md`
-- **GLM 宿主模型**：参考 `references/models/glm.md`
 
