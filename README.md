@@ -180,7 +180,8 @@ natural-talk/
 
 ## 致谢
 
-文本层规则与反清单的判定依据来自 [lieflat-less-ai-tone](https://github.com/larashero3-dotcom/lieflat-less-ai-tone) 的对照研究（629 篇、约 283 万字，26 项候选特征仅 11 项成立）。感谢这项工作。
+- [shuorenhua](https://github.com/MrGeDiao/shuorenhua)：中文优先的去 AI 味改写 skill，感谢其在编辑边界、信息守恒与工程评测上的探索与启发。
+- [lieflat-less-ai-tone](https://github.com/larashero3-dotcom/lieflat-less-ai-tone)：文本层规则与反清单判定依据来自其对照研究（629 篇、约 283 万字，26 项候选特征仅 11 项成立）。
 
 ---
 

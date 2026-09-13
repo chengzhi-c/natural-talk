@@ -105,7 +105,8 @@ Misjudgment reports, before/after cases, and rule improvements are welcome — s
 
 ## Acknowledgements
 
-Text-layer rules and negative whitelist criteria are based on comparative research from [lieflat-less-ai-tone](https://github.com/larashero3-dotcom/lieflat-less-ai-tone) (629 articles, ~2.83M words, 11 of 26 candidate features confirmed). Thanks for this work.
+- [shuorenhua](https://github.com/MrGeDiao/shuorenhua): Chinese-first rewrite skill; thanks for its exploration and insights into editing boundaries, information conservation, and engineering evaluations.
+- [lieflat-less-ai-tone](https://github.com/larashero3-dotcom/lieflat-less-ai-tone): Text-layer rules and negative whitelist criteria are based on comparative research from this project (629 articles, ~2.83M words, 11 of 26 candidate features confirmed).
 
 ---
 
