@@ -222,6 +222,6 @@
 ## 八、 专项扩展参考
 
 处理特定人设与情境时，按需参考对应文件：
-- **高张力克制与冰山潜台词**：参考 `references/specialized/restrained_subtext.md`（适用于深层情感张力、留白克制、隐秘试探与去油腻的冰山表达）。
+- **情感克制与潜台词**：参考 `references/specialized/restrained_subtext.md`（适用于深层情感张力、克制留白、隐秘试探与潜台词呈现）。
 
 
