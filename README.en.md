@@ -15,10 +15,11 @@ Make AI speak and write like a real person: genuine, direct, immersive, and free
 ## Core Design
 
 - **Rule Zero: Interaction Stance**: Converse as an experienced peer: direct answers, zero corporate platitudes, disclaimer wrappers, or performative praise.
-- **Three Scenario Routes**:
-  - **Conversational**: Conclusion first, natural paragraph development, total ban on antithetical lecturing (only affirmative statements), strict quantity compliance.
-  - **Fiction & Narrative**: Camera-eye viewpoint (limited POV, Show, don't tell), no authorial mind-reading or moralizing, physical resistance, anti-cliché repetitive phrasing.
-  - **Text Polishing**: Non-destructive micro-tuning, strictly preserving length (80%~100%) and facts, authentic human voice.
+- **Four Scenario Routes**:
+  - **Dialogue & Interaction**: Direct answers, natural paragraph flow, affirmative statements, strict compliance with count constraints.
+  - **Fiction & Narrative**: Camera-eye perspective (limited POV, Show, don't tell), physical resistance, no authorial mind-reading, natural pronoun cadence.
+  - **Text Polishing**: Preserving length (80%~100%) and facts, zero narrative dashes, metaphors grounded in concrete objects.
+  - **Restraint & Subtext**: Deep tension and subtext, grounding unstated emotions in physical handling and daily details without authorial monologue.
 
 ---
 
