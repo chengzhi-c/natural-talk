@@ -220,6 +220,6 @@ description: 自然人味交互与去 AI 腔。消除客服腔、谄媚评判、
 - **成稿去AI味与成文清理**：读取 `references/polish.md`（包含严格信息守恒、篇幅保护、叙述破折号清零与比喻去套路）
 
 ### 专项扩展参考
-- **情感克制与潜台词**：读取 `references/specialized/restrained_subtext.md`（当叙事涉及深层情感张力、克制留白、隐秘试探与潜台词呈现时按需参考）。
+- **情感克制与潜台词**：读取 `references/restrained_subtext.md`（当叙事涉及深层情感张力、克制留白、隐秘试探与潜台词呈现时按需参考）。
 
 

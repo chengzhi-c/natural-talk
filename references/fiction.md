@@ -229,6 +229,6 @@
 ## 八、 专项扩展参考
 
 处理特定人设与情境时，按需参考对应文件：
-- **情感克制与潜台词**：参考 `references/specialized/restrained_subtext.md`（适用于深层情感张力、克制留白、隐秘试探与潜台词呈现）。
+- **情感克制与潜台词**：参考 `references/restrained_subtext.md`（适用于深层情感张力、克制留白、隐秘试探与潜台词呈现）。
 
 
