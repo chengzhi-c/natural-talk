@@ -74,8 +74,7 @@ natural-talk/
 ├── references/                      # Vertical scenario reference guides (on-demand reading)
 │   ├── dialogue.md                  # Dialogue & character voice guidelines
 │   ├── fiction.md                   # Fiction narrative & literary tension reference
-│   ├── polish.md                    # Text cleanup & fidelity polishing reference
-│   └── restrained_subtext.md        # Restrained tension & subtext guidelines
+│   └── polish.md                    # Text cleanup & fidelity polishing reference
 ├── scripts/                         # Automated contract & repository verification suite (verify_repo.py)
 ├── evals/                           # Evaluation benchmark and cases
 └── assets/                          # Static assets

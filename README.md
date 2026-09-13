@@ -149,8 +149,7 @@ natural-talk/
 ├── references/                      # 垂直场景参考库（按需读取）
 │   ├── dialogue.md                  # 对话与交互层人味指南
 │   ├── fiction.md                   # 叙事创作与小说工法指南
-│   ├── polish.md                    # 文本去套路与成稿润色参考
-│   └── restrained_subtext.md        # 情感克制与潜台词指南
+│   └── polish.md                    # 文本去套路与成稿润色参考
 ├── scripts/                         # 自动化契约与全量体检套件 (verify_repo.py)
 ├── evals/                           # 评测基准与用例集
 └── assets/                          # 静态资源
