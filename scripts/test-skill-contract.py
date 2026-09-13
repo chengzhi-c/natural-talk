@@ -32,6 +32,7 @@ REQUIRED_ANCHORS = {
         "references/fiction.md",
         "references/dialogue.md",
         "references/polish.md",
+        "references/restrained_subtext.md",
     ),
     "references/fiction.md": (
         "事实与设定守恒",
@@ -56,6 +57,14 @@ REQUIRED_ANCHORS = {
         "严禁脑补新剧情",
         "篇幅保护",
         "80%~100%",
+    ),
+    "references/restrained_subtext.md": (
+        "情感克制与潜台词指南",
+        "触发识别与适用画像",
+        "正向动作置换法则",
+        "拒绝舞台剧抽搐",
+        "潜台词沉底机制",
+        "极限白描与文字禁戒",
     ),
 }
 

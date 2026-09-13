@@ -48,21 +48,28 @@ def test_contract():
             failures.append("SKILL.md 缺少 'description:' 字段")
         
         # Check reference files mentioned in SKILL.md
-        for ref in ["references/fiction.md", "references/dialogue.md", "references/polish.md"]:
+        for ref in [
+            "references/fiction.md",
+            "references/dialogue.md",
+            "references/polish.md",
+            "references/restrained_subtext.md",
+        ]:
             ref_path = ROOT / ref
             if not ref_path.exists():
                 failures.append(f"SKILL.md 导航指向的文件不存在: {ref}")
 
     # 2. Check references
-    for ref_name in ["fiction.md", "dialogue.md", "polish.md"]:
+    for ref_name in ["fiction.md", "dialogue.md", "polish.md", "restrained_subtext.md"]:
         p = ROOT / "references" / ref_name
         if not p.exists() or p.stat().st_size == 0:
             failures.append(f"缺少参考指南或文件为空: references/{ref_name}")
 
     # 3. Check critical anchor contracts
+    total_anchors = 0
     try:
         from importlib.machinery import SourceFileLoader
         contract_mod = SourceFileLoader("test_skill_contract", str(SCRIPTS_DIR / "test-skill-contract.py")).load_module()
+        total_anchors = sum(len(anchors) for anchors in contract_mod.REQUIRED_ANCHORS.values())
         for rel_path, anchors in contract_mod.REQUIRED_ANCHORS.items():
             file_path = ROOT / rel_path
             if not file_path.exists():
@@ -79,7 +86,7 @@ def test_contract():
         for f in failures:
             print(f"  ❌ 失败: {f}")
         return False
-    print("  🟢 PASS: SKILL.md 与参考文件结构及 28 处核心契约锚点 100% 完整有效！")
+    print(f"  🟢 PASS: SKILL.md 与全量参考文件结构及 {total_anchors} 处核心契约锚点 100% 完整有效！")
     return True
 
 def test_regression():
@@ -141,9 +148,15 @@ def test_privacy():
 
 def test_zip_package():
     print("\n[4/4] 正在执行：分发压缩包 natural-talk.zip 规范性检查...")
-    zip_path = ROOT.parent / "natural-talk.zip"
-    if not zip_path.exists():
-        print(f"  ⚠️ 跳过: 未找到 {zip_path.name}")
+    zip_paths = [
+        p for p in [
+            ROOT / "natural-talk.zip",
+            ROOT.parent / "natural-talk.zip",
+            ROOT.parent.parent / "natural-talk.zip"
+        ] if p.exists()
+    ]
+    if not zip_paths:
+        print("  ⚠️ 跳过: 未找到 natural-talk.zip")
         return True
         
     # 严格白名单机制：面向终端模型的纯净 Skill 分发包只保留模型可读可用文件，绝不携带 README、许可证、脚本或测试
@@ -154,24 +167,27 @@ def test_zip_package():
         "natural-talk/references/",
     )
     
-    forbidden_hits = []
-    with zipfile.ZipFile(zip_path, 'r') as z:
-        for n in z.namelist():
-            if n.endswith('/'):
-                continue
-            if n.endswith('.py') or 'scripts/' in n:
-                forbidden_hits.append(f"{n} (AI 不会自动执行 Python 脚本，分发包严禁携带任何脚本文件)")
-                continue
-            is_allowed = (n in allowed_exact) or any(n.startswith(d) for d in allowed_dirs)
-            if not is_allowed:
-                forbidden_hits.append(n)
-                    
-    if forbidden_hits:
-        for h in forbidden_hits:
-            print(f"  ❌ 压缩包包含非 Skill 冗余项: {h}")
-        return False
-    print(f"  🟢 PASS: {zip_path.name} ({zip_path.stat().st_size:,} 字节) 极致纯净（零脚本、零测试、纯正 Skill 资产包）！")
-    return True
+    all_ok = True
+    for zip_path in zip_paths:
+        forbidden_hits = []
+        with zipfile.ZipFile(zip_path, 'r') as z:
+            for n in z.namelist():
+                if n.endswith('/'):
+                    continue
+                if n.endswith('.py') or 'scripts/' in n:
+                    forbidden_hits.append(f"{n} (AI 不会自动执行 Python 脚本，分发包严禁携带任何脚本文件)")
+                    continue
+                is_allowed = (n in allowed_exact) or any(n.startswith(d) for d in allowed_dirs)
+                if not is_allowed:
+                    forbidden_hits.append(n)
+                        
+        if forbidden_hits:
+            for h in forbidden_hits:
+                print(f"  ❌ [{zip_path.name}] 压缩包包含非 Skill 冗余项: {h}")
+            all_ok = False
+        else:
+            print(f"  🟢 PASS: {zip_path} ({zip_path.stat().st_size:,} 字节) 极致纯净（零脚本、零测试、纯正 Skill 资产包）！")
+    return all_ok
 
 def main():
     print("==================================================")
