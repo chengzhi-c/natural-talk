@@ -8,8 +8,6 @@
 
 让 AI 的表达回归真实人类状态：真诚、直接、有在场感、去虚浮套路。
 
-> **版本选择**：强规则版见 [`natural-talk-strict`](https://github.com/chengzhi-c/natural-talk/tree/strict)。
-
 ---
 
 ## 核心设计
@@ -180,8 +178,8 @@ natural-talk/
 
 ## 致谢
 
-- [shuorenhua](https://github.com/MrGeDiao/shuorenhua)：中文优先的去 AI 味改写 skill，感谢其在编辑边界、信息守恒与工程评测上的探索与启发。
-- [lieflat-less-ai-tone](https://github.com/larashero3-dotcom/lieflat-less-ai-tone)：文本层规则与反清单判定依据来自其对照研究（629 篇、约 283 万字，26 项候选特征仅 11 项成立）。
+- [shuorenhua](https://github.com/MrGeDiao/shuorenhua)：中文优先的去 AI 味改写 skill，感谢其在信息守恒、编辑边界与工程化评测上的探索与启发。
+- [lieflat-less-ai-tone](https://github.com/larashero3-dotcom/lieflat-less-ai-tone)：中文去 AI 腔提示词研究，感谢其在文本层反清单与实证对照研究中提供的判定依据。
 
 ---
 

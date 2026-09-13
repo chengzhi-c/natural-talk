@@ -8,8 +8,6 @@ English | [中文](README.md)
 
 Make AI speak and write like a real person: genuine, direct, immersive, and free of synthetic tropes.
 
-> **Editions**: For the strict edition, see [`natural-talk-strict`](https://github.com/chengzhi-c/natural-talk/tree/strict).
-
 ---
 
 ## Core Design
@@ -105,8 +103,8 @@ Misjudgment reports, before/after cases, and rule improvements are welcome — s
 
 ## Acknowledgements
 
-- [shuorenhua](https://github.com/MrGeDiao/shuorenhua): Chinese-first rewrite skill; thanks for its exploration and insights into editing boundaries, information conservation, and engineering evaluations.
-- [lieflat-less-ai-tone](https://github.com/larashero3-dotcom/lieflat-less-ai-tone): Text-layer rules and negative whitelist criteria are based on comparative research from this project (629 articles, ~2.83M words, 11 of 26 candidate features confirmed).
+- [shuorenhua](https://github.com/MrGeDiao/shuorenhua): Chinese-first rewrite skill; thanks for its exploration and insights into information conservation, editing boundaries, and engineering evaluations.
+- [lieflat-less-ai-tone](https://github.com/larashero3-dotcom/lieflat-less-ai-tone): Chinese de-AI-tone prompt research; thanks for its empirical comparative study and criteria for the text-layer negative whitelist.
 
 ---
 
