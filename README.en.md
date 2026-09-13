@@ -13,11 +13,10 @@ Make AI speak and write like a real person: genuine, direct, immersive, and free
 ## Core Design
 
 - **Rule Zero: Interaction Stance**: Converse as an experienced peer: direct answers, zero corporate platitudes, disclaimer wrappers, or performative praise.
-- **Four Scenario Routes**:
+- **Vertical Scenario Routes**:
   - **Dialogue & Interaction**: Direct answers, natural paragraph flow, affirmative statements, strict compliance with count constraints.
-  - **Fiction & Narrative**: Camera-eye perspective (limited POV, Show, don't tell), physical resistance, no authorial mind-reading, natural pronoun cadence.
-  - **Text Polishing**: Preserving length (80%~100%) and facts, zero narrative dashes, metaphors grounded in concrete objects.
-  - **Restraint & Subtext**: Deep tension and subtext, grounding unstated emotions in physical handling and daily details without authorial monologue.
+  - **Fiction & Narrative**: Camera-eye perspective (limited POV), physical resistance, no authorial mind-reading, natural pronoun cadence.
+  - **Character Dialogue**: Autonomous character voice, natural everyday delivery, expressive dialogue tags stripped of inflated adverbs.
 
 ---
 
@@ -73,8 +72,7 @@ natural-talk/
 ├── SKILL.md                         # Primary specification & conversational core (Agent entry point)
 ├── references/                      # Vertical scenario reference guides (on-demand reading)
 │   ├── dialogue.md                  # Dialogue & character voice guidelines
-│   ├── fiction.md                   # Fiction narrative & literary tension reference
-│   └── polish.md                    # Text cleanup & fidelity polishing reference
+│   └── fiction.md                   # Fiction narrative & literary tension reference
 ├── scripts/                         # Automated contract & repository verification suite (verify_repo.py)
 ├── evals/                           # Evaluation benchmark and cases
 └── assets/                          # Static assets

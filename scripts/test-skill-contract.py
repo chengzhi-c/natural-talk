@@ -28,10 +28,8 @@ REQUIRED_ANCHORS = {
         "交互姿态",
         "日常对话",
         "叙事创作",
-        "成文清理",
         "references/fiction.md",
         "references/dialogue.md",
-        "references/polish.md",
     ),
     "references/fiction.md": (
         "事实与设定守恒",
@@ -50,12 +48,6 @@ REQUIRED_ANCHORS = {
         "自然段落展开",
         "去翻案套话",
         "台词人设主权",
-    ),
-    "references/polish.md": (
-        "严格信息守恒",
-        "严禁脑补新剧情",
-        "篇幅保护",
-        "80%~100%",
     ),
 }
 
