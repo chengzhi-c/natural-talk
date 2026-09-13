@@ -130,12 +130,9 @@ def test_zip_package():
         print(f"  ⚠️ 跳过: 未找到 {zip_path.name}")
         return True
         
-    # 严格白名单机制：面向终端模型与用户的纯净 Skill 分发包只保留 Skill 资产，绝不携带开发/测试脚本
+    # 严格白名单机制：面向终端模型的纯净 Skill 分发包只保留模型可读可用文件，绝不携带 README、许可证、脚本或测试
     allowed_exact = {
         "natural-talk/SKILL.md",
-        "natural-talk/README.md",
-        "natural-talk/README.en.md",
-        "natural-talk/LICENSE",
     }
     allowed_dirs = (
         "natural-talk/references/",
