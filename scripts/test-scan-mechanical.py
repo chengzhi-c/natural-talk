@@ -196,7 +196,8 @@ check("B6-混合标题层级", MIXED_LEVEL_B6, [])
 
 # 触发词一致性：B4A_PROMPTS 必须在 SKILL.md 或 dialogue.md 的 B4 定义中
 _SKILL_TEXT = (Path(__file__).resolve().parent.parent / "SKILL.md").read_text(encoding="utf-8")
-_DIALOGUE_TEXT = (Path(__file__).resolve().parent.parent / "references" / "dialogue.md").read_text(encoding="utf-8")
+_DIALOGUE_PATH = Path(__file__).resolve().parent.parent / "references" / "dialogue.md"
+_DIALOGUE_TEXT = _DIALOGUE_PATH.read_text(encoding="utf-8") if _DIALOGUE_PATH.exists() else ""
 _B4_COMBINED = _SKILL_TEXT + _DIALOGUE_TEXT
 for _w in ("一句话总结", "核心是"):
     if _w not in _B4_COMBINED:
