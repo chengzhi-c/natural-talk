@@ -6,7 +6,7 @@ English | [中文](README.md)
   <img src="assets/natural-talk.png" alt="Natural Talk" width="100%">
 </p>
 
-Make AI speak and write like a real person: genuine, direct, immersive, and free of synthetic tropes.
+Make AI speak and write like a real person: genuine, direct, immersive — clean the mechanical tropes, keep the creative freedom.
 
 ---
 
@@ -15,11 +15,13 @@ Make AI speak and write like a real person: genuine, direct, immersive, and free
 - **Rule Zero: Interaction Stance**: Converse as an experienced peer: direct answers, zero corporate platitudes, disclaimer wrappers, or performative praise.
 - **Core Architecture**:
   - **Dialogue & Interaction**: Governed directly by SKILL.md: direct answers, natural paragraph flow, affirmative statements, strict count compliance.
-  - **Fiction & Narrative Craft**: Governed by `references/fiction.md`: camera-eye perspective (limited POV), physical resistance, no authorial mind-reading, natural pronoun cadence.
+  - **Fiction & Narrative Craft**: Governed by `references/fiction.md`: camera-eye perspective by default, physical resistance over abstract emotion, natural pronoun cadence. Mechanical tropes are bounded by a creative-freedom table — ending types, narrative structures, and character voices stay free.
 
 ---
 
 ## Quick Start
+
+> **Model choice**: `glm-5.3` / `glm-5.3-flash` recommended — more instruction-faithful on long-form output.
 
 ### 1. Agent Skill Installation
 
