@@ -38,11 +38,12 @@ B11 是否法规条目）仍由模型或人完成。依据 SKILL.md 执行要求
 
 模式（对应 SKILL.md 清理 / fiction 清理 / 生成自查三种流程）：
   prose（默认）  清理全量规则
-  fiction        报 fiction 清理带入集内的 B6(FIX)、B1/B5/F7(REVIEW)；
-                 B3/B4/B10/B11 的倍率来自非虚构论述文体对照，fiction 不带入，
-                 一律不报（对小说照报即越界误伤）
+  fiction        报 fiction 清理带入集内的 B6(FIX)、B1/B5/F7/B13/B15/B17/B18
+                 (REVIEW)；B3/B4/B10/B11 的倍率来自非虚构论述文体对照，
+                 fiction 不带入，一律不报（对小说照报即越界误伤）
   gen            生成期自查：FIX 同 prose（B 层生成清理共用）；
-                 REVIEW 增 B1/B3/B5/B9/C2/C4/C5/C6/D2–D6（D/C 层机械候选），
+                 REVIEW 增 B1/B3/B5/B9/B13/B15/B16/B17/B18 与
+                 C2/C4/C5/C6/D2–D6（D/C 层机械候选），
                  全部只报候选，复核后决定改留
 """
 import argparse
@@ -165,14 +166,39 @@ _D6_ATTRIB = re.compile(
     r"(?:业内|行业|专家|观察者)[^，。；]{0,4}(?:普遍)?(?:认为|指出|表示)|"
     r"(?:不少|很多|部分)(?:用户|人)[^，。；]{0,4}(?:反馈|认为|表示)")
 
+# ---------- fiction 词表（B13/B15/B16/B17/B18，gen 与 fiction 模式 REVIEW 候选） ----------
+
+# B13 动作修饰副词候选（复核区分动作修饰与光/声/温度的客观状态描述）；
+# "微弱"多用于状态陈述（微弱的光/回响），机械层无法区分，不收
+_B13_ADVERBS = re.compile(r"微微|极轻|极慢|极细|轻轻|缓缓")
+
+# B15 舞台剧抽搐候选
+_B15_SPASM = re.compile(r"猛地|骤然|猝然|死死|整个人震了一下|身子猛然一僵|"
+                        r"喉结滚动|咬碎牙关|指甲掐进")
+
+# B17 花式对白动词标签（说道/命令道/沉声道族，台词内合法的中断除外）；
+# 问道/答道属旧白话语域（鲁迅设问自答、评书体均常见），精度不足不收
+_B17_FANCY_TAGS = re.compile(r"说道|命令道|吩咐道|沉声道|轻声道|"
+                             r"低声道|冷声道|感叹道|开口道|沉声说|轻声说")
+
+# B18 计数癖候选：拍子枚举、第N拍、顿了一拍
+_B18_COUNTING = re.compile(
+    r"[一二两三四五六七八九十\d]+[下息拍声滴]，[一二两三四五六七八九十\d]+[下息拍声滴]"
+    r"|数到第?[一二两三四五六七八九十\d]+[下滴声息]"
+    r"|第[一二三四五六七八九十\d]+[下拍滴]"
+    r"|顿了[一半][拍下]")
+
+# B17 句首代词连珠：段内 ≥3 句连续以同一代词起头
+_B17_PRONOUN_HEAD = re.compile(r"^[她他你]")
+
 # 各模式的报告集（见模块 docstring"模式"节；B11 需语义判断，prose/gen 均 REVIEW）
 FIX_RULES = {"prose": ("B4", "B6", "B10"), "fiction": ("B6",),
              "gen": ("B4", "B6", "B10")}
 REVIEW_RULES = {
     "prose": ("B1", "B3", "B5", "B11", "B12"),
-    "fiction": ("B1", "B5", "F7"),
-    "gen": ("B1", "B3", "B5", "B9", "B11", "C2", "C4", "C5", "C6",
-            "D2", "D3", "D4", "D5", "D6"),
+    "fiction": ("B1", "B5", "F7", "B13", "B15", "B17", "B18"),
+    "gen": ("B1", "B3", "B5", "B9", "B11", "B13", "B15", "B16", "B17", "B18",
+            "C2", "C4", "C5", "C6", "D2", "D3", "D4", "D5", "D6"),
 }
 
 
@@ -487,6 +513,38 @@ def scan(text, mode="prose"):
                     note="模糊归因候选：有来源写来源，没来源删归因直接陈述；"
                          "不得补造来源"))
 
+        # ---- fiction 词表（REVIEW）：B13/B15/B16/B17花式/B18，逐处报出 ----
+        if "B13" in review_on:
+            for m in _B13_ADVERBS.finditer(masked):
+                hits.append(dict(
+                    line=idx, rule="B13", tier="REVIEW", snippet=m.group(0),
+                    note="动作修饰副词候选：修饰动作则删（动词自带分量）；"
+                         "光/声/温度的客观状态描述保留"))
+        if "B15" in review_on:
+            for m in _B15_SPASM.finditer(masked):
+                hits.append(dict(
+                    line=idx, rule="B15", tier="REVIEW", snippet=m.group(0),
+                    note="舞台剧抽搐候选：改成定住与动作停顿；"
+                         "对抗场景用精准动量受力动词"))
+        if "B16" in review_on:
+            match = _F7_LOOP.search(masked)
+            if match:
+                hits.append(dict(
+                    line=idx, rule="B16", tier="REVIEW", snippet=match.group(0),
+                    note="同词回环候选：改掉‘很久，久到’表层句式；"
+                         "后半有新信息保留事实改直述，无信息增量删后半"))
+        if "B17" in review_on:
+            for m in _B17_FANCY_TAGS.finditer(masked):
+                hits.append(dict(
+                    line=idx, rule="B17", tier="REVIEW", snippet=m.group(0),
+                    note="花式对白标签：改‘说’或改动作（她把碗放下。“吃。”）"))
+        if "B18" in review_on:
+            for m in _B18_COUNTING.finditer(masked):
+                hits.append(dict(
+                    line=idx, rule="B18", tier="REVIEW", snippet=m.group(0),
+                    note="计数癖候选：作者数拍子改体感或物件变化；"
+                         "角色在数是情节、数量变化是发现，保留"))
+
         # ---- B4a：提示语＋冒号 ----
         if "B4" in fix_on and not heading:
             for p in B4A_PROMPTS:
@@ -516,6 +574,42 @@ def scan(text, mode="prose"):
                                      note="分句内 ≥2 顿号串 ≥3 项：能概括就概括，"
                                           "法规条目/配置项/操作枚举保留"))
                     break
+
+    # ---- B17：句首代词连珠（段内 ≥3 句连续同一代词起头）与标签密度 ----
+    if "B17" in review_on:
+        _plain_tag = re.compile(r"[她他你我](?:说|开口|应|问)[，。：、！？]")
+        for idx, raw, masked in scannable:
+            stripped_m = masked.strip()
+            if not stripped_m:
+                continue
+            sents = [s.strip() for s in _SENT_SPLIT.split(stripped_m) if s.strip()]
+            run = best_run = 0
+            cur = None
+            for s in sents:
+                head = s[:1]
+                if _B17_PRONOUN_HEAD.match(head):
+                    run = run + 1 if head == cur else 1
+                    cur = head
+                else:
+                    run, cur = 0, None
+                best_run = max(best_run, run)
+            if best_run >= 3:
+                hits.append(dict(
+                    line=idx, rule="B17", tier="REVIEW", snippet=stripped_m[:40],
+                    note=f"句首代词连珠（连续 {best_run} 句）：一主串多动，"
+                         "主语带出一次靠动词链顺承"))
+        n_dialogue = sum(1 for _, raw, _ in scannable
+                         if re.match(r"^[“\"『「]", raw.strip()))
+        n_tags = sum(len(_plain_tag.findall(masked)) for _, _, masked in scannable)
+        if n_dialogue >= 4 and n_tags > n_dialogue * 0.5:
+            first_tag_line = next(
+                (idx for idx, _, masked in scannable
+                 if _plain_tag.search(masked)), 1)
+            hits.append(dict(
+                line=first_tag_line, rule="B17", tier="REVIEW",
+                snippet=f"{n_tags} 个说类标签 / {n_dialogue} 行独行对白",
+                note="对白标签密度超标：语境可判的独行对白裸奔；"
+                     "力度用动作替标签干活"))
 
     # 同点双报抑制：B4/B10 的改法是删掉段首提示语/起手式，删后 B3 的触发
     # 对象不复存在，同线命中时 B3 不报（优先级见 SKILL.md B3）

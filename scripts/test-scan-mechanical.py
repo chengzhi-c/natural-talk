@@ -258,6 +258,31 @@ check_mode("gen-D4-万能收尾", PLANTED_GEN_D4, "gen", [], ["D4"])
 check_mode("gen-D5-空预告", PLANTED_GEN_D5, "gen", [], ["D5"])
 check_mode("gen-D6-模糊归因", PLANTED_GEN_D6, "gen", [], ["D6"])
 
+# ---------- fiction 词表（B13/B15/B16/B17/B18）：红灯捕获 + 人写豁免 ----------
+PLANTED_FICTION_B13 = "她微微点头，指尖极轻地按在杯沿上，又轻轻拍了拍。"
+PLANTED_FICTION_B13_STATE = "远处传来微弱的回响，水面浮着一层极淡的柔光。"
+PLANTED_FICTION_B15 = "她猛地一僵，整个人震了一下，指甲掐进了掌心。"
+PLANTED_FICTION_B16 = "他们沉默了很久，久到炭火都凉透了。"
+PLANTED_FICTION_B17_FANCY = "“坐。”她命令道。"
+PLANTED_FICTION_B17_CHAIN = "他端着盆。他蹲下。他撕开布。"
+PLANTED_FICTION_B17_DENSITY = (
+    "“吃。”她说。\n\n“不吃。”她说。\n\n“为什么。”她问。\n\n"
+    "“不饿。”她说。\n\n“那就放着。”她说。"
+)
+PLANTED_FICTION_B18 = "他拍了一下，两下，第三下拍到一半停住了。"
+FICTION_HUMAN_CLEAN = "水声听久了就懒得分了。茶水凉透了，她把碗收进竹筐，起身去看院里的雨。壶盖一下一下地跳，也没人去管。"
+
+check_mode("fiction-B13-动作副词", PLANTED_FICTION_B13, "gen", [], ["B13"])
+check_mode("fiction-B13-状态豁免", PLANTED_FICTION_B13_STATE, "gen", [], [])
+check_mode("fiction-B15-抽搐", PLANTED_FICTION_B15, "gen", [], ["B15"])
+check_mode("fiction-B16-回环", PLANTED_FICTION_B16, "gen", [], ["B16"])
+check_mode("fiction-B17-花式标签", PLANTED_FICTION_B17_FANCY, "gen", [], ["B17"])
+check_mode("fiction-B17-代词连珠", PLANTED_FICTION_B17_CHAIN, "gen", [], ["B17"])
+check_mode("fiction-B17-标签密度", PLANTED_FICTION_B17_DENSITY, "gen", [], ["B17"])
+check_mode("fiction-B18-计数", PLANTED_FICTION_B18, "gen", [], ["B18"])
+check_mode("fiction-人写-洁净段", FICTION_HUMAN_CLEAN, "gen", [], [])
+check_mode("fiction-人写-洁净段-fiction模式", FICTION_HUMAN_CLEAN, "fiction", [], [])
+
 # 人写组：gen 模式 FIX 必须零命中；REVIEW 命中须为"复核后保留"型
 GEN_HUMAN_METAPHOR = "缓存就像一个仓库，把常用数据放在离 CPU 更近的位置，读得快，写回慢。"
 GEN_HUMAN_SOURCE = "2025 年 3 月接口升级后，旧版客户端无法继续登录。"
