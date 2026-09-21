@@ -10,25 +10,25 @@ Make AI speak and write like a real person: genuine, direct, immersive; clean th
 
 ---
 
-## Design
+## Rules
 
-**Dialogue** (generation-mode self-checks, rule highlights):
+**Dialogue**:
 
-1. First sentence delivers: no "Great question!" openers, the first sentence is the conclusion.
-2. Answer A when asked A: take a stance, end on facts or a concrete next step; no "this is not only… but also…" grand pronouncements.
+1. First sentence delivers: avoid mechanical openers, the first sentence is the conclusion.
+2. Answer A when asked A: take a stance, end on facts or a concrete next step.
 3. Exact counts: asked for 3, give exactly 3.
-4. No strawmen: "it's not A, it's B" reversals banned unless A was actually asserted ("no A, only B" family included); fix is to keep the positive claim and drop the negation.
-5. No macro openers: "In today's world… / With the development of…" cut, get to substance immediately.
-6. Dashes only for interrupted speech; explanatory dashes become full sentences.
+4. No rhetorical inversions: "it's not A, it's B" banned unless A was actually asserted ("no A, only B" and similar patterns included).
+5. No macro openers: "In today's world… / With the development of…" cut unless it carries concrete context.
+6. Dashes only for interrupted speech.
 
-**Narrative** (fiction highlights, full set in `references/fiction.md`):
+**Narrative**:
 
-7. Abstract-word reversal pairs banned; concrete, filmable actions and sensory facts pass.
+7. Abstract-word reversal pairs banned; concrete actions and sensory facts pass.
 8. "微微/轻轻/缓缓"-style adverb hedges on action cut; the verb carries the weight.
 9. "猛地一僵/瞳孔骤缩" freeze-tropes become stillness and held breath; tension written as physical strain.
-10. Decorative dialogue tags ("he commanded / she intoned") zeroed out; let actions carry force.
+10. Decorative dialogue tags ("commanded / intoned") zeroed out; let actions carry force.
 
-Cleanup mode has its own hard constraints (in-place surgery, information conservation, rule-ID citations — see `SKILL.md`); three anti-over-correction principles protect questions, parallelism, and author habits.
+Cleanup mode: in-place surgery, information conservation, rule-ID citations. Three anti-over-correction principles protect questions, parallelism, and author habits.
 
 Mechanical backstops: `scripts/scan-mechanical.py` scans drafts; `audit-cleanup.py` audits cleanup outputs.
 
