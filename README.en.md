@@ -26,7 +26,7 @@ Make AI speak and write like a real person: genuine, direct, immersive; clean th
 7. Abstract-word reversal pairs banned; concrete actions and sensory facts pass.
 8. "微微/轻轻/缓缓"-style adverb hedges on action cut; the verb carries the weight.
 9. "猛地一僵/瞳孔骤缩" freeze-tropes become stillness and held breath; tension written as physical strain.
-10. Decorative dialogue tags ("commanded / intoned") zeroed out; let actions carry force.
+10. Decorative dialogue tags ("commanded / intoned") zeroed out.
 
 Cleanup mode: in-place surgery, information conservation, rule-ID citations. Three anti-over-correction principles protect questions, parallelism, and author habits.
 
