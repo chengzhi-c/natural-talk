@@ -1,5 +1,5 @@
 {
-  "frozen_at": "2026-09-02T00:49:13+0800",
+  "frozen_at": "2026-09-21T10:59:54+0800",
   "cases": {
     "SF-01": {
       "case": "cases/SF-01.txt",
@@ -400,7 +400,7 @@
       "assertions": [
         {
           "type": "require_final_regex",
-          "pattern": "赋能",
+          "pattern": "上层应用",
           "level": "l1"
         },
         {
@@ -432,7 +432,55 @@
         }
       ],
       "retention_min": 0.9
+    },
+    "SF-09": {
+      "case": "cases/SF-09.txt",
+      "sha256": "40337bfa1e389ab37c2abe4d12c57f9ec6ccbdd83d6f8ed62e2ce4f5a0596fa8",
+      "assertions": [
+        {
+          "type": "require_final_regex",
+          "pattern": "我先清一下日志——",
+          "level": "l1"
+        },
+        {
+          "type": "require_final_regex",
+          "pattern": "对讲机",
+          "level": "l1"
+        },
+        {
+          "type": "require_final_regex",
+          "pattern": "临时盘",
+          "level": "l1"
+        },
+        {
+          "type": "require_final_regex",
+          "pattern": "报表",
+          "level": "l1"
+        },
+        {
+          "type": "forbid_final_regex",
+          "pattern": "说白了",
+          "level": "l2"
+        },
+        {
+          "type": "forbid_final_regex",
+          "pattern": "不是没有人",
+          "level": "l2"
+        }
+      ],
+      "retention_min": 0.75
     }
   },
-  "changes": []
+  "changes": [
+    {
+      "date": "2026-09-21",
+      "case": "SF-09",
+      "reason": "新增 SF-09：台词被打断的合法破折号（B5 豁免形态）必须在清理后存活，require 级断言锚定，防止过度删除随版本迭代固化；同例含 B10/B1 病灶照常清理"
+    },
+    {
+      "date": "2026-09-21T14:35:00+0800",
+      "case": "SNF-07",
+      "reason": "require 赋能 与清理硬约束句内手术原则冲突：赋能→支撑为等义改写（kimi/qwen 双模型独立同改），信息锚点改判 上层应用；样例文本与SHA256 未变，仅断言更新"
+    }
+  ]
 }

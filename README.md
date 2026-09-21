@@ -10,181 +10,100 @@
 
 ---
 
-## 核心设计
+## 设计
 
-- **零号原则：交互姿态（同行平视）**：像懂行的同行一样交流，第一句直奔结论，消除客服废话、免责包装与虚假共情。
-- **核心架构**：
-  - **日常对话与交互**：直接遵循主规约，首句直给，自然段落展开，正面陈述事实，严格遵循数量词约束。
-  - **叙事创作与小说工法**：读取 `references/fiction.md`，摄影机视点在场（默认限知），动作与物理受力推进，代词连贯自然；结局类型、叙事结构与角色声线不受限（见创作自由边界），管控的只有可定位的机械痕迹。
+- `SKILL.md`：核心规则（反例/正解对照）+ 防误杀三原则，日常对话只付最小上下文成本。
+- `references/rules-full.md`：全量 D/B/C/N 编号规范，成文清理的逐条引用依据。
+- `references/fiction.md`：叙事工法。摄影机视点在场（默认限知），动作与物理受力推进；结局、结构与角色声线不受限，管控的只有可定位的机械痕迹。
+- `scripts/`：`scan-mechanical.py` 扫描草稿；`audit-cleanup.py` 审计清理稿的信息守恒与改动归属。
 
 ---
 
-## 效果对比
+## 效果
 
 <details>
-<summary><b>测试设定（点击展开）</b></summary>
+<summary><b>测试设定</b></summary>
 
-> **测试模型**：`大肥鲸-flash`  
-> **统一提示词**：`豆包豆包，我要看女生谈恋爱，500字左右。`（is real）
+> `scripts/scan-mechanical.py`（gen 模式）自动扫描翻案腔变体与破折号密度，命中定位到字符级。短文 4 端点 × 10 模型 × 6 场景 106 份；小说长文 10 模型 × 4 场景 38 篇（每篇 2000-8000 字）。
 
 </details>
 
-| 优化前 | 优化后 |
-| :---: | :---: |
-| <img src="assets/detection-before.png" width="480" alt="优化前"> | <img src="assets/detection-after.png" width="480" alt="优化后"> |
+**小说长文（10 模型 × 4 场景 × 38 篇）**：
 
-<details>
-<summary><b>查看生成原文详情（点击展开）</b></summary>
+| 模型 | 变体（累计） | 破折号（累计，合法句内形） |
+| :--- | :---: | :---: |
+| qwen3.8-27b / glm-5.3 / glm-5.3-flash / gemini-3.8 / step-5-preview / deepseek-v4-flash / longcat-2.0 | 0 | 0–4 |
+| kimi-k2.6 / deepseek-v4-pro / minimax-m2.7 | 各 1 | 0–4 |
 
-### 优化前
+> 35 篇零命中；3 处残留人工复核后真病灶仅 1 处（minimax），其余 2 处为合法翻转与实物对举。FIX 级命中 0。深度思考开启时执行完整度显著更高。
+>
+> 无 skill 基线：glm-5.3 同题同卡双臂，不挂 1 变体 + 10 破折号 + 20 疑点，挂载后 0 + 0 + 1；短文对抗场景 5 模型裸跑 0–2 变体/篇。
 
-**《雨天与热牛奶》**
+**长文边界**：角色卡超长 system（20K+ 字符）叠加弱依从模型时翻案腔回潮，属模型对长指令的注意力衰减而非规则失效；缓解手段见 SKILL.md 场景路由。
 
-林知夏第一次注意到许栀，是在图书馆的最后一排。
+**清理基准（17 例冻结语料）**：
 
-那天雨下得很大，许栀缩在角落看书，头发被雨水淋得半湿，像只狼狈的小猫。林知夏走过去，把一杯还冒着热气的牛奶放在她手边：“图书馆楼下买的，多了一杯。”
+| 模型 | L1 失败 | FIX 清除率 | REVIEW 清除率 | 误伤 | 留存率 |
+| :--- | :---: | :---: | :---: | :---: | :---: |
+| kimi-k2.6 | 0/17 | 100% | 75% | 0/8 | 0.69–1.00 |
+| qwen3.8-27b | 0/17 | 100% | 75% | 0/8 | 0.69–1.00 |
+| deepseek-v4-flash | 5/17 | 100% | 64% | 3/8 | 0.23–1.00 |
 
-许栀抬头，眼睛亮得像雨后洗过的天空。从此以后，每个下雨天，那排座位都会多一杯热牛奶。
-
-后来她们一起熬夜赶论文，一起在便利店分食关东煮，一起把春天走成夏天。许栀会在林知夏打喷嚏时，自然而然地把围巾分她一半；林知夏会在许栀说“想吃甜的”时，跑三条街去买那家限量款泡芙。
-
-谁都没有先开口，可谁都知道，那不是朋友的距离。
-
-毕业前夜，她们坐在天台上喝酒。许栀喝得脸颊绯红，忽然小声问：“林知夏，如果我说我喜欢你……你会不会觉得奇怪？”
-
-晚风正好。林知夏把易拉罐放下，指尖轻轻勾住许栀的手指，笑着说：“我等这句话，等了整整三年。”
-
-那天夜里，城市的灯一盏盏亮起来，像为她们铺成一条银河。许栀靠在她肩上，声音闷闷的：“你的牛奶，以后还分我吗？”
-
-“分。”林知夏低头吻了吻她的发顶，“一辈子都分你。”
-
-窗外的雨，刚好停了。
+> deepseek 的 5 处失败均为过删（应保留的实体信息被蒸发），`audit-cleanup.py` 可机械抓出全部 5 处。
 
 ---
 
-### 优化后
+## 使用
 
-雨是在九点半下来的。她站在便利店檐下，看着雾白的水汽漫过街灯，正犹豫要不要冲进雨里，肩头忽然一沉。一件还带着体温的外套披上来，然后是宋遥的声音，从身后近得发烫的地方落下来：“猜你就没带伞。”
-
-她回头，宋遥手里攥着两把伞，一把撑开举在两个人头顶，伞骨往她这边斜了大半。
-
-“一把就够了。”
-
-“一把不够。”宋遥把另一把往胳膊底下一夹，空出的手理了理她沾了潮气的刘海，指尖在她额角停了一下，又收回去。“两把才显得我专门来接你。”
-
-街灯把雨丝照成一线线亮的。她垂下眼，看见宋遥帆布鞋的鞋尖正对着自己的鞋尖，中间隔着一小洼水。她想往旁边挪半步，挪到一半又站回原处。
-
-“你从哪儿过来的？”
-
-“你们图书馆后门，等了四十分钟。”
-
-她没忍住笑出声，笑完喉咙发紧。宋遥也笑，顺手把夹着的那把伞塞进她手里：“下次别让我等这么久。”
-
-雨声把后半句泡软了。她没答话，低头摩挲伞柄上宋遥指节留下的潮气，往她那边靠了靠。两把伞挤在一起，伞沿碰着伞沿，滴下来的水连成一条线。
-
-走到第三个路灯底下，宋遥忽然停下来，把斜了一路的伞扶正，声音被雨浸得湿漉漉的：“要不，你以后住我那儿，下雨天我不用跑两趟。”
-
-她愣了愣。
-
-“考虑考虑？”宋遥说。
-
-她没回答，只是把伞收得更紧，脚步跟上去，鞋尖并着鞋尖，落进同一片水洼里。
-
-</details>
-
----
-
-## 快速使用
-
-> **模型选择**：更推荐使用 `glm-5.3` `glm-5.3-flash` 模型。(因为更听话...长文输出大概率不错，大肥鱼的实际效果就很玄学。)
-
-### 1. Agent Skill 安装
+> 模型选择：`glm-5.3` `qwen3.8-27b` 指令遵循较好。规则只能提醒规避，执行靠模型自身解读——深度思考开启时完整度明显更高；弱依从模型（longcat/minimax）残留多，需扫描器兜底。
 
 ```bash
-# 方式一：通过 npx skills 一键安装
+# 一键安装
 npx skills add chengzhi-c/natural-talk
 
-# 方式二：Git Clone 至 Claude Code / Cursor / Codex / Antigravity 技能目录
+# 或 clone 至 Claude Code / Cursor / Codex / Antigravity 技能目录
 git clone https://github.com/chengzhi-c/natural-talk.git ~/.claude/skills/natural-talk
 ```
 
-### 2. 作为 System Prompt 或 Agent 工具使用
+**API 调用**：读 `SKILL.md` 作 system prompt，按场景拼接 references：
 
-直接读取 `SKILL.md` 作为主 Prompt，并按需引入 `references/` 下的场景指南：
-
-**API 调用示例**：
 ```python
-from pathlib import Path
-from openai import OpenAI
-
-client = OpenAI()
-root = Path("path/to/natural-talk")
-
-# 读取主规则，根据任务按需拼接场景指南
-system_prompt = (root / "SKILL.md").read_text(encoding="utf-8")
-# 如为小说创作场景，可拼接 fiction.md:
-# system_prompt += "\n\n" + (root / "references" / "fiction.md").read_text(encoding="utf-8")
-
-response = client.chat.completions.create(
-    model="your-model-name",
-    messages=[
-        {"role": "system", "content": system_prompt},
-        {"role": "user", "content": "你的创作或对话提示词"}
-    ]
-)
-print(response.choices[0].message.content)
+system = Path("SKILL.md").read_text(encoding="utf-8")
+# 小说创作拼接 fiction.md；成文清理拼接 rules-full.md（改动须逐条引用编号）
+# system += "\n\n" + Path("references/fiction.md").read_text(encoding="utf-8")
 ```
 
-### 3. RikkaHub / SillyTavern
-
-导入 [Release](https://github.com/chengzhi-c/natural-talk/releases) 中的 `natural-talk.zip`。
+RikkaHub / SillyTavern：导入 [Release](https://github.com/chengzhi-c/natural-talk/releases) 的 `natural-talk.zip`。
 
 ---
 
-## 目录结构
+## 目录
 
 ```
 natural-talk/
-├── SKILL.md                         # 核心规范与日常对话（Agent 入口与单一事实源）
-├── references/                      # 垂直场景参考库（按需读取）
-│   └── fiction.md                   # 叙事创作与小说工法指南
-├── scripts/                         # 自动化契约与全量体检套件 (verify_repo.py)
-├── evals/                           # 评测基准与用例集
-└── assets/                          # 静态资源
+├── SKILL.md            # 核心规则（Agent 入口）
+├── references/         # fiction.md 小说工法 / rules-full.md 全量规范
+├── scripts/            # 扫描器、审计与体检套件
+├── evals/              # 评测基准与判分
+└── assets/
 ```
 
----
+## 边界
 
-## 不适用
-
-学术论文、公文、法律文书、营销文案、演讲稿等需要相反风格的特定体制文书，本规则自动让位。
-
----
-
-## 局限
-
-模型写作中的“AI 味”多半来自预训练形成的表达缺陷。现阶段，skill 与 prompt 主要只能通过提醒和警示，让模型尽量避免这些问题；实际效果仍取决于模型自身的解读能力。
-
----
+学术论文、公文、法律文书、营销文案等体制文书，规则自动让位。"AI 味"多半源于预训练的表达缺陷，规则只能提醒规避，效果取决于模型自身的解读能力。
 
 ## 贡献
 
-欢迎报告误判、提交案例或改进规则，流程见 [CONTRIBUTING.md](CONTRIBUTING.md)。
-
----
+欢迎报告误判、提交案例：[CONTRIBUTING.md](CONTRIBUTING.md)。
 
 ## 致谢
 
-- [shuorenhua](https://github.com/MrGeDiao/shuorenhua)：中文优先的去 AI 味改写 skill，感谢其在信息守恒、编辑边界与工程化评测上的探索与启发。
-- [lieflat-less-ai-tone](https://github.com/larashero3-dotcom/lieflat-less-ai-tone)：中文去 AI 腔提示词研究，感谢其在文本层反清单与实证对照研究中提供的判定依据。
-
----
+- [shuorenhua](https://github.com/MrGeDiao/shuorenhua)：信息守恒、编辑边界与工程化评测的启发。
+- [lieflat-less-ai-tone](https://github.com/larashero3-dotcom/lieflat-less-ai-tone)：文本层反清单与实证对照的判定依据。
 
 ## 社区
 
-欢迎加入 [LINUX DO](https://linux.do) 社区，一个「新的理想型社区」。
-
----
+[LINUX DO](https://linux.do)
 
 ## License
 

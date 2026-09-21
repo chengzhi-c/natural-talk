@@ -116,13 +116,51 @@ check("AI-2", AI_2, [])
 check("种植-B1", PLANTED_B1, [], ["B1"])
 check("种植-B3", PLANTED_B3, [], ["B3"])
 check("种植-B4a", PLANTED_B4A, ["B4"])
-check("种植-B4b", PLANTED_B4B, ["B4"])
+check("种植-B4b", PLANTED_B4B, [], ["B4"])
 check("种植-B5", PLANTED_B5, [], ["B5"], {"B5": 1})
 check("种植-B5-单破折号", PLANTED_B5_SINGLE, [], ["B5"], {"B5": 1})
 check("种植-B6", PLANTED_B6, ["B6"], [], {"B6": 3})
 check("种植-B11", PLANTED_B11, [], ["B11"], {"B11": 1})
 check("种植-B12", PLANTED_B12, [], ["B12"], {"B12": 1})
 check("种植-B12-带背景", PLANTED_B12_BACKGROUND, [])  # 随着句带具体事件，零命中
+
+# ---------- B1 隐性对举变体（生成文本实测漏网形态：省“而”翻案腔） ----------
+check("种植-B1只是变体", "他不是不在意，只是习惯了把在意藏起来。", [], ["B1"], {"B1": 1})
+check("种植-B1那不是是", "那不是裙子，是她妈妈的旧窗帘。", [], ["B1"], {"B1": 1})
+check("种植-B1更是变体", "这不仅是一次升级，更是一次反思。", [], ["B1"], {"B1": 1})
+check("种植-B1纯粹是变体", "她要的不是道歉，纯粹是一句实话。", [], ["B1"], {"B1": 1})
+check("种植-B1破折号形态", "那不是道歉——是宣战。", [], ["B1", "B5"])
+# 豁免：转折枚举不是对举；台词在引文掩码内；口语“不是A，是B”只作 REVIEW 候选
+check("B1变体-转折豁免", "他不是本地人，但城里的每条胡同他都熟。", [])
+check("B1变体-枚举豁免", "拿走文件的不是他就是他哥，办公室里再没别人。", [])
+check("B1变体-台词豁免", "老张敲了敲桌子：“这不是钱的问题，是规矩问题。”", [])
+check("B1变体-而是不双报", "真正的瓶颈不是技术，而是耐心。", [], ["B1"], {"B1": 1})
+check("种植-B1与其说不如说", "这与其说是理性抉择，不如说是骨子里的恐惧。", [], ["B1"], {"B1": 1})
+check("种植-B1谈不上更多是", "他谈不上喜欢画画，更多是为了打发时间。", [], ["B1"], {"B1": 1})
+check("B1变体-单纯不如说不报", "与其抱怨规则，不如先把这局打完。", [])
+
+# ---------- B1 变体扩展（r2b：句号/单破折号分隔 + 没有/看似/不在于家族 + 是不是误报回归） ----------
+check("B1变体-句号形态", "那不是雨。是有人在楼上晾衣服。", [], ["B1"], {"B1": 1})
+check("B1变体-句号形态-没有只有", "世上没有奇迹。只有不肯认输的人。", [], ["B1"], {"B1": 1})
+check("B1变体-单破折号形态", "那不是道歉—是宣战。", [], ["B1", "B5"], {"B1": 1, "B5": 1})
+check("B1变体-没有只有", "没有永远的朋友，只有永远的利益。", [], ["B1"], {"B1": 1})
+check("B1变体-没有什么只是", "没有什么岁月静好，只是有人替你负重前行。", [], ["B1"], {"B1": 1})
+check("B1变体-不在于而在于", "真正的胜负不在于招式有多华丽，而在于能否一击毙命。", [], ["B1"], {"B1": 1})
+check("B1变体-表面看似实则", "表面看似风平浪静，实则各方势力早已磨刀霍霍。", [], ["B1"], {"B1": 1})
+check("B1变体-看似骨子里", "他表面看似玩世不恭，骨子里却极有原则。", [], ["B1"], {"B1": 1})
+check("B1变体-反倒是", "这非但不是妥协，反倒是宣战。", [], ["B1"], {"B1": 1})
+# 是不是疑问形不得误判为对举（句号形与逗号形各一，后者为历史误报回归锁）
+check("B1变体-是不是疑问-句号", "他不确定那是不是猫。是他看错了。", [])
+check("B1变体-是不是疑问-逗号", "她问这是不是真的，是真的她又该怎么办。", [])
+# 没有……只有……的事实清点：同形不可机械区分，报 REVIEW 候选交复核（note 教判据），
+# 与 A4 允许 B1/B5 候选同理——候选不授权自动改写
+check("B1变体-事实清点候选", "冰箱里没有可乐，只有啤酒。", [], ["B1"], {"B1": 1})
+# 动作否定（趋近-收回结构）：合法描写，与抽象对举同形，机器报 REVIEW 候选交人判（B1 小说形判据）
+check("B1变体-动作否定候选", "她没有握上去，只是把手收回了掌心。", [], ["B1"], {"B1": 1})
+# 抽象对举（两侧都是抽象词）：真病灶，必须报
+check("B1变体-抽象对举", "没有安慰，只有沉默。", [], ["B1"], {"B1": 1})
+# 跨句无对举关系不误报：没有 A。是 B（follow 受限，只有/只是/唯一直连才报）
+check("B1变体-没有是-B不报", "冰箱里没有可乐。是我上次喝完了。", [])
 
 _b3_hits = scan(PLANTED_B3)
 if any("加一个" in h["note"] for h in _b3_hits if h["rule"] == "B3"):
@@ -194,18 +232,15 @@ MIXED_LEVEL_B6 = """## 一、一级
 """
 check("B6-混合标题层级", MIXED_LEVEL_B6, [])
 
-# 触发词一致性：B4A_PROMPTS 必须在 SKILL.md 或 dialogue.md 的 B4 定义中
-_SKILL_TEXT = (Path(__file__).resolve().parent.parent / "SKILL.md").read_text(encoding="utf-8")
-_DIALOGUE_PATH = Path(__file__).resolve().parent.parent / "references" / "dialogue.md"
-_DIALOGUE_TEXT = _DIALOGUE_PATH.read_text(encoding="utf-8") if _DIALOGUE_PATH.exists() else ""
-_B4_COMBINED = _SKILL_TEXT + _DIALOGUE_TEXT
+# 触发词一致性：B4A_PROMPTS 必须在全量规范 rules-full.md 的 B4 定义中
+_RULES_FULL = (Path(__file__).resolve().parent.parent / "references" / "rules-full.md").read_text(encoding="utf-8")
 for _w in ("一句话总结", "核心是"):
-    if _w not in _B4_COMBINED:
-        failures.append(f"触发词缺失：核心提示词「{_w}」不在 SKILL.md 或 dialogue.md 的 B4 定义中")
+    if _w not in _RULES_FULL:
+        failures.append(f"触发词缺失：核心提示词「{_w}」不在 rules-full.md 的 B4 定义中")
 
 # ---------- 模式感知 ----------
 # fixture 取自公版语料（呼蘭河傳）真实段落：含多处顿号串，是人类小说的正常写法。
-# SKILL.md 规定 fiction 清理不带入 B3/B4/B9/B10/B11，扫描器 --mode fiction 必须抑制；
+# rules-full.md 规定 fiction 清理不带入 B3/B4/B9/B10/B11，扫描器 --mode fiction 必须抑制；
 # B6/B1 在带入集内，末尾种植的编号小标题与"而是"句必须照报。
 FICTION_FIXTURE = (Path(__file__).resolve().parent / "fixtures" / "fiction-sample.txt"
                    ).read_text(encoding="utf-8")

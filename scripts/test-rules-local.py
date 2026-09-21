@@ -2,15 +2,20 @@
 """Deterministic Offline Behavioral Regression Test for Natural-Talk.
 
 Zero-API cost, runs in milliseconds.
-- Validates 0 False Positives on Human Literary & Daily Dialogue Samples (22 Invariant Cases).
-- Validates 100% True Positive Detection across 8 Major AI Slop Patterns (57 Adversarial Mutation Cases).
+- Validates 0 False Positives (FIX tier) on Human Literary & Daily Dialogue Samples.
+- Validates 100% True Positive Detection (any tier) across 8 Major AI Slop Patterns.
 - Validates Grammar Context Isolation (Single-line & Multi-line Code Fences, Dialogue Quotes Sovereignty).
+
+Scanner under test: scripts/scan-mechanical.py (mode=gen) — the same scanner
+shipped in the SKILL contract. Legacy mirror scan_slop.py was merged in; the
+corpus is the value, the duplicate implementation is not.
 """
 
 import os
 import re
 import sys
 import time
+import importlib.util
 from pathlib import Path
 
 # Ensure UTF-8 output on Windows
@@ -21,11 +26,22 @@ if sys.platform == "win32":
     except Exception:
         pass
 
-# Import scan_text from scan_slop
-sys.path.insert(0, str(Path(__file__).parent))
-from scan_slop import scan_text, PATTERNS
+_spec = importlib.util.spec_from_file_location(
+    "scan_mechanical", Path(__file__).resolve().parent / "scan-mechanical.py")
+_mod = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(_mod)
 
-# 1. 22 Clean Invariant & Boundary Cases (Must PASS with 0 violations)
+
+def scan_text(text):
+    """scan-mechanical gen 模式适配层：返回 [(行号, 规则, 片段, 说明)]。"""
+    return [(h["line"], h["rule"], h["snippet"], h["note"])
+            for h in _mod.scan(text, mode="gen")]
+
+
+def has_fix_hits(text):
+    return any(h["tier"] == "FIX" for h in _mod.scan(text, mode="gen"))
+
+# 1. Clean Invariant & Boundary Cases (Must PASS with 0 violations)
 INVARIANT_SAMPLES = [
     ("HUMAN_01_自然日常对话", "“你昨晚去哪了？”“在老王家打牌，怎么了？”“没事，钥匙落在茶几上了。”"),
     ("HUMAN_02_台词内部包含对举", "老张敲了敲桌子：“这不是钱的问题，而是规矩问题！懂吗？”"),
@@ -51,7 +67,7 @@ INVARIANT_SAMPLES = [
     ("SYNTAX_07_纯台词对话段落", "“空气凝固了？”“没有啊，挺凉快的。”“那你为什么不说话？”“我在想事情。”"),
 ]
 
-# 2. 57 Adversarial AI Slop Fixtures (Must FAIL by triggering detection across all 8 patterns)
+# 2. Adversarial AI Slop Fixtures (Must FAIL by triggering detection across all 8 patterns)
 AI_SLOP_SAMPLES = [
     # --- Pattern 1: 套路生理反应 (10 cases) ---
     ("P1_01_副词修饰瞳孔", "在听到枪声的瞬间，他的瞳孔微缩，死死盯住门口。"),
@@ -74,6 +90,9 @@ AI_SLOP_SAMPLES = [
     ("P2_06_谈不上更多是", "他谈不上有多么同情对方，更多是一种唇亡齿寒的兔死狐悲。"),
     ("P2_07_谈不上更多的是", "他谈不上喜欢画画，更多的是为了打发无聊的时间。"),
     ("P2_08_表面看似骨子里", "他表面看似玩世不恭，骨子里却极有原则。"),
+    ("P2_09_只是对举无而", "他不是不在意，只是习惯了把在意藏起来。"),
+    ("P2_10_不是只是陈述", "她说的不是气话，只是她表达关心的另一种方式。"),
+    ("P2_11_那不是只是", "那不是勇敢，只是没有别的路可以走了。"),
 
     # --- Pattern 3: 套路修辞与凝固感 (7 cases) ---
     ("P3_01_眼底掠过暗芒", "她眼底掠过一抹决绝的冷意，随即抽出了短刀。"),
@@ -133,18 +152,20 @@ def run_regression_tests() -> bool:
     print("   Natural-Talk Local Offline Regression Test    ", flush=True)
     print("==================================================\n", flush=True)
     
-    # Step 1: Check False Positives on Human & Invariant Samples (22 cases)
-    print("--- [Test Suite 1: Human Baseline & Syntax Invariants (Zero False Positives)] ---")
+    # Step 1: Check False Positives on Human & Invariant Samples (FIX tier must be zero;
+    # REVIEW-tier candidates on human text are by-design "review then keep" hits)
+    print("--- [Test Suite 1: Human Baseline & Syntax Invariants (Zero FIX-tier False Positives)] ---")
     fp_count = 0
     for name, text in INVARIANT_SAMPLES:
-        findings = scan_text(text)
-        if findings:
+        findings = [f for f in scan_text(text)]
+        fix_hits = [f for f in findings if has_fix_hits(text)]
+        if has_fix_hits(text):
             print(f"  ❌ FAIL (False Positive) [{name}]:")
-            for line_no, p_name, match, fix in findings:
-                print(f"     Line {line_no} [{p_name}] -> \"{match}\"")
             fp_count += 1
         else:
-            print(f"  🟢 PASS [{name}]")
+            review = [f for f in findings]
+            note = f" (+{len(review)} REVIEW candidates)" if review else ""
+            print(f"  🟢 PASS [{name}]{note}")
             
     # Step 2: Check True Positives on Adversarial Mutation Slop Samples (57 cases)
     print("\n--- [Test Suite 2: AI Slop Benchmark (100% Detection Rate across 8 Patterns)] ---")
@@ -166,7 +187,7 @@ def run_regression_tests() -> bool:
     print("==================================================\n")
     
     if fp_count == 0 and fn_count == 0:
-        print("✅ ALL LOCAL REGRESSION TESTS (22 INVARIANTS + 57 ADVERSARIAL CASES) PASSED CLEANLY!\n")
+        print(f"✅ ALL LOCAL REGRESSION TESTS ({len(INVARIANT_SAMPLES)} INVARIANTS + {len(AI_SLOP_SAMPLES)} ADVERSARIAL CASES) PASSED CLEANLY!\n")
         return True
     else:
         print(f"❌ REGRESSION FAILED! ({fp_count} false alarms, {fn_count} slop escapes)\n")

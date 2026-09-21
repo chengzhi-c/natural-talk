@@ -26,6 +26,7 @@ $RECYCLE.BIN/
 PROJECT-STRUCTURE.md
 corpus/
 evals/runs/
+evals/turing-runs/
 
 # Python
 __pycache__/

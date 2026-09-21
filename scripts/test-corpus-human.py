@@ -13,7 +13,19 @@ if sys.platform == "win32":
         pass
 
 sys.path.insert(0, str(Path(__file__).parent))
-from scan_slop import scan_text
+import importlib.util
+
+_spec = importlib.util.spec_from_file_location(
+    "scan_mechanical", Path(__file__).resolve().parent / "scan-mechanical.py")
+_mod = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(_mod)
+
+
+def scan_text(text):
+    """契约扫描器 gen 模式：FIX 级判误伤；REVIEW 候选在人类文本上是
+    '复核后保留'型命中（B5 破折号、B13 副词为旧白话语域常态），不计误伤。"""
+    return [(h["line"], h["rule"], h["snippet"], h["note"])
+            for h in _mod.scan(text, mode="gen") if h["tier"] == "FIX"]
 
 def test_human_corpus():
     corpus_dir = Path(__file__).resolve().parent.parent.parent / "natural-talk-tests" / "source-dev" / "corpus" / "human"

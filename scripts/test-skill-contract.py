@@ -26,9 +26,25 @@ REQUIRED_ANCHORS = {
         "description:",
         "零号原则",
         "交互姿态",
-        "日常对话",
-        "叙事创作",
         "references/fiction.md",
+        "references/rules-full.md",
+        "scripts/scan-mechanical.py",
+        "scripts/audit-cleanup.py",
+        "每处改动对应一条编号",
+        "信息守恒",
+    ),
+    "references/rules-full.md": (
+        "D1 谄媚与评判越界",
+        "D6 模糊归因",
+        "B1 翻案腔",
+        "B5 破折号揭晓",
+        "B12 空降宏观开场",
+        "B18 计数癖",
+        "C7 动词精准",
+        "反复写全称、少用代词",
+        "防误杀白名单",
+        "频率原则",
+        "成文清理边界",
     ),
     "references/fiction.md": (
         "事实与设定守恒",
@@ -41,6 +57,7 @@ REQUIRED_ANCHORS = {
         "四大工法正向置换律",
         "舞台剧抽搐：写定住",
         "代词呼吸律",
+        "感官密度调控",
     ),
 }
 
@@ -61,10 +78,10 @@ def check_frontmatter(path: Path, failures: list) -> None:
 
 def main():
     failures = []
-    
+
     # 1. Check frontmatter of SKILL.md
     check_frontmatter(ROOT / "SKILL.md", failures)
-    
+
     # 2. Check required anchors in all model files
     for rel_path, anchors in REQUIRED_ANCHORS.items():
         file_path = ROOT / rel_path
@@ -75,13 +92,13 @@ def main():
         for anchor in anchors:
             if anchor not in content:
                 failures.append(f"{rel_path}: 缺少必选锚点「{anchor}」")
-                
+
     if failures:
         print("❌ skill 契约测试未通过:")
         for f in failures:
             print(" ", f)
         sys.exit(1)
-        
+
     print(f"✅ skill 契约测试全部通过 ({len(REQUIRED_ANCHORS)} 个核心文件，{sum(len(v) for v in REQUIRED_ANCHORS.values())} 处关键锚点核验完毕)")
 
 if __name__ == "__main__":

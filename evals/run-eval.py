@@ -64,13 +64,21 @@ def resolve_credentials(args):
     return base.rstrip("/"), key
 
 
-def build_messages(entry, case_text):
+def build_messages(entry, case_text, core_only=False):
+    """system 拼接遵循 SKILL.md 模式判定：
+    - 生成（retell）：蒸馏核心 SKILL.md（+ fiction.md 当 system=-fiction）
+    - 清理（clean）：追加全量规范 rules-full.md（+ fiction.md 当 system=-fiction）
+    core_only=True 只加载蒸馏核心，跳过参考拼接——蒸馏 A/B 对照专用。
+    """
     skill_main = (ROOT / "SKILL.md").read_text(encoding="utf-8")
+    parts = [skill_main]
+    if not core_only and entry.get("prompt_type") == "clean":
+        parts.append((ROOT / "references" / "rules-full.md")
+                    .read_text(encoding="utf-8"))
     if entry.get("system") == "fiction":
-        fiction_ref = (ROOT / "references" / "fiction.md").read_text(encoding="utf-8")
-        system = skill_main + "\n\n" + fiction_ref
-    else:
-        system = skill_main
+        parts.append((ROOT / "references" / "fiction.md")
+                     .read_text(encoding="utf-8"))
+    system = "\n\n".join(parts)
     if entry["prompt_type"] == "retell":
         user = RETELL_INSTRUCTION + "\n\n" + case_text
     else:
@@ -126,6 +134,9 @@ def main(argv):
     parser.add_argument("--timeout", type=int, default=180)
     parser.add_argument("--output-root", type=Path, default=None,
                         help="输出根目录，默认 evals/runs；测试产物可隔离到主仓库外")
+    parser.add_argument("--core-only", action="store_true",
+                        help="只加载蒸馏核心 SKILL.md，跳过 rules-full/fiction 拼接"
+                             "（蒸馏 A/B 对照专用；run 目录自动加 -core 后缀）")
     args = parser.parse_args(argv[1:])
 
     import os
@@ -146,6 +157,8 @@ def main(argv):
             raise SystemExit(f"未知样例 ID：{sorted(missing)}")
 
     run_name = time.strftime("%Y%m%d") + "-" + args.model
+    if args.core_only:
+        run_name += "-core"
     if args.tag:
         run_name += "-" + args.tag
     out_root = args.output_root or (EVALS_DIR / "runs")
@@ -155,7 +168,8 @@ def main(argv):
     jobs = []
     for entry in entries:
         case_text = (EVALS_DIR / entry["case"]).read_text(encoding="utf-8-sig")
-        messages, system = build_messages(entry, case_text)
+        messages, system = build_messages(entry, case_text,
+                                          core_only=args.core_only)
         prompt_sha = hashlib.sha256(
             json.dumps(messages, ensure_ascii=False).encode("utf-8")).hexdigest()
         for rep in range(1, args.repeat + 1):
@@ -167,6 +181,7 @@ def main(argv):
 
     meta = {"model": args.model, "started_at":
             time.strftime("%Y-%m-%dT%H:%M:%S%z"), "repeat": args.repeat,
+            "core_only": args.core_only,
             "cases": [e["id"] for e in entries], "results": []}
     meta_lock_write = run_dir / "metadata.json"
 

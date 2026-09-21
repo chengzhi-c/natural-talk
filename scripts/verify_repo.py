@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 """verify_repo.py - natural-talk 仓库一键全量自动化体检与契约测试工具 (纯标准库)
 
-运行本脚本将执行四层严苛自检：
+运行本脚本将执行五层严苛自检：
   1. 结构与契约体检 (SKILL.md frontmatter、导航死链、references完备性)
-  2. 离线回归与反套路测试 (22个不变性用例 0 误杀 + 57个AI塑料套路 100% 捕获)
+  2. 离线回归与反套路测试 (不变性用例 0 误杀 + AI 塑料套路 100% 捕获)
   3. 隐私与安全审查 (全仓库扫描 API Key、敏感端点与过程草稿)
   4. 压缩分发包一致性 (校验 natural-talk.zip 是否纯净、无冗余开发文件)
+  5. 正解示例自检 (✅ 行零病灶，规则不得带病示人)
 
 用法:
     python scripts/verify_repo.py
@@ -28,7 +29,23 @@ ROOT = Path(__file__).resolve().parent.parent
 SCRIPTS_DIR = ROOT / "scripts"
 
 sys.path.insert(0, str(SCRIPTS_DIR))
-from scan_slop import scan_text
+
+import importlib.util
+
+def _load_scanner():
+    """契约扫描器：scan-mechanical.py（与 SKILL.md 引用链一致的单一规范源）。"""
+    spec = importlib.util.spec_from_file_location(
+        "scan_mechanical", SCRIPTS_DIR / "scan-mechanical.py")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+_scanner = _load_scanner()
+
+def scan_text(text):
+    """gen 模式扫描适配层：不变量判 FIX 级 0 命中，对抗样例判任意命中。"""
+    return [(h["line"], h["rule"], h["snippet"], h["note"])
+            for h in _scanner.scan(text, mode="gen")]
 
 def test_contract():
     print("\n[1/4] 正在执行：Skill 结构与契约完整性测试...")
@@ -50,13 +67,16 @@ def test_contract():
         # Check reference files mentioned in SKILL.md
         for ref in [
             "references/fiction.md",
+            "references/rules-full.md",
+            "scripts/scan-mechanical.py",
+            "scripts/audit-cleanup.py",
         ]:
             ref_path = ROOT / ref
             if not ref_path.exists():
                 failures.append(f"SKILL.md 导航指向的文件不存在: {ref}")
 
     # 2. Check references
-    for ref_name in ["fiction.md"]:
+    for ref_name in ["fiction.md", "rules-full.md"]:
         p = ROOT / "references" / ref_name
         if not p.exists() or p.stat().st_size == 0:
             failures.append(f"缺少参考指南或文件为空: references/{ref_name}")
@@ -91,14 +111,14 @@ def test_regression():
     from importlib.machinery import SourceFileLoader
     test_rules = SourceFileLoader("test_rules_local", str(SCRIPTS_DIR / "test-rules-local.py")).load_module()
     INVARIANT_SAMPLES, AI_SLOP_SAMPLES = test_rules.INVARIANT_SAMPLES, test_rules.AI_SLOP_SAMPLES
-    
-    # Invariants
+
     inv_fails = 0
     for name, sample in INVARIANT_SAMPLES:
-        hits = scan_text(sample)
-        if len(hits) > 0:
+        hits = _scanner.scan(sample, mode="gen")
+        fix_hits = [h for h in hits if h["tier"] == "FIX"]
+        if len(fix_hits) > 0:
             inv_fails += 1
-            print(f"  ❌ 不变性误杀 [{name}]: {hits}")
+            print(f"  ❌ 不变性误杀 [{name}]: {fix_hits}")
             
     # Adversarial
     slop_fails = 0
@@ -111,7 +131,7 @@ def test_regression():
     if inv_fails > 0 or slop_fails > 0:
         print(f"  ❌ 失败: {inv_fails} 处误杀, {slop_fails} 处漏检")
         return False
-    print(f"  🟢 PASS: 22/22 不变性用例 0 误杀，57/57 变异套路 100% 精准捕获！")
+    print(f"  🟢 PASS: {len(INVARIANT_SAMPLES)}/{len(INVARIANT_SAMPLES)} 不变性用例 0 误杀，{len(AI_SLOP_SAMPLES)}/{len(AI_SLOP_SAMPLES)} 变异套路 100% 精准捕获！")
     return True
 
 def test_privacy():
@@ -186,19 +206,33 @@ def test_zip_package():
             print(f"  🟢 PASS: {zip_path} ({zip_path.stat().st_size:,} 字节) 极致纯净（零脚本、零测试、纯正 Skill 资产包）！")
     return all_ok
 
+def test_positive_examples():
+    print("\n[5/5] 正在执行：正解示例自检（✅ 行零病灶）...")
+    import subprocess
+    result = subprocess.run(
+        [sys.executable, "-B", str(SCRIPTS_DIR / "test-positive-examples.py")],
+        capture_output=True, text=True, cwd=str(ROOT))
+    if result.returncode == 0:
+        print("  🟢 PASS: 全部文档 ✅ 正解示例零翻案腔、零违规破折号！")
+        return True
+    print(result.stdout)
+    print("  ❌ FAIL: 正解示例带病灶，规则不得「带病示人」")
+    return False
+
 def main():
     print("==================================================")
     print("      natural-talk 仓库全量体检自动化测试套件      ")
     print("==================================================")
-    
+
     ok1 = test_contract()
     ok2 = test_regression()
     ok3 = test_privacy()
     ok4 = test_zip_package()
-    
+    ok5 = test_positive_examples()
+
     print("\n==================================================")
-    if ok1 and ok2 and ok3 and ok4:
-        print("🎉 全部 4 项体检测试 100% 通过！仓库处于完美交付状态。")
+    if ok1 and ok2 and ok3 and ok4 and ok5:
+        print("🎉 全部 5 项体检测试 100% 通过！仓库处于完美交付状态。")
         print("==================================================")
         sys.exit(0)
     else:
