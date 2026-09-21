@@ -10,7 +10,7 @@ Make AI speak and write like a real person: genuine, direct, immersive; clean th
 
 ---
 
-## Rules
+## Core Rules
 
 **Dialogue**:
 
