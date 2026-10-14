@@ -3,16 +3,17 @@
 设计原则：先证明脚本能捕获已知缺陷（红灯真红），再采信"零命中"结论。
 - 人类组（A1–A5、C1）：FIX 级必须 0 命中；
   A4 的"其实"与叙述破折号可报 B1/B5 候选（候选不授权自动改写）。
-- AI 腔组 AI-1：必须命中 B10(FIX)＋B1(REVIEW)——测不出即脚本失效。
+- AI 腔组 AI-1：必须命中 B10(FIX)＋B1/B9(REVIEW)——测不出即脚本失效。
   AI-1 为单段文本，B3 按规则定义（非首段）不触发。
 - AI 腔组 AI-2：病灶是 B2（非机械规则），必须 0 命中——误命中即误伤。
-- 种植病灶组：B1/B3/B4/B5/B6/B11/B12/F7 各一处，缺一即脚本漏检。
+- 种植病灶组：B1/B3/B4/B5/B6/B11/B12/B16 各一处，缺一即脚本漏检。
 - 边界组：引用与行内引文豁免、行内代码、表格、B4 触发词、BOM、GBK、B3 分段。
 
 运行：python scripts/test-scan-mechanical.py
 """
 import importlib.util
 import os
+import re
 import subprocess
 import sys
 from collections import Counter
@@ -31,6 +32,8 @@ _spec = importlib.util.spec_from_file_location(
 _mod = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(_mod)
 scan = _mod.scan
+FIX_RULES = _mod.FIX_RULES
+REVIEW_RULES = _mod.REVIEW_RULES
 
 # ---------- 回归集：人类组 ----------
 A1 = "部署完成后先看日志。Kafka 消费延迟超过两秒，基本是消费者组 rebalance 没结束，等一会儿就好；持续上涨则是处理逻辑卡住了，多半出在数据库连接池。我们上个月踩过这个坑，把连接池从 20 调到 50，延迟就平了。"
@@ -51,6 +54,7 @@ PLANTED_B6 = "## 一、先找出模糊在哪里\n\n正文。\n\n## 二、把需�
 PLANTED_B11 = "系统负责采集、存储、展示。"
 PLANTED_B12 = "在当今快速发展的时代，效率成为核心竞争力。"
 PLANTED_B12_BACKGROUND = "随着供应商切换完成，本月起账单走新渠道。"
+PLANTED_B12_TODAY = "在这个行业野蛮生长的今天，效率成了唯一信仰。"
 PLANTED_B1 = "真正的瓶颈不是技术，而是耐心。"
 PLANTED_B3 = "第一段说完了。\n\n值得注意的是，配置管理往往被忽视。"
 PLANTED_B5 = "答案已经很清楚——继续等。"
@@ -109,7 +113,7 @@ for name, t in [("A1", A1), ("A2", A2), ("A3", A3), ("A5", A5), ("C1", C1)]:
 check("A4", A4, [], ["B1", "B5"])
 
 # AI 腔组
-check("AI-1", AI_1, ["B10"], ["B1"])
+check("AI-1", AI_1, ["B10"], ["B1", "B9"])
 check("AI-2", AI_2, [])
 
 # 种植病灶：漏一个都是红灯
@@ -123,6 +127,7 @@ check("种植-B6", PLANTED_B6, ["B6"], [], {"B6": 3})
 check("种植-B11", PLANTED_B11, [], ["B11"], {"B11": 1})
 check("种植-B12", PLANTED_B12, [], ["B12"], {"B12": 1})
 check("种植-B12-带背景", PLANTED_B12_BACKGROUND, [])  # 随着句带具体事件，零命中
+check("种植-B12-在今天", PLANTED_B12_TODAY, [], ["B12"], {"B12": 1})
 
 # ---------- B1 隐性对举变体（生成文本实测漏网形态：省“而”翻案腔） ----------
 check("种植-B1只是变体", "他不是不在意，只是习惯了把在意藏起来。", [], ["B1"], {"B1": 1})
@@ -240,7 +245,7 @@ for _w in ("一句话总结", "核心是"):
 
 # ---------- 模式感知 ----------
 # fixture 取自公版语料（呼蘭河傳）真实段落：含多处顿号串，是人类小说的正常写法。
-# rules-full.md 规定 fiction 清理不带入 B3/B4/B9/B10/B11，扫描器 --mode fiction 必须抑制；
+# fiction.md 规定 fiction 清理不带入 B2/B3/B4/B10/B11，扫描器 --mode fiction 必须抑制；
 # B6/B1 在带入集内，末尾种植的编号小标题与"而是"句必须照报。
 FICTION_FIXTURE = (Path(__file__).resolve().parent / "fixtures" / "fiction-sample.txt"
                    ).read_text(encoding="utf-8")
@@ -262,9 +267,9 @@ def check_mode(name, text, mode, expect_fix, expect_review=()):
 check_mode("fixture-fiction", FICTION_FIXTURE, "fiction", ["B6"], ["B1"])
 check_mode("fixture-prose", FICTION_FIXTURE, "prose", ["B6"], ["B1", "B11"])
 check_mode("fiction-叙述破折号", PLANTED_B5, "fiction", [], ["B5"])
-check_mode("fiction-久到回环", PLANTED_F7, "fiction", [], ["F7"])
-check_mode("fiction-句号久到回环", PLANTED_F7_PERIOD, "fiction", [], ["F7"])
-check_mode("fiction-分号久到回环", PLANTED_F7_SEMICOLON, "fiction", [], ["F7"])
+check_mode("fiction-久到回环", PLANTED_F7, "fiction", [], ["B16"])
+check_mode("fiction-句号久到回环", PLANTED_F7_PERIOD, "fiction", [], ["B16"])
+check_mode("fiction-分号久到回环", PLANTED_F7_SEMICOLON, "fiction", [], ["B16"])
 
 # ---------- gen 模式：生成期自查候选（既有规则补机械触发，全部 REVIEW 级） ----------
 PLANTED_GEN_B9 = "微服务架构就像一支交响乐团，每个服务是一件乐器，共同奏响数字化的乐章。"
@@ -273,6 +278,7 @@ PLANTED_GEN_C2 = "尽管面临诸多挑战，团队未来可期。"
 PLANTED_GEN_C2_SUB = "这不仅是工具的升级，更关乎工作方式的变革。"
 PLANTED_GEN_C4 = "这项政策可能在一定程度上或许会影响结果。"
 PLANTED_GEN_C5 = "在当今快速发展的时代下，AI 正在改变一切。"
+PLANTED_GEN_C5_TODAY = "在这个行业野蛮生长的今天，AI 正在改变一切。"
 PLANTED_GEN_C6 = "欢呼声过后，声音填满了整个空间。"
 PLANTED_GEN_D2 = "好问题！\n\n希望这能帮到你。"
 PLANTED_GEN_D3 = "作为一个语言模型，我无法预测股价。"
@@ -282,10 +288,14 @@ PLANTED_GEN_D6 = "有研究表明，这种方法可以提高效率。"
 
 check_mode("gen-B9-乐团", PLANTED_GEN_B9, "gen", [], ["B9"])
 check_mode("gen-B9-拟人", PLANTED_GEN_B9_ROLE, "gen", [], ["B9"])
+# prose 带入集为 B1–B12（含 B9），铺陈喻体在论述文同样照报
+check_mode("prose-B9-铺陈喻体", PLANTED_GEN_B9, "prose", [], ["B9"])
+check_mode("prose-B9-拟人模板", PLANTED_GEN_B9_ROLE, "prose", [], ["B9"])
 check_mode("gen-C2-未来可期", PLANTED_GEN_C2, "gen", [], ["C2"])
 check_mode("gen-C2-不仅是更", PLANTED_GEN_C2_SUB, "gen", [], ["C2"])
 check_mode("gen-C4-叠加", PLANTED_GEN_C4, "gen", [], ["C4"])
 check_mode("gen-C5-宏观", PLANTED_GEN_C5, "gen", [], ["C5"])
+check_mode("gen-C5-在今天", PLANTED_GEN_C5_TODAY, "gen", [], ["C5"])
 check_mode("gen-C6-气氛", PLANTED_GEN_C6, "gen", [], ["C6"])
 check_mode("gen-D2-服务腔", PLANTED_GEN_D2, "gen", [], ["D2"])
 check_mode("gen-D3-免责", PLANTED_GEN_D3, "gen", [], ["D3"])
@@ -314,6 +324,62 @@ check_mode("fiction-B16-回环", PLANTED_FICTION_B16, "gen", [], ["B16"])
 check_mode("fiction-B17-花式标签", PLANTED_FICTION_B17_FANCY, "gen", [], ["B17"])
 check_mode("fiction-B17-代词连珠", PLANTED_FICTION_B17_CHAIN, "gen", [], ["B17"])
 check_mode("fiction-B17-标签密度", PLANTED_FICTION_B17_DENSITY, "gen", [], ["B17"])
+# 句内主语复现（口吃式主语过量，"她知道，她也明白"）与主语切换豁免
+PLANTED_FICTION_B17_INTRA = "她知道这件事，她也明白为什么。屋里的灯没点，她坐着，她等着。"
+B17_INTRA_SUBJECT_SWAP = "她不信他，他也不信自己。"
+B17_INTRA_HUMAN = "风把门吹开，她起身去闩，顺手把灯芯剪短了一截。"
+check_mode("fiction-B17-句内主语复现", PLANTED_FICTION_B17_INTRA, "gen", [], ["B17"])
+check_mode("fiction-B17-主语切换不报", B17_INTRA_SUBJECT_SWAP, "gen", [], [])
+check_mode("fiction-B17-句内人写不报", B17_INTRA_HUMAN, "gen", [], [])
+# 问答乒乓：连续 ≥5 行独行对白无叙述才报；4 行是人类高频短交锋（HUMAN_07 同形）
+PLANTED_FICTION_B17_PINGPONG = (
+    "“你走吧。”\n\n“我不走。”\n\n“为什么？”\n\n“不为什么。”\n\n"
+    "“告诉我。”\n\n“没有什么好说的。”"
+)
+FICTION_HUMAN_SHORT_EXCHANGE = (
+    "“空气凝固了？”\n\n“没有啊，挺凉快的。”\n\n“那你为什么不说话？”\n\n“我在想事情。”"
+)
+check_mode("fiction-B17-问答乒乓", PLANTED_FICTION_B17_PINGPONG, "gen", [], ["B17"])
+check_mode("fiction-B17-四行交锋不报", FICTION_HUMAN_SHORT_EXCHANGE, "gen", [], [])
+# B15 实测漏网变体：喉结"动了动"、瞳孔间隔"在暗处缩紧"；医学事实不误报
+PLANTED_FICTION_B15_ADAM = "她喉结动了动，没说话。"
+PLANTED_FICTION_B15_PUPIL = "你看见她的瞳孔在暗处缩紧，紫得发黑。"
+FICTION_HUMAN_PUPIL_MEDICAL = "医生用手电筒照射患者的眼部，观察瞳孔反射与对光收缩情况。"
+check_mode("fiction-B15-喉结动", PLANTED_FICTION_B15_ADAM, "gen", [], ["B15"])
+check_mode("fiction-B15-瞳孔间隔", PLANTED_FICTION_B15_PUPIL, "gen", [], ["B15"])
+check_mode("fiction-B15-瞳孔医学不报", FICTION_HUMAN_PUPIL_MEDICAL, "gen", [], [])
+# B15 狂跳（实测补充：fiction 清理中"心脏狂跳不止"被常规删除但旧词表无归属）
+PLANTED_FICTION_B15_POUND = "他愣在原地，心脏狂跳不止。"
+check_mode("fiction-B15-狂跳", PLANTED_FICTION_B15_POUND, "gen", [], ["B15"])
+# B15 低吼（用户判定禁用的发声反应套板）：模板形态全捕获；
+# 裸"低吼"是引擎/风/兽群的客观声源，不报
+PLANTED_FICTION_B15_GROWL = "他低吼一声，眼底发红。"
+PLANTED_FICTION_B15_GROWL_N = "她从喉头里滚出几声低吼。"
+PLANTED_FICTION_B15_GROWL_Z = "他低吼着掐住她的手腕。"
+FICTION_HUMAN_GROWL_ENGINE = "隧道尽头，引擎在低吼，盖住了他的脚步声。"
+check_mode("fiction-B15-低吼一声", PLANTED_FICTION_B15_GROWL, "gen", [], ["B15"])
+check_mode("fiction-B15-几声低吼", PLANTED_FICTION_B15_GROWL_N, "gen", [], ["B15"])
+check_mode("fiction-B15-低吼着", PLANTED_FICTION_B15_GROWL_Z, "gen", [], ["B15"])
+check_mode("fiction-B15-引擎低吼不报", FICTION_HUMAN_GROWL_ENGINE, "gen", [], [])
+# B17 低吼道 标签（"低声道"的姊妹形态）
+PLANTED_FICTION_B17_GROWL_TAG = "“放开。”他低吼道。"
+check_mode("fiction-B17-低吼道标签", PLANTED_FICTION_B17_GROWL_TAG, "gen", [], ["B17"])
+# B14 情绪贴标签（扫描器 emit 但此前无测试覆盖：情绪诊断书报，直陈无力不报）
+PLANTED_FICTION_B14_EMOTION = "一股强烈的苦涩涌上心头，他站在原地。"
+FICTION_HUMAN_B14_PLAIN = "他确实感到无力，腿上的伤口还在渗血。"
+check_mode("fiction-B14-情绪贴标签", PLANTED_FICTION_B14_EMOTION, "gen", [], ["B14"])
+check_mode("fiction-B14-直陈无力不报", FICTION_HUMAN_B14_PLAIN, "gen", [], [])
+# B14 在 fiction 清理带入集（B13–B18）内，fiction 模式照报
+check_mode("fiction-B14-情绪贴标签-fiction模式", PLANTED_FICTION_B14_EMOTION,
+           "fiction", [], ["B14"])
+# B13–B18 是叙事工法，prose 清理不带入：同文本 prose 模式必须不报
+check_mode("prose-B14-叙事工法不带入", PLANTED_FICTION_B14_EMOTION,
+           "prose", [], [])
+# B9 常规明喻形态（实测补充：fiction 清理中"像是被雷击中一般"被常规删除但旧词表无归属）
+PLANTED_FICTION_B9_GENERAL = "他愣在原地，像是被雷击中一般。月光像水一样洒进来。"
+FICTION_HUMAN_B9_EXPLAIN = "缓存就像一个仓库，把常用数据放在离 CPU 更近的位置。"
+check_mode("fiction-B9-一般形态", PLANTED_FICTION_B9_GENERAL, "gen", [], ["B9"])
+check_mode("fiction-B9-解释比喻不报", FICTION_HUMAN_B9_EXPLAIN, "gen", [], [])
 check_mode("fiction-B18-计数", PLANTED_FICTION_B18, "gen", [], ["B18"])
 check_mode("fiction-人写-洁净段", FICTION_HUMAN_CLEAN, "gen", [], [])
 check_mode("fiction-人写-洁净段-fiction模式", FICTION_HUMAN_CLEAN, "fiction", [], [])
@@ -413,6 +479,49 @@ OVERLAP_B4 = "第一段铺垫，没有任何问题。\n\n关键在于：预算�
 OVERLAP_B10 = "第一段铺垫，没有任何问题。\n\n说白了，预算不够。\n"
 check("双报-B4", OVERLAP_B4, ["B4"], [])
 check("双报-B10", OVERLAP_B10, ["B10"], [])
+# B4/B10 命中在行内其他位置时，同行的 B3 触发语删后照旧存在，必须照报
+# （旧实现按行抑制，把同行其他位置的 B3 病灶一起吞掉）
+SAME_LINE_B4_B3 = ("第一段内容在这里。\n\n值得注意的是，配置管理往往被忽视。"
+                   "原因如下：一是人，二是钱。\n")
+check_mode("双报-B4同行不吞B3", SAME_LINE_B4_B3, "prose", ["B4"], ["B3"])
+
+# ---------- 规则页机械层覆盖表 vs 扫描器模式集（防漂移） ----------
+# rules-full.md 的覆盖表是规范源，FIX_RULES/REVIEW_RULES 是实现；两者不一致
+# 即"规则说报而扫描器不报"（B9 曾缺 prose、B14 曾缺 fiction 的缺口类型）。
+_RULES_FULL = (Path(__file__).resolve().parent.parent / "references"
+               / "rules-full.md").read_text(encoding="utf-8")
+_exp_fix = {"prose": set(), "fiction": set(), "gen": set()}
+_exp_rev = {"prose": set(), "fiction": set(), "gen": set()}
+_in_table = False
+for _line in _RULES_FULL.splitlines():
+    if _line.startswith("| 规则 |"):
+        _in_table = True
+    if not _in_table or not _line.startswith("|"):
+        if _in_table:
+            break
+        continue
+    _cells = [c.strip() for c in _line.strip().strip("|").split("|")]
+    if len(_cells) < 4:
+        continue
+    _ids = re.findall(r"[BCD]\d{1,2}", _cells[0])
+    if not _ids:
+        continue
+    for _mode, _cell in zip(("prose", "fiction", "gen"), _cells[1:4]):
+        if _cell == "FIX":
+            _exp_fix[_mode].update(_ids)
+        elif _cell == "REVIEW":
+            _exp_rev[_mode].update(_ids)
+        elif _cell.startswith("经 C5"):
+            _exp_rev[_mode].add("C5")
+for _mode in ("prose", "fiction", "gen"):
+    if set(FIX_RULES[_mode]) != _exp_fix[_mode]:
+        failures.append(
+            f"覆盖表-{_mode} FIX: 规则页 {sorted(_exp_fix[_mode])} vs "
+            f"扫描器 {sorted(FIX_RULES[_mode])}")
+    if set(REVIEW_RULES[_mode]) != _exp_rev[_mode]:
+        failures.append(
+            f"覆盖表-{_mode} REVIEW: 规则页 {sorted(_exp_rev[_mode])} vs "
+            f"扫描器 {sorted(REVIEW_RULES[_mode])}")
 
 if failures:
     print("红灯测试未通过：")

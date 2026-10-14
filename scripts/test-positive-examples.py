@@ -3,7 +3,12 @@
 
 规则文档引用病灶（❌ 行）合法，但正解示例（✅ 行、→ 后的改法文本）
 自身必须干净，否则"带病示人"。本脚本提取正解示例逐条过
-scan-mechanical 的 B1 变体与破折号检查。
+scan-mechanical 的 B1 变体、破折号、B10/B4a 开场与 fiction 词表检查。
+
+fiction 词表检查（B13 副词/B14 情绪贴标签/B15 抽搐与低吼/B16 回环/
+B17 装饰标签/B12·C5 宏观开场）源于一次实录：修订 B5 示例时把"极慢"
+写进 ✅ 行，而 B13 明令清除该词——旧检查面（只查 B1/破折号/B10/B4a）
+放行，靠人工肉眼拦截。凡正解示例命中这些词表即失败。
 
 误报控制：❌ 行的病灶文本与 ✅ 行同行时，只提取 ✅ 之后的部分；
 ❌ 与 → 之间的原文不检。
@@ -26,7 +31,23 @@ DOCS = ["SKILL.md", "README.md", "README.en.md", "CONTRIBUTING.md",
 
 # 明确豁免：正解示例中为了对照而保留的病灶残留说明（人工核对清单）
 ALLOWLIST = [
-    # （当前无豁免项）
+    # B1 纠错放行示例（rules-full.md B1 条）：用户前提被证伪时该句式是
+    # 信息本体，规则明文放行；扫描器机械层分不清语境报 REVIEW 候选属预期
+    "不是缓存的问题，是连接池打满了。",
+    # B5 示例（fiction.md）：示范"只改破折号不删信息"，句中"不是小队
+    # 制式，是地摊淘的"两侧都是具体事实，按 fiction.md 放行判据属合法句式
+    "领口别着枚旧胸针，不是小队的制式，是她在地摊上淘的。",
+]
+
+# fiction 词表与宏观开场：正解示例命中即失败（规则明文清除的形态）
+FICTION_CHECKS = [
+    ("B13 副词", lambda s: sm._B13_ADVERBS.search(s)),
+    ("B14 情绪贴标签", lambda s: sm._B14_EMOTION.search(s)),
+    ("B15 抽搐/低吼", lambda s: sm._B15_SPASM.search(s)),
+    ("B16 回环", lambda s: sm._B16_LOOP.search(s)
+     or sm._B16_TIME_EXT.search(s)),
+    ("B17 装饰标签", lambda s: sm._B17_FANCY_TAGS.search(s)),
+    ("B12/C5 宏观开场", lambda s: sm._MACRO_OPENER.search(s)),
 ]
 
 
@@ -79,6 +100,14 @@ def main():
                         "doc": doc, "line": lineno, "sample": sample[:80],
                         "variants": variants, "dash": dash,
                         "lead_in": lead_in, "b4a": b4a})
+                # fiction 词表：正解示例不得自带规则明文清除的形态
+                fic_hits = [name for name, check in FICTION_CHECKS
+                            if check(sample)]
+                if fic_hits:
+                    failures.append({
+                        "doc": doc, "line": lineno, "sample": sample[:80],
+                        "variants": [], "dash": 0, "lead_in": False,
+                        "b4a": False, "fiction": fic_hits})
 
     if failures:
         print(f"发现 {len(failures)} 处正解示例带病灶：")
@@ -93,6 +122,8 @@ def main():
                 print(f"    B10 起手式: 提示语开场")
             if f.get("b4a"):
                 print(f"    B4a 提示语冒号: 空提示语引出")
+            if f.get("fiction"):
+                print(f"    fiction 词表命中: {', '.join(f['fiction'])}")
         return 1
     print("正解示例自检通过：全部 ✅ 示例零病灶")
     return 0

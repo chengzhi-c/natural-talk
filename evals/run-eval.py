@@ -2,7 +2,7 @@
 
 密钥纪律：凭据从 --credentials 文件（用户自管路径）
 或 NT_BASE/NT_KEY 环境变量运行时读取；任何输出文件只记模型 ID、时间、
-prompt SHA256 与字数，不落密钥与 prompt 全文（模板有 SHA256 即可复现）。
+prompt SHA256、rules_commit 与字数，不落密钥与 prompt 全文（模板有 SHA256 + commit 即可复现）。
 
 Windows 纪律（write_text 会把 LF 翻译成 CRLF，导致校验和失配）：所有写出走 write_bytes，
 换行统一 \\n，禁裸 write_text 写含校验和的内容。
@@ -13,13 +13,14 @@ Windows 纪律（write_text 会把 LF 翻译成 CRLF，导致校验和失配）�
 用法：
   python evals/run-eval.py --model deepseek-v4-flash-0731 ^
       [--credentials <file>] [--endpoint-index 1] [--tag baseline] ^
-      [--cases SF-01,SF-07] [--repeat 2] [--workers 4]
+      [--cases SF-01,SF-07] [--repeat 2] [--workers 4] [--max-tokens 32000]
 输出：evals/runs/<日期>-<模型>[-<tag>]/<case-id>[.rN].txt + metadata.json
 """
 import argparse
 import hashlib
 import json
 import re
+import subprocess
 import sys
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -50,6 +51,17 @@ def parse_endpoints(text):
     if not endpoints:
         raise SystemExit("凭据文件未找到 端点URL+密钥 同行记录")
     return endpoints
+
+
+def rules_commit():
+    """记录规则文件的 git commit（README 效果数字需要版本锚点才能复核）。"""
+    try:
+        result = subprocess.run(
+            ["git", "rev-parse", "--short", "HEAD"],
+            cwd=ROOT, capture_output=True, text=True, timeout=5)
+        return result.stdout.strip() or None
+    except Exception:  # noqa: BLE001
+        return None
 
 
 def resolve_credentials(args):
@@ -87,9 +99,10 @@ def build_messages(entry, case_text, core_only=False):
             {"role": "user", "content": user}], system
 
 
-def call_chat(base, key, model, messages, temperature, timeout, retries=2):
+def call_chat(base, key, model, messages, temperature, timeout, retries=2,
+              max_tokens=MAX_TOKENS):
     payload = json.dumps({"model": model, "messages": messages, "stream": False,
-                          "temperature": temperature, "max_tokens": MAX_TOKENS},
+                          "temperature": temperature, "max_tokens": max_tokens},
                          ensure_ascii=False).encode("utf-8")
     request = Request(f"{base}/chat/completions", data=payload, headers={
         "Authorization": f"Bearer {key}",
@@ -132,6 +145,9 @@ def main(argv):
     parser.add_argument("--repeat", type=int, default=1)
     parser.add_argument("--workers", type=int, default=4)
     parser.add_argument("--timeout", type=int, default=180)
+    parser.add_argument("--max-tokens", type=int, default=MAX_TOKENS,
+                        help="单次生成 token 预算，默认 8000；全程思考的重思考模型"
+                             "（glm-5.3 一类）会把预算全烧在推理上导致空输出，需调大")
     parser.add_argument("--output-root", type=Path, default=None,
                         help="输出根目录，默认 evals/runs；测试产物可隔离到主仓库外")
     parser.add_argument("--core-only", action="store_true",
@@ -182,6 +198,7 @@ def main(argv):
     meta = {"model": args.model, "started_at":
             time.strftime("%Y-%m-%dT%H:%M:%S%z"), "repeat": args.repeat,
             "core_only": args.core_only,
+            "rules_commit": rules_commit(),
             "cases": [e["id"] for e in entries], "results": []}
     meta_lock_write = run_dir / "metadata.json"
 
@@ -192,7 +209,8 @@ def main(argv):
         try:
             content, finish = call_chat(
                 base, key, args.model, job["messages"],
-                entry.get("temperature", 0.2), args.timeout)
+                entry.get("temperature", 0.2), args.timeout,
+                max_tokens=args.max_tokens)
             out_path.write_bytes(content.encode("utf-8"))
             record = {"id": entry["id"], "file": out_path.name, "status": "ok",
                       "prompt_sha256": job["prompt_sha"],

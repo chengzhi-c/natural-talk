@@ -28,10 +28,14 @@ def scan_text(text):
             for h in _mod.scan(text, mode="gen") if h["tier"] == "FIX"]
 
 def test_human_corpus():
+    """人类语料误报基准。需自备语料：公版文学（鲁迅/萧红等）纯文本放在
+    仓库上级的 natural-talk-tests/source-dev/corpus/human/ 下；目录不存在
+    时本测试 SKIP（不算通过，也不失败）。"""
     corpus_dir = Path(__file__).resolve().parent.parent.parent / "natural-talk-tests" / "source-dev" / "corpus" / "human"
     if not corpus_dir.exists():
-        print(f"Notice: Human corpus directory not found at {corpus_dir}, skipping corpus benchmark.", file=sys.stderr)
-        return True
+        print(f"SKIP: Human corpus directory not found at {corpus_dir}, "
+              f"corpus benchmark not run.", file=sys.stderr)
+        return None
         
     files = sorted(corpus_dir.glob("*.txt"))
     print("==================================================")
@@ -73,5 +77,7 @@ def test_human_corpus():
     return total_findings <= 6  # Xiao Hong's 6 factual contrastives
 
 if __name__ == "__main__":
-    success = test_human_corpus()
-    sys.exit(0 if success else 1)
+    result = test_human_corpus()
+    if result is None:
+        sys.exit(0)  # SKIP：无自备语料，不计失败也不计通过
+    sys.exit(0 if result else 1)

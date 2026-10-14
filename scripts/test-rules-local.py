@@ -157,17 +157,15 @@ def run_regression_tests() -> bool:
     print("--- [Test Suite 1: Human Baseline & Syntax Invariants (Zero FIX-tier False Positives)] ---")
     fp_count = 0
     for name, text in INVARIANT_SAMPLES:
-        findings = [f for f in scan_text(text)]
-        fix_hits = [f for f in findings if has_fix_hits(text)]
+        findings = scan_text(text)
         if has_fix_hits(text):
             print(f"  ❌ FAIL (False Positive) [{name}]:")
             fp_count += 1
         else:
-            review = [f for f in findings]
-            note = f" (+{len(review)} REVIEW candidates)" if review else ""
+            note = f" (+{len(findings)} REVIEW candidates)" if findings else ""
             print(f"  🟢 PASS [{name}]{note}")
             
-    # Step 2: Check True Positives on Adversarial Mutation Slop Samples (57 cases)
+    # Step 2: Check True Positives on Adversarial Mutation Slop Samples (60 cases)
     print("\n--- [Test Suite 2: AI Slop Benchmark (100% Detection Rate across 8 Patterns)] ---")
     fn_count = 0
     for name, text in AI_SLOP_SAMPLES:

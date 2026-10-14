@@ -1,5 +1,5 @@
 {
-  "frozen_at": "2026-09-21T10:59:54+0800",
+  "frozen_at": "2026-09-22T21:51:15+0800",
   "cases": {
     "SF-01": {
       "case": "cases/SF-01.txt",
@@ -26,7 +26,7 @@
           "level": "l2"
         }
       ],
-      "retention_min": 0.5
+      "retention_min": 0.85
     },
     "SF-02": {
       "case": "cases/SF-02.txt",
@@ -58,7 +58,7 @@
           "level": "l2"
         }
       ],
-      "retention_min": 0.8
+      "retention_min": 0.75
     },
     "SF-03": {
       "case": "cases/SF-03.txt",
@@ -481,6 +481,12 @@
       "date": "2026-09-21T14:35:00+0800",
       "case": "SNF-07",
       "reason": "require 赋能 与清理硬约束句内手术原则冲突：赋能→支撑为等义改写（kimi/qwen 双模型独立同改），信息锚点改判 上层应用；样例文本与SHA256 未变，仅断言更新"
+    },
+    {
+      "date": "2026-09-22",
+      "what": "retention_min 校准 + 判据纳入冻结",
+      "why": "原阈值缺依据：SF-01 0.5 虚设（历史观测 0.92-1.0）上调 0.85；SF-02 0.80 与 deepseek 观测 0.81 贴线（+1 分即红）下调 0.75 留 6 分余量。SF-08 0.65 保留：kimi/qwen 观测 0.69 系两模型输出同长巧合，deepseek 0.23/0.37 说明病灶真会吃信息，收紧会把过删变成过不了。check_frozen 增加 assertions/retention_min 快照比对（防放水另一半）。SF-09.txt 行尾归一 CRLF->LF（字节哈希口径，内容不变）。",
+      "impact": "SF-01: 五 run 中 4 过 1 红（deepseek-round1 缩水 0.37 红灯正确）；SF-02: 全过；其余不变。"
     }
   ]
 }

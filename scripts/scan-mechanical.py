@@ -7,11 +7,13 @@ B11 是否法规条目）仍由模型或人完成。依据 references/rules-full
 
 覆盖规则分两级：
   FIX 级（高精度，命中基本即可改）：
-  B4  冒号滥用：提示语引出（一句话总结：/核心是：……）＋空转句引列表
+  B4  冒号滥用：提示语引出（一句话总结：/核心是：/直接给答案：……）＋空转句引列表
   B6  序数词通篇编号小标题（连续 ≥3 个才报）
-  B10 起手式：说白了 / 说穿了 / 先说结论（句首位置）
-  B12 空降宏观开场：在当今 / 众所周知（句首位置；是否含具体背景信息语义判断）
+  B10 起手式：说白了 / 说穿了 / 先说结论 / 说到底 / 归根结底（句首位置）
   REVIEW 级（只报候选，必须复核语境）：
+  B12 空降宏观开场：在当今 / 在……时代（背景、环境）下 / 在……的今天 /
+      随着……不断发展 / 众所周知（句首锚定；是否含具体背景信息须语义
+      判断，故不授权自动改写）
   B11 顿号罗列过密：一个分句内 ≥2 个顿号串 ≥3 项并列（法规条目、配置项、
       技术操作枚举须保留，语义判断在模型——降级 REVIEW 防误授权）
   B1  翻案腔：句中含"而是/其实/恰恰"，或省"而"变体"不是A，(只/纯)是B"
@@ -21,12 +23,17 @@ B11 是否法规条目）仍由模型或人完成。依据 references/rules-full
       被否定的观点是否存在须读上下文
   B3  段首零回指评论：非首段以评论语开头且整句无"这/那/其/此/上面"
   B5  叙述中的破折号：逐处核对是否只是解释、列举、因果或同位补充
-  F7  fiction 中的"很久……久到……"等空泛回环候选
-  gen 模式追加 REVIEW 候选（既有规则补机械触发，改写判断在模型）：
   B9  装饰性喻体：明喻标记＋"一＋量词"引出的铺陈喻体
+  B16  fiction 中的"很久……久到……"等空泛回环候选
+  B17  花式对白标签、句首代词连珠（段内 ≥3 句同一代词起头）、
+        句内主语复现（同句相邻分句同一代词起头："她知道，她也明白"）、
+        问答乒乓（连续 ≥5 行独行对白且行间无叙述）
+  gen 模式追加 REVIEW 候选（D/C 层机械候选，改写判断在模型）：
   C2  结尾拔高、C4 hedging 叠加、C5 宏观开场、C6 空泛气氛总结
-  D2  服务腔开场收尾（句首）、D3 免责包装、D4 万能收尾、
-  D5  元话语空预告、D6 模糊归因
+  D2  服务腔开场（句首）与客服收尾（句尾）、总结套话开场（综上所述/由此可见）
+  D3  免责包装、D4 万能收尾（含整句式"因人而异"）、D5 元话语空预告、D6 模糊归因
+  无机械层的规则（判断类，交付前人工自查，依据见 rules-full.md 各条）：
+  B2 概括盖住已有具体、B7 相邻句结构同款、B8 翻译腔（只认五种）
 
 白名单（绝对原则，完全豁免）：围栏代码块、行内代码、YAML frontmatter、
 表格行、引用块（> 起首）、URL、Markdown 列表内部（B11）。
@@ -41,14 +48,14 @@ B11 是否法规条目）仍由模型或人完成。依据 references/rules-full
 自测：python scripts/test-scan-mechanical.py
 
 模式（对应 rules-full.md 清理 / fiction 清理 / 生成自查三种流程）：
-  prose（默认）  清理全量规则
-  fiction        报 fiction 清理带入集内的 B6(FIX)、B1/B5/F7/B13/B15/B17/B18
-                 (REVIEW)；B3/B4/B10/B11 的倍率来自非虚构论述文体对照，
-                 fiction 不带入，一律不报（对小说照报即越界误伤）
+  prose（默认）  清理全量规则：FIX B4/B6/B10，REVIEW B1/B3/B5/B9/B11/B12
+                  （B2/B7/B8 为判断类规则，机械层不设候选，见各条）
+  fiction        报 fiction 清理带入集内的 B6(FIX)、B1/B5/B9/B13/B14/B15/
+                  B16/B17/B18(REVIEW)；B3/B4/B10/B11 的倍率来自非虚构论述
+                  文体对照，fiction 不带入，一律不报（对小说照报即越界误伤）
   gen            生成期自查：FIX 同 prose（B 层生成清理共用）；
-                 REVIEW 增 B1/B3/B5/B9/B13/B15/B16/B17/B18 与
-                 C2/C4/C5/C6/D2–D6（D/C 层机械候选），
-                 全部只报候选，复核后决定改留
+                  REVIEW 增 B13–B18 叙事候选与 C2/C4/C5/C6/D2–D6
+                  （D/C 层机械候选），全部只报候选，复核后决定改留
 """
 import argparse
 import re
@@ -65,13 +72,22 @@ if sys.platform == "win32":
 
 # ---------- 触发标记 ----------
 
-# B10：句首起手式
-B10_WORDS = ("说白了", "说穿了", "先说结论")
-# B12：句首空降宏观开场（"随着"类不进机械层，误伤具体事件句）
-B12_WORDS = ("在当今", "众所周知")
+# B10：句首起手式（词表与 SKILL.md / rules-full.md 的 B10 条目一致，verify_repo.py 做一致性核验）
+B10_WORDS = ("说白了", "说穿了", "先说结论", "说到底", "归根结底")
+# B10 构词负向断言："归根结底的原因""说到底的方案"是名词性用法，不是起手式
+B10_HEAD = re.compile(r"^(?:" + "|".join(B10_WORDS) + r")(?!的)")
+# B12/C5 共用：句首空降宏观开场（prose 模式报 B12，gen 模式报 C5）。
+# 覆盖 rules-full B12 文档形态：在当今 / 在……的今天 / 在……时代（背景、环境）下 /
+# 随着……不断（发展、演变、进步）/ 众所周知。
+# "随着"必须带"不断"：具体事件句（"随着供应商切换完成"）是合法叙述，不报；
+# 句内是否含具体背景信息由人核对（REVIEW 口径）。
+_MACRO_OPENER = re.compile(
+    r"在当今|众所周知|在[^，。；！？\n]{2,24}的今天|"
+    r"在[^，。；！？\n]{0,16}(?:时代|背景|环境)下?|"
+    r"随着[^，。；！？\n]{2,24}的?不断(?:发展|演变|进步|前进)")
 
 # B4a：提示语＋冒号（见 references/rules-full.md 的 B4）
-B4A_PROMPTS = ("一句话总结", "核心是", "关键在于", "原因如下", "本质上")
+B4A_PROMPTS = ("一句话总结", "核心是", "关键在于", "原因如下", "本质上", "直接给答案")
 
 # B1（REVIEW 级）：翻案腔候选词
 B1_WORDS = ("而是", "其实", "恰恰")
@@ -112,6 +128,8 @@ _SENT_SPLIT = re.compile(r"[。！？；\n]")
 
 _URL = re.compile(r"https?://\S+|www\.\S+")
 _INLINE_CODE = re.compile(r"(?P<fence>`+).*?(?P=fence)")
+# 引文整段豁免，含 ASCII 引号（技术写作常用 ASCII 引号作术语强调/转述）；
+# 授权口径写入 rules-full.md 第五节"清理通则"
 _INLINE_QUOTES = (
     re.compile(r"“[^”]*”"),
     re.compile(r"‘[^’]*’"),
@@ -123,20 +141,27 @@ _TABLE_SEPARATOR = re.compile(
     r"^\s*\|?\s*:?-{3,}:?\s*(?:\|\s*:?-{3,}:?\s*)+\|?\s*$")
 _FENCE_OPEN = re.compile(r"^\s{0,3}(`{3,}|~{3,})")
 _FENCE_CLOSE = re.compile(r"^\s{0,3}(`+|~+)\s*$")
-_F7_LOOP = re.compile(
+# B16 程度回环候选：程度词同形复现（"很久，久到"族）。
+# "轻"为实测补充：fiction 清理中模型常规删除"你的呼吸轻得……轻得我数不到"
+# 式程度回环，旧词表无此形态致删除无归属；
+_B16_LOOP = re.compile(
     r"(?:很久[，,、；;。.!！？?…\s]{0,4}久到|"
     r"安静[，,、；;。.!！？?…\s]{0,4}静[到得]|"
     r"寂静[，,、；;。.!！？?…\s]{0,4}静[到得]|"
     r"沉默[，,、；;。.!！？?…\s]{0,4}沉默到|"
-    r"(?P<degree>冷|黑|痛|累|远|慢|快)"
-    r"[，,、；;。.!！？?…\s]{0,4}(?P=degree)[到得])")
+    r"(?P<degree>冷|黑|痛|累|远|慢|快|轻)"
+    r"[得，,、；;。.!！？?…\s]{0,4}(?P=degree)[到得])")
 _TEXT_SUFFIXES = {".md", ".markdown", ".txt"}
 
 # ---------- gen 模式触发标记（既有规则的机械候选，全部 REVIEW 级） ----------
 
-# B9 装饰性喻体：明喻标记＋"一＋量词"引出的铺陈喻体（乐团/导师/灯塔/明月…）。
+# B9 装饰性喻体：明喻标记＋"一＋量词"引出的铺陈喻体（乐团/导师/灯塔/明月…），
+# 以及"像X一般/一样"常规明喻形态（实测：fiction 清理中 6/7 模型删除
+# "像是被雷击中一般""月光像水一样"，旧词表覆盖不到致删除无归属；
+# 人类语料 10.7 万字该形态 0.24/万字，REVIEW 级候选不授权自动改写）。
 # "一个"不报：解释性比喻的常规量词（缓存就像一个仓库）。
 _B9_SIMILE = re.compile(
+    r"(?:就像|如同|宛如|仿佛|犹如|恰似|像|像是)[^，。；！？]{0,8}(?:一般|一样)|"
     r"(?:就像|如同|宛如|仿佛|犹如|恰似|像)[^，。；！？]{0,6}一"
     r"[位支场座轮缕双只股颗盏片]")
 
@@ -151,20 +176,41 @@ _C4_HEDGE = re.compile(
     r"(?:可能|或许|也许|大概|在一定程度上|在某种程度上)[^，。；]{0,10}"
     r"(?:可能|或许|也许|大概|在一定程度上|在某种程度上)")
 
-# C5 空降宏观开场
-_C5_MACRO = re.compile(
-    r"在(?:当今|当前)[^，。]{0,16}(?:时代|背景|环境)下?|"
-    r"随着[^，。]{0,16}不断(?:发展|演变|进步)")
+# C5 空降宏观开场：与 B12 共用 _MACRO_OPENER（gen 模式报 C5，句首锚定）
 
 # C6 空泛气氛总结
 _C6_ATMOS = re.compile(
     r"(?:声音|寂静|沉默)[^。]{0,8}(?:填满|充满|弥漫)|"
     r"静[得有][^。]{0,6}重量|世界退回[^。]{0,4}壳")
 
-# D2 服务腔开场收尾（句首匹配）
+# D2 服务腔开场（句首匹配）。过宽的"希望这/希望对你/希望对您"已换成完整客套形态：
+# 原三词会把"希望这个世界更温柔""希望这周能上线"判成套话；收尾套话由 _D2_TAIL 覆盖。
+# 构词负向断言：后接"的/地/得/性/之"是名词性用法（"希望对你有帮助的方式""好问题的定义"）。
 _D2_OPENERS = ("好问题", "问得好", "这是个好问题", "这真是个好问题",
-               "感谢提问", "感谢你的提问", "希望这", "希望对你", "希望对您",
+               "感谢提问", "感谢你的提问",
+               "希望对你有帮助", "希望对您有帮助", "希望对您有所帮助",
+               "希望对你有启发", "希望这些建议对你有帮助",
                "如有疑问", "如有任何问题", "欢迎随时")
+_D2_HEAD = re.compile(
+    r"^(?:" + "|".join(re.escape(w) for w in _D2_OPENERS) + r")(?![的地得性之])")
+
+# D2 句首总结套话（仅书面空转词，不含口语的"综上/总之"——实测那是日常常态）
+_D2_SUMMARY_OPENERS = ("综上所述", "由此可见")
+# 构词负向断言："综上所述的问题""由此可见性"是名词性用法
+_D2_SUMMARY_HEAD = re.compile(
+    r"^(?:" + "|".join(_D2_SUMMARY_OPENERS) + r")(?![的性所言])")
+
+# D2 客服收尾（句尾匹配，整句尾部为短语才算）
+# 收尾标点/语气符在匹配前剔除（主体词表与 astrbot 插件侧 DEFAULT_ENDINGS 对齐；
+# "随时问我"不收——那是自然口语不是客服腔，误伤面实测最大）
+_TRAILING_PUNCT = "。．.!！?？~～…‥、,，;；)）」』】 \t\r\n"
+_D2_TAIL = re.compile(
+    r"(?:希望能帮到你|希望这能帮到你|希望对你有帮助|希望对您有帮助|希望对您有所帮助"
+    r"|希望这对你有帮助|希望这些建议对你有帮助|希望对你有启发|希望有所帮助"
+    r"|随时联系我|有问题随时找我|有问题可以随时找我"
+    r"|欢迎继续交流|欢迎随时交流)\s*$")
+# "以上，供参考"独立成句时才是空转收尾；"这部分供你参考"是正常信息句式
+_D2_TAIL_STANDALONE = re.compile(r"^以上[，,]\s*供参考\s*$")
 
 # D3 免责包装
 _D3_DISCLAIM = re.compile(
@@ -173,6 +219,9 @@ _D3_DISCLAIM = re.compile(
 # D4 万能收尾
 _D4_BALANCE = re.compile(
     r"关键在于找到平衡|要结合实际情况|没有绝对的对错")
+# D4 整句式万能收尾（"因人而异。"式独立成句才报，句中"因人而异的问题"不报）
+_D4_TAIL = re.compile(
+    r"^(?:(?:因|视)?人而异|视情况而定|看具体情况|没有标准答案|没有绝对的对错)\s*$")
 
 # D5 元话语空预告（含具体动作的真步骤不在此 pattern 内，复核区分）
 _D5_META = re.compile(
@@ -193,15 +242,23 @@ _D6_ATTRIB = re.compile(
 _B13_ADVERBS = re.compile(r"微微|极轻|极慢|极细|轻轻|缓缓")
 
 # B15 舞台剧抽搐候选（含 scan_slop 合并：下颌紧绷/喉结滚动一类/倒吸气/
-# 指节泛白/睫毛颤/漏跳一拍——P1 族全量，成熟正则平移）
+# 指节泛白/睫毛颤/漏跳一拍——P1 族全量，成熟正则平移）。
+# “狂跳”为实测补充：fiction 清理中模型常规删除“心脏狂跳不止”（生理模板），旧词表无此形态致删除无归属；人类语料 10.7 万字零出现。
+# 喉结补"动了动/动"形态；瞳孔补间隔形态（"瞳孔在暗处缩紧"，实测漏网），
+# 间隔内排除"射/光"防医学表述（瞳孔反射与对光收缩）误报；
+# "缩小/缩短"是生理事实描述，负向断言排除；
+# "低吼"为用户判定禁用的发声反应套板（"低吼一声/低吼着/几声低吼"），
+# 与倒吸气同类；人类语料 17 万字零出现。裸"低吼"不命中——引擎、风、
+# 兽群的客观声源是环境描写，放行。
 _B15_SPASM = re.compile(
-    r"猛地|骤然|猝然|死死|整个人震了一下|身子猛然一僵|"
-    r"喉结滚动|咬碎牙关|指甲掐进|"
-    r"瞳孔(?:微|骤|猛地?|剧烈)?(?:缩|收缩)(?![小短])|"
+    r"猛地|骤然|猝然|死死|咬碎牙关|狂跳不止|心脏狂跳|整个人震了一下|身子猛然一僵|"
+    r"喉结(?:微|上下|艰难地?)?(?:滚(?:动)?|动(?:了)?动)|"
+    r"瞳孔[^，。；！？\n射光]{0,6}(?:缩|收缩)(?![小短])|"
     r"(?:下颌|下颌线|下巴)(?:紧绷|咬得死紧|咬得死死的|收紧)|"
     r"喉结(?:微|上下|艰难地?)?滚(?:动)?|喉头(?:微|剧烈|上下)?(?:滚|动|滚动)|"
     r"指甲(?:深深)?掐[进入]|"
     r"倒[吸抽](?:了)?[一口]*(?:凉|冷)气|"
+    r"低吼(?:一[声句]|了?一?[声句]|着|起来)|[一两三几\d]+[声句]低吼|"
     r"(?:手指|指|骨)?(?:关节|节|骨节)(?:发|泛|捏得|捏得发)白|"
     r"呼吸(?:猛地|不由得|微微)?一?(?:滞|窒)|"
     r"(?:睫毛|眼睫)(?:微|轻轻一?)?颤(?:动)?|"
@@ -209,19 +266,29 @@ _B15_SPASM = re.compile(
     r"(?:后背|脊背)(?:猛地?一僵|渗出冷汗|冒出冷汗|渗出一层冷汗|一僵)")
 
 # B17 花式对白动词标签（说道/命令道/沉声道一类，台词内合法的中断除外）；
-# 问道/答道属旧白话语域（鲁迅设问自答、评书体均常见），精度不足不收
-_B17_FANCY_TAGS = re.compile(r"说道|命令道|吩咐道|沉声道|轻声道|"
-                             r"低声道|冷声道|感叹道|开口道|沉声说|轻声说")
+# 问道/答道属旧白话语域（鲁迅设问自答、评书体均常见），精度不足不收；
+# "说道"同理属旧白话常规标签，机械层分不清作者文域，一并排除（鲁迅语料实测：
+# 《呐喊》6 万字 18 处"说道"，全属合法旧白话，doc 与词表原不一致）
+_B17_FANCY_TAGS = re.compile(r"命令道|吩咐道|沉声道|轻声道|"
+                             r"低吼道|低声道|冷声道|感叹道|开口道|沉声说|轻声说")
 
-# B18 计数癖候选：拍子枚举、第N拍、顿了一拍
+# B18 计数癖候选：拍子枚举、第N拍、顿了一拍（"顿了一下"是人类常规停顿表述，排除）
 _B18_COUNTING = re.compile(
     r"[一二两三四五六七八九十\d]+[下息拍声滴]，[一二两三四五六七八九十\d]+[下息拍声滴]"
     r"|数到第?[一二两三四五六七八九十\d]+[下滴声息]"
     r"|第[一二三四五六七八九十\d]+[下拍滴]"
-    r"|顿了[一半][拍下]")
+    r"|顿了[一半]拍")
 
 # B17 句首代词连珠：段内 ≥3 句连续以同一代词起头
 _B17_PRONOUN_HEAD = re.compile(r"^[她他你]")
+# B17 句内主语复现：同一句内相邻分句以同一代词起头（"她知道，她也明白"）。
+# 主语切换（"她爱他，他也爱她"）不命中，第二分句代词与第一分句不同。
+_B17_INTRA_HEAD = re.compile(r"^[她他你它]")
+# B17 问答乒乓：独行对白行（整行一句引语，行内无叙述）
+_B17_DIALOGUE_LINE = re.compile(r"^[“\"『「][^”\"』」]{0,40}[”\"』」]$")
+# 问答乒乓阈值：≥5 行。4 行及以下是人类高频短交锋（test-rules-local
+# HUMAN_07 四行纯对白是不变例），N2 保护问句，阈值必须高于它。
+_B17_PINGPONG_MIN = 5
 
 # ---------- scan_slop 合并词条（P3–P8 同类，gen 模式 REVIEW 候选） ----------
 
@@ -271,11 +338,12 @@ _D2_SERVICE_EXT = re.compile(
     r"欢迎随时(?:向我)?提问")
 
 # 各模式的报告集（见模块 docstring"模式"节；B11 需语义判断，prose/gen 均 REVIEW）
+# gen 是生成期自查：覆盖全部文体，故含 B13–B18 叙事候选（REVIEW 级，须读上下文复核而非即改）。
 FIX_RULES = {"prose": ("B4", "B6", "B10"), "fiction": ("B6",),
              "gen": ("B4", "B6", "B10")}
 REVIEW_RULES = {
-    "prose": ("B1", "B3", "B5", "B11", "B12"),
-    "fiction": ("B1", "B5", "F7", "B13", "B15", "B17", "B18"),
+    "prose": ("B1", "B3", "B5", "B9", "B11", "B12"),
+    "fiction": ("B1", "B5", "B9", "B16", "B13", "B15", "B17", "B18", "B14"),
     "gen": ("B1", "B3", "B5", "B9", "B11", "B13", "B14", "B15", "B16",
             "B17", "B18", "C2", "C4", "C5", "C6", "D2", "D3", "D4", "D5",
             "D6"),
@@ -483,35 +551,31 @@ def scan(text, mode="prose"):
         if "B10" in fix_on:
             for sent in _SENT_SPLIT.split(masked):
                 s = sent.strip().lstrip(">*#- ")
-                for w in B10_WORDS:
-                    if s.startswith(w):
-                        hits.append(dict(line=idx, rule="B10", tier="FIX", snippet=w,
-                                         note="句首起手式，删后直接给判断"))
-                        break
+                m10 = B10_HEAD.match(s)
+                if m10:
+                    hits.append(dict(line=idx, rule="B10", tier="FIX", snippet=m10.group(0),
+                                     note="句首起手式，删后直接给判断"))
 
         # ---- B12（REVIEW）：句首空降宏观开场 ----
         if "B12" in review_on and not heading:
             for sent in _SENT_SPLIT.split(masked):
                 s = sent.strip().lstrip(">*#- ")
-                for w in B12_WORDS:
-                    if s.startswith(w):
-                        hits.append(dict(line=idx, rule="B12", tier="REVIEW", snippet=w,
-                                         note="句首宏观开场候选：核对句内是否含具体背景信息"))
-                        break
+                m = _MACRO_OPENER.match(s)
+                if m:
+                    hits.append(dict(line=idx, rule="B12", tier="REVIEW",
+                                     snippet=m.group(0),
+                                     note="句首宏观开场候选：核对句内是否含具体背景信息"))
+                    break
 
         # ---- B1（REVIEW）：翻案腔候选词与隐性对举变体 ----
         if "B1" in review_on and not heading:
-            for sent in _SENT_SPLIT.split(masked):
-                for w in B1_WORDS:
-                    if w in sent:
-                        hits.append(dict(line=idx, rule="B1", tier="REVIEW",
-                                         snippet=sent.strip()[:40],
-                                         note=f"含“{w}”：核对被否定的观点是否真实存在，"
-                                              f"不存在删否定留肯定；角色台词内不改"))
-                        break
             # 变体匹配行级执行：句号分隔形态（"不是A。是B"）跨句界，
-            # 按分句循环会漏报；台词引号已在 masked 中豁免
+            # 按分句循环会漏报；台词引号已在 masked 中豁免。
+            # 先跑变体；命中行不再跑 B1_WORDS——否则"其实不是A，只是B"
+            # 会被两条路径重复报出（同规则同句双报）。
+            variant_hit = False
             for m in _B1_VARIANT.finditer(masked):
+                variant_hit = True
                 hits.append(dict(line=idx, rule="B1", tier="REVIEW",
                                  snippet=m.group(0),
                                  note="隐性对举变体（不是A，(只/纯)是B/更是B/"
@@ -519,6 +583,15 @@ def scan(text, mode="prose"):
                                       "破折号分隔形态）：核对被否定的观点是否"
                                       "真实存在，不存在删否定留肯定；事实清点"
                                       "（冰箱里没有可乐，只有啤酒）与台词内不改"))
+            if not variant_hit:
+                for sent in _SENT_SPLIT.split(masked):
+                    for w in B1_WORDS:
+                        if w in sent:
+                            hits.append(dict(line=idx, rule="B1", tier="REVIEW",
+                                             snippet=sent.strip()[:40],
+                                             note=f"含“{w}”：核对被否定的观点是否真实存在，"
+                                                  f"不存在删否定留肯定；角色台词内不改"))
+                            break
 
         # ---- B5（REVIEW）：叙述破折号逐处复核用途 ----
         if "B5" in review_on and "—" in masked:
@@ -527,12 +600,12 @@ def scan(text, mode="prose"):
                 note="叙述破折号：若右侧只是解释、列举、同位、原因、结果或补充，"
                      "保留内容并改用完整句或常规标点；台词中断与未完不改"))
 
-        # ---- F7（REVIEW）：fiction 空泛程度回环 ----
-        if "F7" in review_on:
-            match = _F7_LOOP.search(masked)
+        # ---- B16（REVIEW）：fiction 空泛程度回环 ----
+        if "B16" in review_on:
+            match = _B16_LOOP.search(masked)
             if match:
                 hits.append(dict(
-                    line=idx, rule="F7", tier="REVIEW", snippet=match.group(0),
+                    line=idx, rule="B16", tier="REVIEW", snippet=match.group(0),
                     note="程度回环候选：改掉‘很久，久到’等表层句式；"
                          "保留具体结果并改为直述，没有信息增量则删后半"))
 
@@ -561,12 +634,16 @@ def scan(text, mode="prose"):
                     line=idx, rule="C4", tier="REVIEW", snippet=m.group(0),
                     note="hedging 叠加：留一个限定词或直说不知道；"
                          "单个‘可能’是诚实，不删"))
-        if "C5" in review_on:
-            m = _C5_MACRO.search(masked)
-            if m:
-                hits.append(dict(
-                    line=idx, rule="C5", tier="REVIEW", snippet=m.group(0),
-                    note="宏观开场候选：与论点无关的背景删掉，第一句即实质"))
+        if "C5" in review_on and not heading:
+            for sent in _SENT_SPLIT.split(masked):
+                s = sent.strip().lstrip(">*#- ")
+                m = _MACRO_OPENER.match(s)
+                if m:
+                    hits.append(dict(
+                        line=idx, rule="C5", tier="REVIEW",
+                        snippet=m.group(0),
+                        note="宏观开场候选：与论点无关的背景删掉，第一句即实质"))
+                    break
         if "C6" in review_on:
             m = _C6_ATMOS.search(masked)
             if m:
@@ -582,13 +659,28 @@ def scan(text, mode="prose"):
         if "D2" in review_on:
             for sent in _SENT_SPLIT.split(masked):
                 s = sent.strip().lstrip(">*#- ")
-                for w in _D2_OPENERS:
-                    if s.startswith(w):
-                        hits.append(dict(
-                            line=idx, rule="D2", tier="REVIEW", snippet=s[:20],
-                            note="服务腔开场/收尾：首句直接给结论，"
-                                 "末句停在事实、建议或边界"))
-                        break
+                m_open = _D2_HEAD.match(s)
+                if m_open:
+                    hits.append(dict(
+                        line=idx, rule="D2", tier="REVIEW", snippet=s[:20],
+                        note="服务腔开场：首句直接给结论，从事实或判断起句"))
+                m_sum = _D2_SUMMARY_HEAD.match(s)
+                if m_sum:
+                    hits.append(dict(
+                        line=idx, rule="D2", tier="REVIEW", snippet=m_sum.group(0),
+                        note="总结套话开场：'综上所述/由此可见'是空转过渡，"
+                             "删掉让结论直接起句"))
+            # 收尾：整句尾部为客服客套或万能废话才报（句中形态不报）
+            tail_probe = re.sub(r"[ \t\r\n]+$", "", stripped).rstrip(_TRAILING_PUNCT)
+            m_tail = _D2_TAIL.search(tail_probe)
+            if m_tail:
+                hits.append(dict(
+                    line=idx, rule="D2", tier="REVIEW", snippet=m_tail.group(0),
+                    note="客服收尾套话：末句停在事实、明确建议或行动边界"))
+            if _D2_TAIL_STANDALONE.match(tail_probe):
+                hits.append(dict(
+                    line=idx, rule="D2", tier="REVIEW", snippet=tail_probe,
+                    note="'以上，供参考'式空转收尾：删掉，停在实质内容"))
             for m in _D2_SERVICE_EXT.finditer(masked):
                 hits.append(dict(
                     line=idx, rule="D2", tier="REVIEW", snippet=m.group(0),
@@ -606,6 +698,12 @@ def scan(text, mode="prose"):
                     line=idx, rule="D4", tier="REVIEW", snippet=m.group(0),
                     note="万能收尾候选：问什么答什么给出倾向；"
                          "真两难写清判断条件"))
+            tail_probe = re.sub(r"[ \t\r\n]+$", "", stripped).rstrip(_TRAILING_PUNCT)
+            if _D4_TAIL.match(tail_probe):
+                hits.append(dict(
+                    line=idx, rule="D4", tier="REVIEW", snippet=tail_probe,
+                    note="整句式万能收尾：'因人而异'一类消解信息的独立结尾，"
+                         "写清判断条件与权衡基准"))
         if "D5" in review_on:
             for m in _D5_META.finditer(masked):
                 hits.append(dict(
@@ -632,7 +730,7 @@ def scan(text, mode="prose"):
                     note="舞台剧抽搐候选：改成定住与动作停顿；"
                          "对抗场景用精准动量受力动词"))
         if "B16" in review_on:
-            match = _F7_LOOP.search(masked)
+            match = _B16_LOOP.search(masked)
             if match:
                 hits.append(dict(
                     line=idx, rule="B16", tier="REVIEW", snippet=match.group(0),
@@ -718,6 +816,27 @@ def scan(text, mode="prose"):
                     line=idx, rule="B17", tier="REVIEW", snippet=stripped_m[:40],
                     note=f"句首代词连珠（连续 {best_run} 句）：一主串多动，"
                          "主语带出一次靠动词链顺承"))
+            # 句内主语复现：同句相邻分句同一代词起头（“她知道，她也明白”）
+            for sent in sents:
+                clauses = [c.strip() for c in _CLAUSE_SPLIT.split(sent) if c.strip()]
+                intra_run = []
+                cur = None
+                for c in clauses:
+                    head = c[:1] if _B17_INTRA_HEAD.match(c) else None
+                    if head and head == cur:
+                        intra_run.append(c)
+                    else:
+                        if len(intra_run) >= 2:
+                            break
+                        intra_run = [c] if head else []
+                        cur = head
+                if len(intra_run) >= 2:
+                    hits.append(dict(
+                        line=idx, rule="B17", tier="REVIEW",
+                        snippet="，".join(c[:20] for c in intra_run),
+                        note="句内主语复现（同句相邻分句同一代词起头）："
+                             "承前省删后一个主语或合并动词链；有意的强调、"
+                             "对比、递进复用放行"))
         n_dialogue = sum(1 for _, raw, _ in scannable
                          if re.match(r"^[“\"『「]", raw.strip()))
         n_tags = sum(len(_plain_tag.findall(masked)) for _, _, masked in scannable)
@@ -730,23 +849,51 @@ def scan(text, mode="prose"):
                 snippet=f"{n_tags} 个说类标签 / {n_dialogue} 行独行对白",
                 note="对白标签密度超标：语境可判的独行对白直接呈现；"
                      "力度用动作替标签干活"))
+        # 问答乒乓：连续 ≥5 行独行对白且行间无叙述，即整场戏只由问答构成
+        ping_run = []
 
-    # 同点双报抑制：B4/B10 的改法是删掉段首提示语/起手式，删后 B3 的触发
-    # 对象不复存在，同线命中时 B3 不报（优先级见 SKILL.md B3）
+        def _flush_pingpong():
+            if len(ping_run) >= _B17_PINGPONG_MIN:
+                hits.append(dict(
+                    line=ping_run[0][0], rule="B17", tier="REVIEW",
+                    snippet=ping_run[0][1][:30],
+                    note=f"问答乒乓（连续 {len(ping_run)} 行独行对白无叙述）："
+                         "确认型、递进型回合降级为嵌入叙述或间接转述，"
+                         "只留最锋利的几句独行；交锋型反问短打放行"))
+
+        for idx, raw, masked in scannable:
+            line = raw.strip()
+            if not line:
+                continue  # 空行是小说常规分段，不打断对白连发
+            if _B17_DIALOGUE_LINE.match(line):
+                ping_run.append((idx, line))
+            else:
+                _flush_pingpong()
+                ping_run = []
+        _flush_pingpong()
+
+    # 同点双报抑制：仅当 B4 的提示语本身就是 B3 的触发语时（词表重叠：
+    # "关键在于："），删掉提示语后 B3 的触发对象才确实不复存在。B4/B10
+    # 命中在行内其他位置时（如"原因如下："），B3 的触发语删后照旧存在，
+    # 必须照报，否则同行的 B3 病灶被吞
     if "B3" in review_on:
-        drop = {h["line"] for h in hits if h["rule"] in ("B4", "B10")}
-        hits = [h for h in hits if not (h["rule"] == "B3" and h["line"] in drop)]
+        drop_lines = {h["line"] for h in hits
+                      if h["rule"] in ("B4", "B10")
+                      and any(w in h["snippet"] for w in B3_OPENERS)}
+        hits = [h for h in hits
+                if not (h["rule"] == "B3" and h["line"] in drop_lines)]
 
     return hits
 
 
 def main():
     parser = argparse.ArgumentParser(
-        description="机械规则扫描器（确定命中 B4/B6/B10；复核候选 B1/B3/B5/B11/F7）")
+        description="机械规则扫描器（FIX：B4/B6/B10；REVIEW：B1/B3/B5/B9/B11/B12 与 fiction 的 B13–B18、gen 的 C/D 层）")
     parser.add_argument("files", nargs="*", help="待扫描文件或目录（目录递归）；单独的 - 读 stdin")
     parser.add_argument("--mode", choices=("prose", "fiction", "gen"), default="prose",
-                        help="prose=论述清理；fiction=fiction 清理（B6/B1/B5/F7）；"
-                             "gen=生成期自查（FIX 同 prose，REVIEW 增 D/C 层候选）")
+                        help="prose=论述清理（B1/B3/B4/B5/B6/B9/B10/B11/B12）；"
+                             "fiction=fiction 清理（B1/B5/B6/B9/B13–B18）；"
+                             "gen=生成期自查（prose 集加 B13–B18 与 C/D 层）")
     args = parser.parse_args()
     if not args.files:
         parser.print_help(file=sys.stderr)

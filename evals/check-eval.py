@@ -57,7 +57,10 @@ def case_sha256(path):
 
 
 def check_frozen(evals_dir):
-    """核对每份样例与 manifest 的 SHA256；返回失败清单。"""
+    """核对每份样例的 SHA256 与判据快照（assertions/retention_min）；返回失败清单。
+
+    判据与样例同冻：只冻样例文本不冻判据，改 benchmark 阈值即可放水（防放水条款的另一半）。
+    """
     manifest_path = evals_dir / "manifest.json"
     if not manifest_path.exists():
         return ["manifest.json 不存在：先运行 --freeze 冻结基线"]
@@ -73,6 +76,10 @@ def check_frozen(evals_dir):
         if actual != recorded["sha256"]:
             failures.append(f"{case_id}: 样例内容与冻结指纹不符（防放水条款："
                             f"跑分后不得改样例；确需变更先在 manifest.changes 记理由）")
+        for field in ("assertions", "retention_min"):
+            if entry.get(field) != recorded.get(field):
+                failures.append(f"{case_id}: 判据 {field} 与冻结快照不符（改阈值/断言须先在 "
+                                f"manifest.changes 记理由后重冻结）")
     return failures
 
 
@@ -167,22 +174,28 @@ def evaluate_case(entry, case_text, output_text):
 
 
 def score_run(run_dir, evals_dir):
-    """对一个 run 目录全量判分。输出文件名：<case-id>.txt 或 <case-id>.rN.txt。"""
+    """对一个 run 目录全量判分。输出文件名：<case-id>.txt；--repeat 产物为 <case-id>.rN.txt（逐份判分）。"""
     entries = load_benchmark(evals_dir)
     results = []
     for entry in entries:
         case_path = evals_dir / entry["case"]
         case_text = case_path.read_text(encoding="utf-8-sig")
-        out_path = run_dir / f"{entry['id']}.txt"
-        if not out_path.exists():
+        out_paths = [run_dir / f"{entry['id']}.txt"]
+        if not out_paths[0].exists():
+            out_paths = sorted(run_dir.glob(f"{entry['id']}.r*.txt"))
+        if not out_paths:
             results.append({
                 "id": entry["id"], "verdict": "FAIL",
                 "details": [{"kind": "missing_output",
-                             "why": f"run 目录缺 {out_path.name}"}],
+                             "why": f"run 目录缺 {entry['id']}.txt"}],
                 "metrics": {}})
             continue
-        output_text = out_path.read_text(encoding="utf-8-sig")
-        results.append(evaluate_case(entry, case_text, output_text))
+        for out_path in out_paths:
+            output_text = out_path.read_text(encoding="utf-8-sig")
+            result = evaluate_case(entry, case_text, output_text)
+            if out_path.stem != entry["id"]:
+                result["id"] = out_path.stem
+            results.append(result)
     return results
 
 
@@ -203,13 +216,18 @@ def summarize(results):
         review_cleared += m.get("review_in", 0) - m.get("review_out", 0)
     rets = [r["metrics"].get("retention") for r in results
             if r["metrics"].get("retention") is not None]
+    # 误伤只计"跑了且被改坏"：缺输出是 harness 缺失，不是清理误伤（glm run 曾被误计 2/8）
+    missing = [r["id"] for r in results
+               if any(d.get("kind") == "missing_output" for d in r["details"])]
+    snf_hurt = sum(1 for r in snf if r["verdict"] == "FAIL" and r["id"] not in missing)
     return {
         "cases": len(results),
         "l1_failures": len(l1),
         "l1_ids": [r["id"] for r in l1],
         "l2_warnings": len(l2),
         "l2_ids": [r["id"] for r in l2],
-        "snf_hurt_count": sum(1 for r in snf if r["verdict"] == "FAIL"),
+        "missing_outputs": missing,
+        "snf_hurt_count": snf_hurt,
         "snf_total": len(snf),
         "sf_fix_clear_rate": (fix_cleared / fix_total) if fix_total else None,
         "sf_review_clear_rate": (review_cleared / review_total) if review_total else None,

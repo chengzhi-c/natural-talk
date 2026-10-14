@@ -1,17 +1,24 @@
 #!/usr/bin/env python3
 """verify_repo.py - natural-talk 仓库一键全量自动化体检与契约测试工具 (纯标准库)
 
-运行本脚本将执行五层严苛自检：
-  1. 结构与契约体检 (SKILL.md frontmatter、导航死链、references完备性)
+运行本脚本将执行十一层自检：
+  1. 结构与契约体检 (SKILL.md frontmatter、导航死链、references完备性、锚点契约)
   2. 离线回归与反套路测试 (不变性用例 0 误杀 + AI 塑料套路 100% 捕获)
   3. 隐私与安全审查 (全仓库扫描 API Key、敏感端点与过程草稿)
   4. 压缩分发包一致性 (校验 natural-talk.zip 是否纯净、无冗余开发文件)
   5. 正解示例自检 (✅ 行零病灶，规则不得带病示人)
+  6. 日常对话生成期回归
+  7. 规则页与扫描器词表一致性
+  8. 扫描器红灯测试 (test-scan-mechanical.py)
+  9. 清理审计测试 (test-audit-cleanup.py)
+ 10. 评测环 harness 自测 (test-eval-harness.py)
+ 11. turing 判分纯函数自测 (test-turing-eval.py)
 
 用法:
     python scripts/verify_repo.py
 """
 
+import subprocess
 import sys
 import re
 import zipfile
@@ -32,13 +39,15 @@ sys.path.insert(0, str(SCRIPTS_DIR))
 
 import importlib.util
 
-def _load_scanner():
-    """契约扫描器：scan-mechanical.py（与 SKILL.md 引用链一致的单一规范源）。"""
-    spec = importlib.util.spec_from_file_location(
-        "scan_mechanical", SCRIPTS_DIR / "scan-mechanical.py")
+def _load_module(name, path):
+    spec = importlib.util.spec_from_file_location(name, path)
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
     return mod
+
+def _load_scanner():
+    """契约扫描器：scan-mechanical.py（与 SKILL.md 引用链一致的单一规范源）。"""
+    return _load_module("scan_mechanical", SCRIPTS_DIR / "scan-mechanical.py")
 
 _scanner = _load_scanner()
 
@@ -48,7 +57,7 @@ def scan_text(text):
             for h in _scanner.scan(text, mode="gen")]
 
 def test_contract():
-    print("\n[1/4] 正在执行：Skill 结构与契约完整性测试...")
+    print("\n[1/11] 正在执行：Skill 结构与契约完整性测试...")
     failures = []
     
     # 1. Check SKILL.md
@@ -84,8 +93,7 @@ def test_contract():
     # 3. Check critical anchor contracts
     total_anchors = 0
     try:
-        from importlib.machinery import SourceFileLoader
-        contract_mod = SourceFileLoader("test_skill_contract", str(SCRIPTS_DIR / "test-skill-contract.py")).load_module()
+        contract_mod = _load_module("test_skill_contract", SCRIPTS_DIR / "test-skill-contract.py")
         total_anchors = sum(len(anchors) for anchors in contract_mod.REQUIRED_ANCHORS.values())
         for rel_path, anchors in contract_mod.REQUIRED_ANCHORS.items():
             file_path = ROOT / rel_path
@@ -107,9 +115,8 @@ def test_contract():
     return True
 
 def test_regression():
-    print("\n[2/4] 正在执行：离线回归与反套路测试...")
-    from importlib.machinery import SourceFileLoader
-    test_rules = SourceFileLoader("test_rules_local", str(SCRIPTS_DIR / "test-rules-local.py")).load_module()
+    print("\n[2/11] 正在执行：离线回归与反套路测试...")
+    test_rules = _load_module("test_rules_local", SCRIPTS_DIR / "test-rules-local.py")
     INVARIANT_SAMPLES, AI_SLOP_SAMPLES = test_rules.INVARIANT_SAMPLES, test_rules.AI_SLOP_SAMPLES
 
     inv_fails = 0
@@ -135,7 +142,7 @@ def test_regression():
     return True
 
 def test_privacy():
-    print("\n[3/4] 正在执行：全仓库隐私与机密信息扫描...")
+    print("\n[3/11] 正在执行：全仓库隐私与机密信息扫描...")
     # Keywords to check (constructed dynamically to avoid self-match)
     secrets = [''.join(['sk', '_', 'tr_']), ''.join(['sk', '-', 'wZP']), ''.join(['token', 'rhythm']), ''.join(['sak', 'iko'])]
     leakages = []
@@ -164,7 +171,7 @@ def test_privacy():
     return True
 
 def test_zip_package():
-    print("\n[4/4] 正在执行：分发压缩包 natural-talk.zip 规范性检查...")
+    print("\n[4/11] 正在执行：分发压缩包 natural-talk.zip 规范性检查...")
     zip_paths = [
         p for p in [
             ROOT / "natural-talk.zip",
@@ -206,18 +213,117 @@ def test_zip_package():
             print(f"  🟢 PASS: {zip_path} ({zip_path.stat().st_size:,} 字节) 极致纯净（零脚本、零测试、纯正 Skill 资产包）！")
     return all_ok
 
+def test_wording_sync_check():
+    """词表一致性：规则页写的句首套话必须都在扫描器词表里。
+
+    历史缺口——SKILL.md 与 rules-full.md 已写明「说到底/归根结底/直接给答案」，
+    扫描器词表却停在三项，体检全绿而生成期实际漏检。本层把该漂移变成机器可查。
+    """
+    skill = (ROOT / "SKILL.md").read_text(encoding="utf-8")
+    full = (ROOT / "references" / "rules-full.md").read_text(encoding="utf-8")
+    docs = skill + "\n" + full
+    failures = []
+
+    # B10：规则页点名的句首起手式，逐词须在 B10_WORDS
+    for word in ("说白了", "说穿了", "先说结论", "说到底", "归根结底"):
+        if word not in docs:
+            failures.append(f"规则页未提及 B10 起手式「{word}」——用例与文档脱节")
+        elif word not in _scanner.B10_WORDS:
+            failures.append(f"B10 起手式「{word}」在规则页有定义但扫描器词表缺失")
+
+    # B4a：规则页点名的冒号提示语空壳
+    if "直接给答案" not in docs:
+        failures.append("规则页未提及「直接给答案」空壳")
+    elif "直接给答案" not in _scanner.B4A_PROMPTS:
+        failures.append("「直接给答案」在规则页有定义但 B4A 词表缺失")
+
+    # D2：规则页要求的服务腔收尾须有句尾表覆盖（B4a 词表与 D2 尾表至少一处覆盖）
+    for word in ("希望能帮到你", "随时联系我"):
+        if word not in docs:
+            continue
+        covered = (word in _scanner._D2_TAIL.pattern
+                   or word in _scanner._D2_OPENERS
+                   or word in _scanner._D2_SERVICE_EXT.pattern)
+        if not covered:
+            failures.append(f"D2 收尾「{word}」在规则页有定义但扫描器无覆盖")
+
+    if failures:
+        for f in failures:
+            print(f"  ❌ 词表漂移: {f}")
+        return False
+    print(f"  🟢 PASS: 规则页与扫描器词表一致（B10 {len(_scanner.B10_WORDS)} 词 / "
+          f"B4A {len(_scanner.B4A_PROMPTS)} 词 / D2 收尾已覆盖）")
+    return True
+
+def test_daily_gen():
+    print("\n[6/11] 正在执行：日常对话生成期回归...")
+    import subprocess
+    result = subprocess.run(
+        [sys.executable, "-B", str(SCRIPTS_DIR / "test-daily-gen.py")],
+        capture_output=True, text=True, encoding="utf-8", errors="replace", cwd=str(ROOT))
+    stdout = result.stdout or ""
+    if result.returncode == 0:
+        tail = [line for line in stdout.splitlines() if line.startswith("✅")]
+        print(f"  🟢 PASS: {tail[0] if tail else '日常对话生成期回归全绿'}")
+        return True
+    print(stdout)
+    print(result.stderr or "")
+    print("  ❌ FAIL: 日常对话生成期规则存在漏检或误报")
+    return False
+
+
 def test_positive_examples():
-    print("\n[5/5] 正在执行：正解示例自检（✅ 行零病灶）...")
+    print("\n[5/11] 正在执行：正解示例自检（✅ 行零病灶）...")
     import subprocess
     result = subprocess.run(
         [sys.executable, "-B", str(SCRIPTS_DIR / "test-positive-examples.py")],
-        capture_output=True, text=True, cwd=str(ROOT))
+        capture_output=True, text=True, encoding="utf-8", errors="replace", cwd=str(ROOT))
     if result.returncode == 0:
         print("  🟢 PASS: 全部文档 ✅ 正解示例零翻案腔、零违规破折号！")
         return True
-    print(result.stdout)
+    print(result.stdout or "")
     print("  ❌ FAIL: 正解示例带病灶，规则不得「带病示人」")
     return False
+
+
+def test_wording_sync():
+    print("\n[7/11] 正在执行：规则页与扫描器词表一致性...")
+    if test_wording_sync_check():
+        return True
+    return False
+
+
+def run_script_test(index, title, script):
+    """子进程跑 scripts/test-*.py（它们各自带 CLI 与退出码契约）。"""
+    print(f"\n[{index}/11] 正在执行：{title}...")
+    result = subprocess.run(
+        [sys.executable, "-B", str(SCRIPTS_DIR / script)],
+        capture_output=True, text=True, encoding="utf-8", errors="replace", cwd=str(ROOT))
+    if result.returncode == 0:
+        tail = [line for line in (result.stdout or "").splitlines() if line.strip()]
+        print(f"  🟢 PASS: {tail[-1] if tail else script + ' 全绿'}")
+        return True
+    print(result.stdout or "")
+    print(result.stderr or "")
+    print(f"  ❌ FAIL: {script}")
+    return False
+
+
+def test_scan_mechanical():
+    return run_script_test(8, "扫描器红灯测试（种植病灶/白名单/编码回退）", "test-scan-mechanical.py")
+
+
+def test_audit_cleanup():
+    return run_script_test(9, "清理审计测试（信息守恒/改动归属）", "test-audit-cleanup.py")
+
+
+def test_eval_harness():
+    return run_script_test(10, "评测环 harness 自测（冻结/判分/换行）", "test-eval-harness.py")
+
+
+def test_turing_eval():
+    return run_script_test(11, "turing 判分纯函数自测", "test-turing-eval.py")
+
 
 def main():
     print("==================================================")
@@ -229,10 +335,16 @@ def main():
     ok3 = test_privacy()
     ok4 = test_zip_package()
     ok5 = test_positive_examples()
+    ok6 = test_daily_gen()
+    ok7 = test_wording_sync()
+    ok8 = test_scan_mechanical()
+    ok9 = test_audit_cleanup()
+    ok10 = test_eval_harness()
+    ok11 = test_turing_eval()
 
     print("\n==================================================")
-    if ok1 and ok2 and ok3 and ok4 and ok5:
-        print("🎉 全部 5 项体检测试 100% 通过！仓库处于完美交付状态。")
+    if all((ok1, ok2, ok3, ok4, ok5, ok6, ok7, ok8, ok9, ok10, ok11)):
+        print("🎉 全部 11 项体检测试 100% 通过！仓库处于完美交付状态。")
         print("==================================================")
         sys.exit(0)
     else:

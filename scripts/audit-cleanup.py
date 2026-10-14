@@ -75,36 +75,31 @@ _SENT_BOUNDARY = re.compile(r"[。！？；，,]")
 _CLAUSE_MIN_CHARS = 2
 
 
-def _scope_chars(origin_lines, i1, i2, block_hits):
-    """归属命中的解释范围：块内命中行内、以句边界切出的句子（含功能字过滤前）。
-
-    REVIEW/FIX 命中的授权范围是其所在句子：解释力按"归属命中行的句边界"
-    圈定，非命中句的内容字删除不获解释。命中行整行计入（命中行内的
-    其他句子同享解释权，避免同句多命中切分过细的抖动）。
-    """
-    hit_lines = {h["line"] for h in block_hits}
-    scope_chars = {}
-    for ln, raw in enumerate(origin_lines[i1:i2], start=i1 + 1):
-        if ln not in hit_lines:
-            continue
-        for seg in _SENT_BOUNDARY.split(raw):
-            if not seg:
-                continue
-            for ch, n in content_chars(seg).items():
-                scope_chars[ch] = scope_chars.get(ch, 0) + n
-    return scope_chars
-
-
 # 句子骨架存续线：授权句在清理稿中须存在共享 ≥50% 内容字的对应句。
 # 合法句内手术（删"说白了"/"微微"、B1 删否定留肯定）保留句子主体；
 # 整句蒸发（SNF-04）与肯定面蒸发（SF-08）都会跌破此线。
 _SKELETON_RATIO = 0.5
 
 # 触发分句整体可删的规则：改法就是重写/删除病灶分句本身
-_CLAUSE_EXEMPT_RULES = {"B15", "B16", "F7", "B12", "C5"}
+# （B17 含标签分句重写："她沉声道"→"她说"；B9 含装饰比喻"删掉或直说"）
+_CLAUSE_EXEMPT_RULES = {"B15", "B16", "B12", "C5", "B9", "B17"}
 # 触发词短语可删的规则：按触发词内容字给预算（不动分句其余部分）
 _PHRASE_BUDGET_RULES = ("B3", "B4", "B10", "C2", "C4", "C6",
                         "D2", "D3", "D4", "D5", "D6")
+# 规则授权的替换词：改法本身就是换成该词，不算越权新增
+# （B17：装饰标签"命令道/沉声道"→"说"；B1：fiction.md 示范句"比恐惧更深"；
+#  B15：改法明文"写定住与动作停顿"——均见 references/fiction.md）
+_RULE_REPLACEMENTS = {"B17": {"说"}, "B1": {"比"}, "B15": {"定", "住"}}
+
+# 主张句动词：分句含这类词且不含否定触发词时，它是"有人主张过 A"的
+# 前提句（"上一版评审认为瓶颈出在数据库"），否证合法性的来源。
+# B1 豁免回溯到此处中断：删主张句会把合法否证改成翻案腔
+#（deepseek SF-08 漏网形态：肯定面在、主张句蒸发）。
+_CLAIM_VERB = re.compile(r"认为|觉得|声称|指出|发现|表明|反映|显示|证明|"
+                         r"看到|听说|传闻|强调|判断")
+# 否定触发词：分句含这些词时属否定侧（"压测证明瓶颈不是数据库"），
+# 即使含主张句动词也不中断豁免回溯。
+_NEG_TRIGGER = re.compile(r"不是|并非|而非|而不是|没有|并无|看似|实则|不只是")
 
 
 def _sentences(text):
@@ -142,9 +137,11 @@ def _authority_scope(origin_lines, i1, i2, block_hits, cleaned_span,
     以分句为骨架单元，按规则的改法给豁免与预算：
     - B1 变体（不是A，(而/只)是B / 没有A只有B / 看似A实则B）：改法
       "删否定留肯定"——否定侧分句豁免，肯定侧分句必须存活；
-      实测漏网 SF-08 即肯定面蒸发、SNF-04 即命中句整句蒸发。
+      豁免回溯在主张句处中断（删"有人主张过 A"的前提句会把合法
+      否证改成翻案腔，deepseek SF-08 漏网形态即主张句蒸发）；
+      整句蒸发（SNF-04）与肯定面蒸发（SF-08）同样必须报。
     - 短语删除类（B3/B4/B10/C*/D*）：触发词本身的内容字计入预算。
-    - 分句重写类（B15/B16/F7/B12/C5）：触发分句豁免（改法即重写该分句）。
+    - 分句重写类（B15/B16/B16/B12/C5）：触发分句豁免（改法即重写该分句）。
     - 其余命中句：与清理稿分句共享 ≥50% 内容字视为骨架存续。
     """
     hit_lines = {h["line"] for h in block_hits}
@@ -173,24 +170,42 @@ def _authority_scope(origin_lines, i1, i2, block_hits, cleaned_span,
                     excl_mark = max(masked.rfind("！", 0, m.start()),
                                     masked.rfind("？", 0, m.start()))
                     sent_start = max(sent_start, excl_mark, -1) + 1
-                    for ci in range(_clause_at(spans, sent_start),
-                                    start_clause + 1):
+                    first_clause = _clause_at(spans, sent_start)
+                    # 回溯在主张句处中断：含主张动词且不属否定侧的分句
+                    # 是"有人主张过 A"的前提，删它即把合法否证改成翻案腔
+                    ci = start_clause
+                    while ci >= first_clause:
+                        seg = spans[ci][2]
+                        if (ci != start_clause
+                                and _CLAIM_VERB.search(seg)
+                                and not _NEG_TRIGGER.search(seg)):
+                            break
                         exempt.add(ci)
+                        ci -= 1
                 pos = masked.find("而是")
                 while pos >= 0:
                     idx = _clause_at(spans, pos)
-                    # "而是"的否定对象在其同句前导分句，全部豁免
+                    # "而是"的否定对象在其同句前导分句，全部豁免；
+                    # 同样在主张句处中断
                     sent_start = masked.rfind("。", 0, pos)
                     excl_mark = max(masked.rfind("！", 0, pos),
                                     masked.rfind("？", 0, pos))
                     sent_start = max(sent_start, excl_mark, -1) + 1
                     first = _clause_at(spans, sent_start)
-                    for ci in range(first, idx):
+                    ci = idx - 1
+                    while ci >= first:
+                        seg = spans[ci][2]
+                        if (_CLAIM_VERB.search(seg)
+                                and not _NEG_TRIGGER.search(seg)):
+                            break
                         exempt.add(ci)
+                        ci -= 1
                     pos = masked.find("而是", pos + 2)
             elif rule in _CLAUSE_EXEMPT_RULES:
                 pos = masked.find(h["snippet"][:6])
-                exempt.add(_clause_at(spans, pos if pos >= 0 else 0))
+                if pos >= 0:
+                    # 定位不到触发分句时不豁免：兜底豁免首分句会掩盖真正的过删
+                    exempt.add(_clause_at(spans, pos))
             elif rule in _PHRASE_BUDGET_RULES:
                 for ch, n in content_chars(h["snippet"]).items():
                     budget[ch] = budget.get(ch, 0) + n
@@ -216,12 +231,16 @@ def _authority_scope(origin_lines, i1, i2, block_hits, cleaned_span,
                         is_b1_affirmative = True
             if total <= _CLAUSE_MIN_CHARS and not is_b1_affirmative:
                 continue  # 语气/连接成分：删除属合法句内手术
-            best_overlap = 0
+            # 骨架存续按块判定：取清理稿整块内容字的并集。B5 的规范改法
+            # （拆句、逗号承接）会把内容分散到多个句里，按单句取 max 会把
+            # 规范拆句误判为塌缩，反而放过真有损的压缩
+            c_union = {}
             for _, c_chars in clean_sents:
-                overlap = sum(min(n, c_chars.get(ch, 0))
-                              for ch, n in r_chars.items())
-                best_overlap = max(best_overlap, overlap)
-            if best_overlap >= total * _SKELETON_RATIO:
+                for ch, n in c_chars.items():
+                    c_union[ch] = c_union.get(ch, 0) + n
+            overlap = sum(min(n, c_union.get(ch, 0))
+                          for ch, n in r_chars.items())
+            if overlap >= total * _SKELETON_RATIO:
                 continue  # 骨架存续：句内手术在授权范围内
             # 骨架塌缩：先扣触发词预算，剩余计入超范围删除
             for ch, n in r_chars.items():
@@ -286,6 +305,11 @@ def audit(original, cleaned, mode="prose"):
             key = tuple(h["orig_line"] for h in bad)
             del_groups.setdefault(key, {})[ch] = g_removed[ch]
     for ch in g_added:
+        # 规则授权的替换词（B17→"说"）从越权新增中剔除
+        if any(ch in _RULE_REPLACEMENTS.get(rule.split("/")[0], set())
+               for h in hunks if h["added"].get(ch)
+               for rule in h["rules"]):
+            continue
         sites = [h for h in hunks if h["added"].get(ch)]
         if sites:
             key = tuple(h["clean_line"] for h in sites)

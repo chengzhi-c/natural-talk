@@ -36,6 +36,7 @@ REQUIRED_ANCHORS = {
     "references/rules-full.md": (
         "D1 谄媚与评判越界",
         "D6 模糊归因",
+        "D7 多轮对话",
         "B1 翻案腔",
         "B5 破折号揭晓",
         "B12 空降宏观开场",
