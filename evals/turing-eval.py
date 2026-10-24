@@ -25,18 +25,15 @@ NT_BASE/NT_KEY 运行时读取；输出只记模型 ID、文件名与判定，�
 import argparse
 import importlib.util
 import json
+import re
 import sys
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
+import _loader
 
-# Ensure UTF-8 output on Windows
-if sys.platform == "win32":
-    try:
-        sys.stdout.reconfigure(encoding="utf-8")
-        sys.stderr.reconfigure(encoding="utf-8")
-    except Exception:
-        pass
+_loader.ensure_utf8()
 
 EVALS_DIR = Path(__file__).resolve().parent
 JUDGE_INSTRUCTION = ("阅读下面这段文字，判断它是 AI 生成的还是人类写的。"
@@ -57,17 +54,48 @@ def build_judge_messages(text):
 
 
 def parse_answer(raw):
-    """判别回答 → ai / human / invalid。含混与否定式表述不硬猜。"""
-    head = (raw or "").strip().splitlines()[0] if (raw or "").strip() else ""
-    has_ai = "AI" in head or "ai" in head.split() or "Ai" in head
-    has_human = any(w in head for w in ("人类", "人写", "是人"))
-    if has_ai and has_human:
+    """判别回答 → ai / human / invalid。含混与否定式表述不硬猜。
+
+    全文找别名，不只看第一行：判别模型常先客套一句再给判定（"这段文字
+    读起来很流畅。
+AI"），只看首行会把正常回答判成 invalid。"人工智能"
+    这类含"AI"却不是判定的词先剔掉。按分句判否定："这不是人写的"是对
+    "人写"的否认，不是判定；"不是AI，是人类写的"两个分句各给一个判定，
+    取未被否定的那个。所有别名都落在否定式之后 → invalid，不硬猜。
+    """
+    text = (raw or "").strip()
+    if not text:
         return "invalid"
-    if has_ai:
+    probe = text.replace("人工智能", "")
+    _AI = r"(?<![A-Za-z])AI(?![A-Za-z])"
+    _HUMAN = r"人类|人写|是人|真人"
+    _FALLBACK = r"机器|模型|生成"
+    live_ai = live_human = live_fallback = False
+    for clause in re.split(r"[。！？；，,、\n]", probe):
+        ai = list(re.finditer(_AI, clause))
+        human = list(re.finditer(_HUMAN, clause))
+        fallback = list(re.finditer(_FALLBACK, clause))
+        if not (ai or human or fallback):
+            continue
+        # 否定词出现在别名之前 → 该别名被否认（"这不是人写的"）
+        neg = re.search(r"不|没|无|非|并未|绝非", clause)
+
+        def denied(m, neg=neg):
+            return bool(neg and neg.start() < m.start())
+
+        if any(not denied(m) for m in ai):
+            live_ai = True
+        if any(not denied(m) for m in human):
+            live_human = True
+        if any(not denied(m) for m in fallback):
+            live_fallback = True
+    if live_ai and live_human:
+        return "invalid"
+    if live_ai:
         return "ai"
-    if has_human:
+    if live_human:
         return "human"
-    if "机器" in head or "模型" in head or "生成" in head:
+    if live_fallback:
         return "ai"
     return "invalid"
 
@@ -80,6 +108,7 @@ def summarize(groups):
         ai = sum(1 for v in verdicts if v == "ai")
         invalid = sum(1 for v in verdicts if v == "invalid")
         out[name] = {"n": n, "judged_ai": ai, "invalid": invalid,
+                     "invalid_rate": round(invalid / n, 4) if n else None,
                      "ai_rate": round(ai / n, 4) if n else None}
     return out
 
@@ -87,12 +116,30 @@ def summarize(groups):
 def conclusion(summary):
     """纯函数：依人类组判定率与组间差给出结论状态与一句话。"""
     human = summary.get("human") or {}
+    human_n = human.get("n") or 0
+    if human_n == 0:
+        return ("no-basis",
+                "人类组没有样本：判别器是否冤枉人类无从检验，本轮不出结论")
+    if (human.get("invalid_rate") or 0) > INVALID_JUDGE_THRESHOLD:
+        return ("invalid-judge",
+                f"人类组无效判定率 {human.get('invalid_rate')} 超过 "
+                f"{INVALID_JUDGE_THRESHOLD:.0%}，判别器答非所问，本轮结论作废")
     if (human.get("ai_rate") or 0) > INVALID_JUDGE_THRESHOLD:
         return ("invalid-judge",
                 f"人类组 AI-判定率 {human.get('ai_rate')} 超过 "
                 f"{INVALID_JUDGE_THRESHOLD:.0%}，判别器不构成区分力，本轮结论作废")
     exp = summary.get("experiment") or {}
     base = summary.get("baseline") or {}
+    # 实验组/基线组无效判定率高时，
+    # ai_rate 只由极少有效样本算出（实测 18 样本
+    # 15 invalid，ai_rate 仅来自 3 个判定），结论统计力
+    # 不足，降级为 low-basis 而不是 improved。
+    for _g, _label in ((exp, "实验组"), (base, "基线组")):
+        if _g and (_g.get("invalid_rate") or 0) > INVALID_JUDGE_THRESHOLD:
+            return ("low-basis",
+                    f"{_label}无效判定率 {_g.get('invalid_rate')} 超 "
+                    f"{INVALID_JUDGE_THRESHOLD:.0%}，有效样本不足，"
+                    f"本轮不出组间结论")
     if exp and base and None not in (exp.get("ai_rate"), base.get("ai_rate")):
         delta = base["ai_rate"] - exp["ai_rate"]
         if delta > 0.05:
@@ -109,7 +156,19 @@ def conclusion(summary):
 
 
 def _collect(directory, limit):
-    paths = sorted(p for p in Path(directory).glob("*.txt") if p.is_file())
+    """取该组的文本样本：同一用例的 rN 重复跑只取第一份。
+
+    run 目录里 `<id>.txt` 与 `<id>.r1/r2.txt` 是同一段文字的多次生成，
+    全算进样本会让 ai_rate 被同一篇文本加权；`--limit` 也按"篇"取，
+    不按文件取（否则 limit=3 取到的是同一篇的三份）。
+    """
+    by_case = {}
+    for path in sorted(Path(directory).glob("*.txt")):
+        if not path.is_file():
+            continue
+        stem = path.stem.split(".r")[0]
+        by_case.setdefault(stem, path)
+    paths = [by_case[k] for k in sorted(by_case)]
     return paths[:limit] if limit else paths
 
 
@@ -148,12 +207,19 @@ def main(argv):
     records = []
 
     def run_job(name, path):
-        text = path.read_text(encoding="utf-8-sig")
-        content, _ = run_eval.call_chat(
-            base, key, args.judge_model, build_judge_messages(text),
-            temperature=0.0, timeout=args.timeout)
-        return {"group": name, "file": path.name,
-                "verdict": parse_answer(content), "head": content.strip()[:40]}
+        try:
+            text = path.read_text(encoding="utf-8-sig")
+            content, _ = run_eval.call_chat(
+                base, key, args.judge_model, build_judge_messages(text),
+                temperature=0.0, timeout=args.timeout)
+            return {"group": name, "file": path.name,
+                    "verdict": parse_answer(content),
+                    "head": content.strip()[:40]}
+        except Exception as error:  # noqa: BLE001
+            # 单例失败只记这一条：future.result() 不捕获会让整轮判定白跑，
+            # 磁盘上还留着上一轮的 report.json 冒充最新
+            return {"group": name, "file": path.name,
+                    "verdict": "invalid", "head": "", "error": str(error)[:200]}
 
     with ThreadPoolExecutor(max_workers=args.workers) as pool:
         futures = {pool.submit(run_job, n, p): (n, p) for n, p in jobs}
@@ -173,7 +239,7 @@ def main(argv):
               "limit": args.limit, "status": status, "summary": summary,
               "message": message, "records": records}
     out_dir = EVALS_DIR / "turing-runs" / (
-        time.strftime("%Y%m%d") + "-" + args.judge_model)
+        time.strftime("%Y%m%d-%H%M%S") + "-" + args.judge_model)
     out_dir.mkdir(parents=True, exist_ok=True)
     (out_dir / "report.json").write_bytes(
         (json.dumps(report, ensure_ascii=False, indent=2) + "\n")

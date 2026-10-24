@@ -30,3 +30,12 @@ evals/turing-runs/
 
 # Python
 __pycache__/
+*.pyc
+*.pyo
+
+# 运行日志与临时文件
+*.log
+*.tmp
+
+# 编辑器/工具写入时生成的伴生锁文件
+*.lock

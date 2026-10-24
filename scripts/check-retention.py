@@ -5,11 +5,7 @@
 
 口径：去空白归一后的字符数之比（清理稿 / 原文）。清理模式的合理删减（删空话、
 删装饰）会压低该值，故下限按需放宽到样例级（见 evals/benchmark.jsonl 的
-retention_min 字段）；命令行默认 85%。
-
-用法：
-  python scripts/check-retention.py <原文> <清理稿>
-上限：清理稿膨胀同样是信息守恒违反（加料），1.25 上限告警。
+retention_min 字段）；命令行默认 85%，膨胀超过 125% 同样告警（加料也是新增了原文没有的内容）。
 
 用法：
   python scripts/check-retention.py <原文> <清理稿>
@@ -19,14 +15,9 @@ retention_min 字段）；命令行默认 85%。
 import re
 import sys
 from pathlib import Path
+import _loader
 
-# Ensure UTF-8 output on Windows
-if sys.platform == "win32":
-    try:
-        sys.stdout.reconfigure(encoding="utf-8")
-        sys.stderr.reconfigure(encoding="utf-8")
-    except Exception:
-        pass
+_loader.ensure_utf8()
 
 RETENTION_FLOOR = 0.85
 RETENTION_CEILING = 1.25

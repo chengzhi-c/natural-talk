@@ -23,6 +23,10 @@ import re
 import sys
 import time
 from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
+import _loader
+
+_loader.ensure_utf8()
 
 EVALS_DIR = Path(__file__).resolve().parent
 ROOT = EVALS_DIR.parent
@@ -40,6 +44,27 @@ _scan_mod = _load("scan_mechanical", SCRIPTS / "scan-mechanical.py")
 _retention_mod = _load("check_retention", SCRIPTS / "check-retention.py")
 scan = _scan_mod.scan
 retention = _retention_mod.retention
+RETENTION_CEILING = _retention_mod.RETENTION_CEILING
+
+# 冻结字段：凡改变判分结果的 benchmark 字段都同样例一起冻。只冻样例文本不冻
+# 判据，跑分后改一个 prompt_type 就能把留存约束整条绕开
+FROZEN_FIELDS = ("case", "prompt_type", "system", "scan_mode", "temperature",
+                 "assertions", "retention_min", "retention_max", "overlap_min")
+
+# 实词 2-gram 重合度下限：留存率只是字数比，"关键词 + 的的的"填充就能把字数补回来
+# （实测留存 0.91 而内容 100% 丢失）。真人清理产出的重合度最低 0.57，故下限取 0.5。
+CONTENT_OVERLAP_FLOOR = 0.5
+
+
+def content_overlap(original, cleaned):
+    """原文 2-gram 在清理稿中的命中比例（去空白）。"""
+    def grams(text):
+        flat = re.sub(r"\s+", "", text)
+        return {flat[i:i + 2] for i in range(len(flat) - 1)}
+    base = grams(original)
+    if not base:
+        return 1.0
+    return len(base & grams(cleaned)) / len(base)
 
 
 def load_benchmark(evals_dir):
@@ -56,19 +81,35 @@ def case_sha256(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def check_frozen(evals_dir):
-    """核对每份样例的 SHA256 与判据快照（assertions/retention_min）；返回失败清单。
+def scorer_fingerprint():
+    """判分器指纹：三个脚本的 sha256。只冻 benchmark 与样例时，改判分逻辑
+    （阈值、规则集、判分分支）能让历史成绩无声失真，指纹把这条路也堵上。"""
+    paths = [Path(__file__).resolve(),
+             SCRIPTS / "scan-mechanical.py",
+             SCRIPTS / "check-retention.py"]
+    return {str(p.relative_to(ROOT)).replace("\\", "/"):
+            hashlib.sha256(p.read_bytes()).hexdigest() for p in paths}
 
-    判据与样例同冻：只冻样例文本不冻判据，改 benchmark 阈值即可放水（防放水条款的另一半）。
+
+def check_frozen(evals_dir):
+    """核对样例指纹与全部判据字段；返回失败清单。
+
+    判据与样例同冻：只冻样例文本不冻判据，改 benchmark 阈值即可放水（防放水条款的
+    另一半）。凡影响判分的字段全量比对（prompt_type/system/scan_mode/temperature/
+    case/assertions/retention_min），并反向遍历 manifest——benchmark 里被删掉的用例
+    同样报失败，否则删掉难过的一例就能无声提高通过率。
     """
     manifest_path = evals_dir / "manifest.json"
     if not manifest_path.exists():
         return ["manifest.json 不存在：先运行 --freeze 冻结基线"]
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    frozen_cases = manifest.get("cases", {})
     failures = []
+    seen = set()
     for entry in load_benchmark(evals_dir):
         case_id = entry["id"]
-        recorded = manifest.get("cases", {}).get(case_id)
+        seen.add(case_id)
+        recorded = frozen_cases.get(case_id)
         if recorded is None:
             failures.append(f"{case_id}: manifest 未收录（新增样例须显式冻结并记理由）")
             continue
@@ -76,27 +117,67 @@ def check_frozen(evals_dir):
         if actual != recorded["sha256"]:
             failures.append(f"{case_id}: 样例内容与冻结指纹不符（防放水条款："
                             f"跑分后不得改样例；确需变更先在 manifest.changes 记理由）")
-        for field in ("assertions", "retention_min"):
+        for field in FROZEN_FIELDS:
             if entry.get(field) != recorded.get(field):
                 failures.append(f"{case_id}: 判据 {field} 与冻结快照不符（改阈值/断言须先在 "
                                 f"manifest.changes 记理由后重冻结）")
+    for case_id in sorted(set(frozen_cases) - seen):
+        failures.append(f"{case_id}: manifest 已冻结但 benchmark.jsonl 中没有该用例"
+                        f"（删除用例同样要记理由，否则删掉难过的一例即可提高通过率）")
+    recorded_scorer = manifest.get("scorer")
+    if recorded_scorer and recorded_scorer != scorer_fingerprint():
+        failures.append("判分器指纹与冻结快照不符：判分逻辑被动过，"
+                        "历史成绩不可比（须先在 manifest.changes 记理由后重冻结）")
     return failures
 
 
-def freeze(evals_dir):
+def freeze(evals_dir, reason=None):
+    """冻结基线。判据字段相对旧快照有变化时必须给 --reason，否则拒绝写入。
+
+    没有这道闸，"有意变更须记理由"只靠自觉：改掉断言后直接 --freeze 会把痕迹
+    一并抹掉，changes 永远停在第一次冻结时的条目。
+    """
     manifest_path = evals_dir / "manifest.json"
     manifest = {"frozen_at": time.strftime("%Y-%m-%dT%H:%M:%S%z"),
-                "cases": {}, "changes": []}
+                "cases": {}, "changes": [], "scorer": scorer_fingerprint()}
+    old_cases = {}
+    old_scorer = {}
     if manifest_path.exists():
         old = json.loads(manifest_path.read_text(encoding="utf-8"))
         manifest["changes"] = old.get("changes", [])
+        old_cases = old.get("cases", {})
+        old_scorer = old.get("scorer", {})
+    drifted = []
     for entry in load_benchmark(evals_dir):
-        manifest["cases"][entry["id"]] = {
-            "case": entry["case"],
-            "sha256": case_sha256(evals_dir / entry["case"]),
-            "assertions": entry.get("assertions", []),
-            "retention_min": entry.get("retention_min"),
-        }
+        new = {"case": entry["case"],
+               "sha256": case_sha256(evals_dir / entry["case"]),
+               **{f: entry.get(f) for f in FROZEN_FIELDS}}
+        old = old_cases.get(entry["id"])
+        # drift 比 sha256 + 全部判据字段：只比判据时，篡改样例文本再 --freeze
+        # 会把指纹静默改写，changes 不新增，之后判分全放行
+        if old is not None and (old.get("sha256") != new["sha256"]
+                                or any(old.get(f) != new[f]
+                                       for f in FROZEN_FIELDS)):
+            drifted.append(entry["id"])
+        manifest["cases"][entry["id"]] = new
+    for case_id in sorted(set(old_cases) - set(manifest["cases"])):
+        drifted.append(case_id)
+    if old_scorer and old_scorer != manifest["scorer"] and not reason:
+        raise SystemExit(
+            "拒绝冻结：判分器指纹相对旧快照有变化"
+            f"（{', '.join(sorted(old_scorer))}）。改判分逻辑同样要记理由")
+    drifted_scorer = bool(old_scorer) and old_scorer != manifest["scorer"]
+    if drifted and not reason:
+        raise SystemExit(
+            f"拒绝冻结：以下用例的判据相对旧快照有变化（{', '.join(drifted)}）。"
+            f"有意变更请用 --freeze --reason 说明理由，变更会记入 manifest.changes")
+    if drifted or drifted_scorer:
+        entry = {"at": manifest["frozen_at"], "reason": reason}
+        if drifted:
+            entry["cases"] = drifted
+        if drifted_scorer:
+            entry["scorer"] = "判分逻辑变更（见 reason）"
+        manifest["changes"].append(entry)
     manifest_path.write_bytes(
         (json.dumps(manifest, ensure_ascii=False, indent=2) + "\n").encode("utf-8"))
     return len(manifest["cases"])
@@ -146,9 +227,22 @@ def evaluate_case(entry, case_text, output_text):
     if entry.get("prompt_type") == "clean":
         ratio = retention(case_text, output_text)
         floor = entry.get("retention_min")
+        ceiling = entry.get("retention_max", RETENTION_CEILING)
+        # 三条判据各自独立：串在 else 后面时，膨胀或缩水的输出会整段跳过
+        # 重合度核查，"关键词 + 填充"在膨胀形态下就抓不到
         if floor is not None and ratio < floor:
             fail({"kind": "retention", "ratio": round(ratio, 4),
                   "floor": floor, "why": "清理稿缩水超样例下限"})
+        if ratio > ceiling:
+            fail({"kind": "retention", "ratio": round(ratio, 4),
+                  "ceiling": ceiling, "why": "清理稿膨胀超上限（加料同属新增原文没有的内容）"})
+        overlap_floor = entry.get("overlap_min", CONTENT_OVERLAP_FLOOR)
+        overlap = content_overlap(case_text, output_text)
+        if overlap < overlap_floor:
+            fail({"kind": "overlap", "ratio": round(overlap, 4),
+                  "floor": overlap_floor,
+                  "why": "实词 2-gram 重合度过低：关键词加填充补字数，"
+                         "内容实际已丢失"})
 
     # ---- 扫描：FIX 残留进 L2，REVIEW 残留只计数 ----
     mode = entry.get("scan_mode", "prose")
@@ -175,15 +269,18 @@ def evaluate_case(entry, case_text, output_text):
 
 def score_run(run_dir, evals_dir):
     """对一个 run 目录全量判分。输出文件名：<case-id>.txt；--repeat 产物为 <case-id>.rN.txt（逐份判分）。"""
+    run_dir, evals_dir = Path(run_dir), Path(evals_dir)
     entries = load_benchmark(evals_dir)
     results = []
     for entry in entries:
         case_path = evals_dir / entry["case"]
         case_text = case_path.read_text(encoding="utf-8-sig")
-        out_paths = [run_dir / f"{entry['id']}.txt"]
-        if not out_paths[0].exists():
-            out_paths = sorted(run_dir.glob(f"{entry['id']}.r*.txt"))
+        out_paths = sorted(run_dir.glob(f"{entry['id']}.r*.txt"))
         if not out_paths:
+            single = run_dir / f"{entry['id']}.txt"
+            out_paths = [single] if single.exists() else []
+        if not out_paths:
+            # 缺输出按缺失记录，不崩：--cases 子集 run 与跑一半的 run 都必须能判分
             results.append({
                 "id": entry["id"], "verdict": "FAIL",
                 "details": [{"kind": "missing_output",
@@ -193,17 +290,38 @@ def score_run(run_dir, evals_dir):
         for out_path in out_paths:
             output_text = out_path.read_text(encoding="utf-8-sig")
             result = evaluate_case(entry, case_text, output_text)
-            if out_path.stem != entry["id"]:
-                result["id"] = out_path.stem
+            # ID 一律用用例 ID：rN 是同一例的重复跑，换成文件名会让 cases/snf_total
+            # 与 evals 的 17 例 / 8 例口径对不上
+            result["id"] = entry["id"]
+            result["source"] = out_path.name
             results.append(result)
     return results
 
 
 def summarize(results):
-    sf = [r for r in results if r["id"].startswith("SF-")]
-    snf = [r for r in results if r["id"].startswith("SNF-")]
-    l1 = [r for r in results if r["verdict"] == "FAIL"]
-    l2 = [r for r in results if r["verdict"] == "WARN"]
+    """按用例 ID 汇总：rN 是同一例的重复跑，必须先并成一例再统计。
+
+    不并会把 repeat=2 的 run 算成 34 例、snf_total 16、清除率出现负值
+    （同一例的 fix_in 被计两次而 fix_out 只计一次），17 例 / 8 例的口径
+    也随 repeat 漂移。并轨规则：verdict 取最坏，清除计数取第一份，
+    留存与重合度取区间。
+    """
+    by_id = {}
+    for r in results:
+        by_id.setdefault(r["id"], []).append(r)
+    merged = []
+    for case_id, group in by_id.items():
+        worst = min((r["verdict"] for r in group),
+                    key=lambda v: {"FAIL": 0, "WARN": 1, "PASS": 2}[v])
+        first = next((r for r in group if r["metrics"]), group[0])
+        details = [d for r in group for d in r["details"]]
+        merged.append({"id": case_id, "verdict": worst,
+                       "details": details, "metrics": first["metrics"],
+                       "reps": len(group)})
+    sf = [r for r in merged if r["id"].startswith("SF-")]
+    snf = [r for r in merged if r["id"].startswith("SNF-")]
+    l1 = [r for r in merged if r["verdict"] == "FAIL"]
+    l2 = [r for r in merged if r["verdict"] == "WARN"]
     fix_cleared, fix_total = 0, 0
     review_cleared, review_total = 0, 0
     for r in sf:
@@ -214,14 +332,14 @@ def summarize(results):
         fix_cleared += m.get("fix_in", 0) - m.get("fix_out", 0)
         review_total += m.get("review_in", 0)
         review_cleared += m.get("review_in", 0) - m.get("review_out", 0)
-    rets = [r["metrics"].get("retention") for r in results
+    rets = [r["metrics"].get("retention") for r in merged
             if r["metrics"].get("retention") is not None]
     # 误伤只计"跑了且被改坏"：缺输出是 harness 缺失，不是清理误伤（glm run 曾被误计 2/8）
-    missing = [r["id"] for r in results
+    missing = [r["id"] for r in merged
                if any(d.get("kind") == "missing_output" for d in r["details"])]
     snf_hurt = sum(1 for r in snf if r["verdict"] == "FAIL" and r["id"] not in missing)
     return {
-        "cases": len(results),
+        "cases": len(merged),
         "l1_failures": len(l1),
         "l1_ids": [r["id"] for r in l1],
         "l2_warnings": len(l2),
@@ -272,11 +390,12 @@ def main(argv):
                         help="评测数据目录（默认脚本所在目录）")
     parser.add_argument("--freeze", action="store_true",
                         help="冻结/更新样例 SHA256 与预期快照")
+    parser.add_argument("--reason", help="本次冻结相对旧快照的变更理由（判据有变必填）")
     parser.add_argument("--report", type=Path, help="报告输出路径（默认不写文件）")
     args = parser.parse_args(argv[1:])
 
     if args.freeze:
-        count = freeze(args.evals)
+        count = freeze(args.evals, reason=args.reason)
         print(f"已冻结 {count} 份样例到 manifest.json")
         if not args.run_dir:
             return 0

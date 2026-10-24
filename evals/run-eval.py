@@ -11,7 +11,7 @@ Windows 纪律（write_text 会把 LF 翻译成 CRLF，导致校验和失配）�
 仍失败则记录到 metadata 并继续，不中断整轮。
 
 用法：
-  python evals/run-eval.py --model deepseek-v4-flash-0731 ^
+  python evals/run-eval.py --model <模型ID> ^
       [--credentials <file>] [--endpoint-index 1] [--tag baseline] ^
       [--cases SF-01,SF-07] [--repeat 2] [--workers 4] [--max-tokens 32000]
 输出：evals/runs/<日期>-<模型>[-<tag>]/<case-id>[.rN].txt + metadata.json
@@ -27,6 +27,10 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from urllib.error import HTTPError
 from urllib.request import Request, urlopen
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
+import _loader
+
+_loader.ensure_utf8()
 
 EVALS_DIR = Path(__file__).resolve().parent
 ROOT = EVALS_DIR.parent
@@ -54,7 +58,7 @@ def parse_endpoints(text):
 
 
 def rules_commit():
-    """记录规则文件的 git commit（README 效果数字需要版本锚点才能复核）。"""
+    """记录规则文件的 git commit（效果数字需要版本锚点才能复核）。"""
     try:
         result = subprocess.run(
             ["git", "rev-parse", "--short", "HEAD"],
@@ -78,16 +82,22 @@ def resolve_credentials(args):
 
 def build_messages(entry, case_text, core_only=False):
     """system 拼接遵循 SKILL.md 模式判定：
-    - 生成（retell）：蒸馏核心 SKILL.md（+ fiction.md 当 system=-fiction）
-    - 清理（clean）：追加全量规范 rules-full.md（+ fiction.md 当 system=-fiction）
+    - 生成（retell）：蒸馏核心 SKILL.md（+ fiction.md 当 system=fiction）
+    - 清理（clean）：论述类追加全量规范 rules-full.md；fiction 成稿只追加 fiction.md
+      （fiction 的清理带入集在 fiction.md 第四节，叠 rules-full 会让 system 冲到
+      20K，同时把论述类口径灌进小说清理，结果被 prompt 构造污染）
     core_only=True 只加载蒸馏核心，跳过参考拼接——蒸馏 A/B 对照专用。
     """
     skill_main = (ROOT / "SKILL.md").read_text(encoding="utf-8")
     parts = [skill_main]
     if not core_only and entry.get("prompt_type") == "clean":
-        parts.append((ROOT / "references" / "rules-full.md")
-                    .read_text(encoding="utf-8"))
-    if entry.get("system") == "fiction":
+        if entry.get("system") == "fiction":
+            parts.append((ROOT / "references" / "fiction.md")
+                         .read_text(encoding="utf-8"))
+        else:
+            parts.append((ROOT / "references" / "rules-full.md")
+                         .read_text(encoding="utf-8"))
+    elif entry.get("system") == "fiction":
         parts.append((ROOT / "references" / "fiction.md")
                      .read_text(encoding="utf-8"))
     system = "\n\n".join(parts)
@@ -172,14 +182,20 @@ def main(argv):
         if missing:
             raise SystemExit(f"未知样例 ID：{sorted(missing)}")
 
-    run_name = time.strftime("%Y%m%d") + "-" + args.model
+    run_name = time.strftime("%Y%m%d-%H%M%S") + "-" + args.model
     if args.core_only:
         run_name += "-core"
     if args.tag:
         run_name += "-" + args.tag
     out_root = args.output_root or (EVALS_DIR / "runs")
     run_dir = out_root / run_name
-    run_dir.mkdir(parents=True, exist_ok=True)
+    # 同秒二次运行要能区分：exist_ok=False 已挡掉同日重跑的静默覆盖，
+    # 但同分钟内的第二次仍会撞名，这里补一个序号后缀
+    suffix = 1
+    while run_dir.exists():
+        suffix += 1
+        run_dir = out_root / f"{run_name}-{suffix}"
+    run_dir.mkdir(parents=True, exist_ok=False)
 
     jobs = []
     for entry in entries:

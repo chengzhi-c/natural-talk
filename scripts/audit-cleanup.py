@@ -1,7 +1,7 @@
-"""清理模式 diff 审计：每处改动归属规则编号，信息守恒机械核验。
+"""清理模式 diff 审计：每处改动归属规则编号，核实新增的实词能否溯源到原文。
 
-把 rules-full.md 成文清理边界中"每处改动对应一条编号，指不出对应规则的
-撤销"与"信息守恒：每个实词能溯源到原文"从荣誉制变成可执行检查：
+把 rules-full.md 成文清理边界中“每处改动对应一条编号，指不出对应规则的”与
+“每个实词能溯源到原文”从荣誉制变成可执行检查：
 
   1. difflib 行级对比原文/清理稿，产出改动块（hunk）
   2. 原文跑 scan-mechanical（prose 或 fiction），命中行号给改动块归属
@@ -10,7 +10,7 @@
      - 全文净删的内容字，删除点均无规则归属 → 无依据删除（按位置分组合并）
      - 全文净增的内容字 → 越权新增（原文已有字符的移位放行，只记块）
      - 有归属的块，净删内容字超出归属规则可解释范围 → 幅度超出归属
-       （REVIEW 级候选只授权触发句内的句内手术；实测漏网：整段压缩
+       （REVIEW 级候选只授权触发句内的改写；实测漏网：整段压缩
        借行内一个 B1 候选洗白为"有归属"——解释范围按归属命中所在句子
        圈定，句外净删即报）
   4. 纯功能字/标点改写（破折号改句号、删"了"）不触发——风险本来就低
@@ -29,18 +29,13 @@ import importlib.util
 import re
 import sys
 from pathlib import Path
+import _loader
 
-# Ensure UTF-8 output on Windows
-if sys.platform == "win32":
-    try:
-        sys.stdout.reconfigure(encoding="utf-8")
-        sys.stderr.reconfigure(encoding="utf-8")
-    except Exception:
-        pass
+_loader.ensure_utf8()
 
-# 功能字：语法胶水，改写中增删不构成信息守恒事件（重写连接词是合法编辑）
+# 功能字：语法胶水，增删它不影响内容完整性
 _FUNC = set("的了是在和与就也都而把被让对为以及或又还再只便但并等"
-            "呢吧啊呀么嘛之其这那着过很不没给向从到把")
+            "呢吧啊呀么嘛之其这那着过很不没给向从到")
 
 # 拉丁字母与数字必计为内容字：名称、端口号、数字改动即违规
 _CJK_LO, _CJK_HI = 0x4E00, 0x9FFF
@@ -70,31 +65,34 @@ def _load_scanner():
 # 句边界含逗号：B1 翻案腔的骨架单元是分句（"不是A，而是B"的 A/B 各为
 # 一单元），肯定面"而是B"是独立分句，整句删除时它单独塌缩。
 # 最小豁免：分句内容字 ≤2 视为语气/连接成分（"说白了""，只是"类），
-# 删除它们是合法句内手术，不构成骨架塌缩。
+# 删除它们是合法的句内改写，不构成骨架塌缩。
 _SENT_BOUNDARY = re.compile(r"[。！？；，,]")
 _CLAUSE_MIN_CHARS = 2
 
 
 # 句子骨架存续线：授权句在清理稿中须存在共享 ≥50% 内容字的对应句。
-# 合法句内手术（删"说白了"/"微微"、B1 删否定留肯定）保留句子主体；
+# 合法的句内改写（删"说白了"/"微微"、B1 删否定留肯定）保留句子主体；
 # 整句蒸发（SNF-04）与肯定面蒸发（SF-08）都会跌破此线。
 _SKELETON_RATIO = 0.5
 
 # 触发分句整体可删的规则：改法就是重写/删除病灶分句本身
 # （B17 含标签分句重写："她沉声道"→"她说"；B9 含装饰比喻"删掉或直说"）
-_CLAUSE_EXEMPT_RULES = {"B15", "B16", "B12", "C5", "B9", "B17"}
+# B15 不在此列：fiction.md 第四节明令清理"不得新造动作、神态与感知"
+# 动作"，给分句豁免等于授权整句重写成别的东西
+_CLAUSE_EXEMPT_RULES = {"B16", "B12", "B9", "B17"}
 # 触发词短语可删的规则：按触发词内容字给预算（不动分句其余部分）
-_PHRASE_BUDGET_RULES = ("B3", "B4", "B10", "C2", "C4", "C6",
+_PHRASE_BUDGET_RULES = ("B3", "B4", "B10", "C2", "C4", "C5",
                         "D2", "D3", "D4", "D5", "D6")
-# 规则授权的替换词：改法本身就是换成该词，不算越权新增
-# （B17：装饰标签"命令道/沉声道"→"说"；B1：fiction.md 示范句"比恐惧更深"；
-#  B15：改法明文"写定住与动作停顿"——均见 references/fiction.md）
-_RULE_REPLACEMENTS = {"B17": {"说"}, "B1": {"比"}, "B15": {"定", "住"}}
+# 规则授权的替换词：改法本身就是换成该词，不算越权新增。
+# 只留 B17 的"说"（装饰标签"命令道"→"说"是换词不是新增信息）。
+# B1 的"比"与 B15 的"定/住"曾在这里，但它们对应的是 fiction.md 的示范句与
+# 原文没有的成分一律算越权新增，不管它多合理
+_RULE_REPLACEMENTS = {"B17": {"说"}}
 
 # 主张句动词：分句含这类词且不含否定触发词时，它是"有人主张过 A"的
 # 前提句（"上一版评审认为瓶颈出在数据库"），否证合法性的来源。
 # B1 豁免回溯到此处中断：删主张句会把合法否证改成翻案腔
-#（deepseek SF-08 漏网形态：肯定面在、主张句蒸发）。
+#（SF-08 漏网形态：肯定面在、主张句蒸发）。
 _CLAIM_VERB = re.compile(r"认为|觉得|声称|指出|发现|表明|反映|显示|证明|"
                          r"看到|听说|传闻|强调|判断")
 # 否定触发词：分句含这些词时属否定侧（"压测证明瓶颈不是数据库"），
@@ -138,10 +136,10 @@ def _authority_scope(origin_lines, i1, i2, block_hits, cleaned_span,
     - B1 变体（不是A，(而/只)是B / 没有A只有B / 看似A实则B）：改法
       "删否定留肯定"——否定侧分句豁免，肯定侧分句必须存活；
       豁免回溯在主张句处中断（删"有人主张过 A"的前提句会把合法
-      否证改成翻案腔，deepseek SF-08 漏网形态即主张句蒸发）；
+      否证改成翻案腔，SF-08 漏网形态即主张句蒸发）；
       整句蒸发（SNF-04）与肯定面蒸发（SF-08）同样必须报。
     - 短语删除类（B3/B4/B10/C*/D*）：触发词本身的内容字计入预算。
-    - 分句重写类（B15/B16/B16/B12/C5）：触发分句豁免（改法即重写该分句）。
+    - 分句重写类（B9/B12/B16/B17）：触发分句豁免（改法即重写该分句）。
     - 其余命中句：与清理稿分句共享 ≥50% 内容字视为骨架存续。
     """
     hit_lines = {h["line"] for h in block_hits}
@@ -226,11 +224,12 @@ def _authority_scope(origin_lines, i1, i2, block_hits, cleaned_span,
                         is_b1_affirmative = True
                         break
                 if not is_b1_affirmative:
+                    # 在前一分句结尾之后找"而是"：命中本分句即肯定侧
                     p = masked.find("而是", spans[idx][0] if idx == 0 else spans[idx - 1][1])
-                    if 0 <= p < spans[idx][1] if idx < len(spans) else False:
+                    if 0 <= p < spans[idx][1]:
                         is_b1_affirmative = True
             if total <= _CLAUSE_MIN_CHARS and not is_b1_affirmative:
-                continue  # 语气/连接成分：删除属合法句内手术
+                continue  # 语气/连接成分：删除属合法改写
             # 骨架存续按块判定：取清理稿整块内容字的并集。B5 的规范改法
             # （拆句、逗号承接）会把内容分散到多个句里，按单句取 max 会把
             # 规范拆句误判为塌缩，反而放过真有损的压缩
@@ -241,7 +240,7 @@ def _authority_scope(origin_lines, i1, i2, block_hits, cleaned_span,
             overlap = sum(min(n, c_union.get(ch, 0))
                           for ch, n in r_chars.items())
             if overlap >= total * _SKELETON_RATIO:
-                continue  # 骨架存续：句内手术在授权范围内
+                continue  # 骨架存续：句内改写在授权范围内
             # 骨架塌缩：先扣触发词预算，剩余计入超范围删除
             for ch, n in r_chars.items():
                 spend = min(n, budget.get(ch, 0))
@@ -276,7 +275,7 @@ def audit(original, cleaned, mode="prose"):
         o_chars, c_chars = content_chars(o_span), content_chars(c_span)
         removed = {c: n for c, n in o_chars.items() if n > c_chars.get(c, 0)}
         added = {c: n for c, n in c_chars.items() if n > o_chars.get(c, 0)}
-        # 幅度核查：授权句的骨架须在清理稿中存续（句内手术合法，
+        # 幅度核查：授权句的骨架须在清理稿中存续（句内改写合法，
         # 整句蒸发与肯定面蒸发报"幅度超出归属"）
         scope_over = {}
         if rules and removed:
@@ -305,15 +304,19 @@ def audit(original, cleaned, mode="prose"):
             key = tuple(h["orig_line"] for h in bad)
             del_groups.setdefault(key, {})[ch] = g_removed[ch]
     for ch in g_added:
-        # 规则授权的替换词（B17→"说"）从越权新增中剔除
-        if any(ch in _RULE_REPLACEMENTS.get(rule.split("/")[0], set())
-               for h in hunks if h["added"].get(ch)
-               for rule in h["rules"]):
+        # 规则授权的替换词（B17→"说"）从越权新增中剔除。只认该 hunk 自身带此
+        # 规则归属时新增的那个字：按字符全局豁免会让别处新造的同一个字搭车
+        # （实测：原文无"说"、改稿"话说完了"里的"说"被整条放过）
+        all_sites = [h for h in hunks if h["added"].get(ch)]
+        allowed = sum(h["added"][ch] for h in all_sites
+                      if any(ch in _RULE_REPLACEMENTS.get(r.split("/")[0], set())
+                             for r in h["rules"]))
+        excess = g_added[ch] - allowed
+        if excess <= 0:
             continue
-        sites = [h for h in hunks if h["added"].get(ch)]
-        if sites:
-            key = tuple(h["clean_line"] for h in sites)
-            add_groups.setdefault(key, {})[ch] = g_added[ch]
+        if all_sites:
+            key = tuple(h["clean_line"] for h in all_sites)
+            add_groups.setdefault(key, {})[ch] = excess
     for h in hunks:
         if h["scope_over"]:
             key = (h["orig_line"],)
@@ -331,14 +334,14 @@ def audit(original, cleaned, mode="prose"):
         violations.append({"kind": "越权新增", "chars": chars,
                            "side": "改稿", "where": list(where),
                            "snippet": first["c_snippet"] if first else "",
-                           "hint": "原文没有的实词出现在清理稿：删除，信息守恒禁增"})
+                           "hint": "原文没有的实词出现在清理稿：删除，不许新增"})
     for where, chars in scope_groups.items():
         first = next(h for h in hunks if h["orig_line"] == where[0])
         violations.append({"kind": "幅度超出归属", "chars": chars,
                            "side": "原文", "where": list(where),
                            "snippet": first["o_snippet"],
                            "hint": "有归属但净删超出归属规则所在句子的解释范围："
-                                   " REVIEW 候选只授权触发句内的句内手术，"
+                                   " REVIEW 候选只授权触发句内的改写，"
                                    "超范围压缩属过度清理，放回或按句拆块重清"})
     return {"hunks": hunks, "violations": violations,
             "g_removed": g_removed, "g_added": g_added}
@@ -367,7 +370,7 @@ def render(result):
 
 def main(argv):
     parser = argparse.ArgumentParser(
-        description="清理模式 diff 审计（信息守恒 + 改动归属）")
+        description="清理模式 diff 审计（新增实词溯源 + 改动归属）")
     parser.add_argument("original", help="原文文件路径（- 读 stdin）")
     parser.add_argument("cleaned", help="清理稿文件路径")
     parser.add_argument("--mode", choices=("prose", "fiction"), default="prose",

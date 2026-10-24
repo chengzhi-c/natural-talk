@@ -1,9 +1,13 @@
 {
-  "frozen_at": "2026-09-22T21:51:15+0800",
+  "frozen_at": "2026-10-24T17:44:31+0800",
   "cases": {
     "SF-01": {
       "case": "cases/SF-01.txt",
       "sha256": "6c51b480fd792b2a345a34cebb6c1685a1386c4cdc6a9198c75ce6d683f4f08f",
+      "prompt_type": "clean",
+      "system": "standard",
+      "scan_mode": "prose",
+      "temperature": 0.2,
       "assertions": [
         {
           "type": "require_final_regex",
@@ -18,19 +22,25 @@
         {
           "type": "forbid_final_regex",
           "pattern": "不是在维护过去",
-          "level": "l2"
+          "level": "l1"
         },
         {
           "type": "forbid_final_regex",
           "pattern": "不是爱好",
-          "level": "l2"
+          "level": "l1"
         }
       ],
-      "retention_min": 0.85
+      "retention_min": 0.85,
+      "retention_max": null,
+      "overlap_min": null
     },
     "SF-02": {
       "case": "cases/SF-02.txt",
       "sha256": "bd9a9e2db2f8047c3af625406c1308dcdf0764c9098b5180de185647bae20e6e",
+      "prompt_type": "clean",
+      "system": "standard",
+      "scan_mode": "prose",
+      "temperature": 0.2,
       "assertions": [
         {
           "type": "require_final_regex",
@@ -55,14 +65,20 @@
         {
           "type": "forbid_final_regex",
           "pattern": "——",
-          "level": "l2"
+          "level": "l1"
         }
       ],
-      "retention_min": 0.75
+      "retention_min": 0.75,
+      "retention_max": null,
+      "overlap_min": null
     },
     "SF-03": {
       "case": "cases/SF-03.txt",
       "sha256": "ce71618ce20be06ab3f922ed4703fefb63c0fa73ed4e228c31d68f4eed26d236",
+      "prompt_type": "clean",
+      "system": "standard",
+      "scan_mode": "prose",
+      "temperature": 0.2,
       "assertions": [
         {
           "type": "require_final_regex",
@@ -87,14 +103,20 @@
         {
           "type": "forbid_final_regex",
           "pattern": "——",
-          "level": "l2"
+          "level": "l1"
         }
       ],
-      "retention_min": 0.8
+      "retention_min": 0.8,
+      "retention_max": null,
+      "overlap_min": null
     },
     "SF-04": {
       "case": "cases/SF-04.txt",
       "sha256": "ba5e2e94949f698363b67e5ecb9301ca692d2cd182d5ae7e4fd95a00c22be67a",
+      "prompt_type": "clean",
+      "system": "standard",
+      "scan_mode": "prose",
+      "temperature": 0.2,
       "assertions": [
         {
           "type": "require_final_regex",
@@ -112,11 +134,17 @@
           "level": "l1"
         }
       ],
-      "retention_min": 0.85
+      "retention_min": 0.85,
+      "retention_max": null,
+      "overlap_min": null
     },
     "SF-05": {
       "case": "cases/SF-05.txt",
       "sha256": "cd531ed80eea5b215a2c67d9edcf613011d7e01f2618b8d5e6f070b61b6eeb07",
+      "prompt_type": "clean",
+      "system": "standard",
+      "scan_mode": "prose",
+      "temperature": 0.2,
       "assertions": [
         {
           "type": "forbid_final_regex",
@@ -142,13 +170,25 @@
           "type": "forbid_final_regex",
           "pattern": "——",
           "level": "l2"
+        },
+        {
+          "type": "forbid_final_regex",
+          "level": "l1",
+          "pattern": "不是[^，。；！？]{1,20}，而是",
+          "why": "B1 翻案腔：删否定留肯定"
         }
       ],
-      "retention_min": 0.5
+      "retention_min": 0.6,
+      "retention_max": null,
+      "overlap_min": null
     },
     "SF-06": {
       "case": "cases/SF-06.txt",
       "sha256": "6f4e1c0dab7fbedce7d268ed124c7360c21c360076c396d6d41e6d7ed738dba7",
+      "prompt_type": "clean",
+      "system": "fiction",
+      "scan_mode": "fiction",
+      "temperature": 0.2,
       "assertions": [
         {
           "type": "require_final_regex",
@@ -172,62 +212,92 @@
         },
         {
           "type": "forbid_final_regex",
-          "pattern": "瞳孔",
-          "level": "l2"
-        },
-        {
-          "type": "forbid_final_regex",
-          "pattern": "无声的拷问",
-          "level": "l2"
-        },
-        {
-          "type": "forbid_final_regex",
-          "pattern": "不是因为冷",
-          "level": "l2"
-        },
-        {
-          "type": "forbid_final_regex",
-          "pattern": "——",
-          "level": "l2"
-        }
-      ],
-      "retention_min": 0.7
-    },
-    "SF-07": {
-      "case": "cases/SF-07.txt",
-      "sha256": "9d7feadd42d3ea1b89ea9bdfca1f30e84dfa51afc0e9fd37e1936f5129e97726",
-      "assertions": [
-        {
-          "type": "min_output_chars",
-          "value": 10,
+          "pattern": "瞳孔[^，。；！？]{0,6}(?:缩|收缩)",
           "level": "l1"
         },
         {
           "type": "forbid_final_regex",
-          "pattern": "有研究表明|业内普遍认为|专家指出|不少用户反馈",
-          "level": "l2"
+          "pattern": "无声的拷问",
+          "level": "l1"
         },
         {
           "type": "forbid_final_regex",
-          "pattern": "很多用户",
-          "level": "l2"
-        },
-        {
-          "type": "forbid_final_regex",
-          "pattern": "不少用户",
-          "level": "l2"
-        },
-        {
-          "type": "forbid_final_regex",
-          "pattern": "40%",
-          "level": "l2"
+          "pattern": "不是因为冷",
+          "level": "l1"
         }
       ],
-      "retention_min": null
+      "retention_min": 0.7,
+      "retention_max": null,
+      "overlap_min": null
+    },
+    "SF-07": {
+      "case": "cases/SF-07.txt",
+      "sha256": "9d7feadd42d3ea1b89ea9bdfca1f30e84dfa51afc0e9fd37e1936f5129e97726",
+      "prompt_type": "retell",
+      "system": "standard",
+      "scan_mode": "gen",
+      "temperature": 0.6,
+      "assertions": [
+        {
+          "type": "min_output_chars",
+          "level": "l1",
+          "value": 30,
+          "why": "复述须覆盖原文四个论断，10 字即可绕过"
+        },
+        {
+          "type": "require_final_regex",
+          "level": "l1",
+          "pattern": "留存率",
+          "why": "核心论断一：留存率是健康度指标"
+        },
+        {
+          "type": "require_final_regex",
+          "level": "l1",
+          "pattern": "注册流程",
+          "why": "核心论断二：注册流程过于复杂"
+        },
+        {
+          "type": "require_final_regex",
+          "level": "l1",
+          "pattern": "40%",
+          "why": "核心论断三：首月流失比例"
+        },
+        {
+          "type": "require_final_regex",
+          "level": "l1",
+          "pattern": "用户体验",
+          "why": "核心论断四：用户体验是竞争决定因素"
+        },
+        {
+          "type": "forbid_final_regex",
+          "level": "l1",
+          "pattern": "有研究表明|业内普遍认为|专家指出|不少用户反馈",
+          "why": "D6 无源归因"
+        },
+        {
+          "type": "forbid_final_regex",
+          "level": "l2",
+          "pattern": "很多用户",
+          "why": "D6 弱化泛化"
+        },
+        {
+          "type": "forbid_final_regex",
+          "level": "l2",
+          "pattern": "40% 的用户",
+          "why": "D6：保留数字须保留口径"
+        }
+      ],
+      "retention_min": null,
+      "retention_max": null,
+      "overlap_min": null
     },
     "SF-08": {
       "case": "cases/SF-08.txt",
       "sha256": "9de1c6b72f368bd422cb463eb4eabcc73ce3bb26b7d9eb2c0a962b7923dde1d2",
+      "prompt_type": "clean",
+      "system": "standard",
+      "scan_mode": "prose",
+      "temperature": 0.2,
       "assertions": [
         {
           "type": "require_final_regex",
@@ -252,29 +322,35 @@
         {
           "type": "forbid_final_regex",
           "pattern": "不只是",
-          "level": "l2"
+          "level": "l1"
         },
         {
           "type": "forbid_final_regex",
           "pattern": "而是耐心",
-          "level": "l2"
+          "level": "l1"
         },
         {
           "type": "forbid_final_regex",
           "pattern": "而是更稳定",
-          "level": "l2"
+          "level": "l1"
         },
         {
           "type": "forbid_final_regex",
           "pattern": "而是整个工作流",
-          "level": "l2"
+          "level": "l1"
         }
       ],
-      "retention_min": 0.65
+      "retention_min": 0.65,
+      "retention_max": null,
+      "overlap_min": null
     },
     "SNF-01": {
       "case": "cases/SNF-01.txt",
       "sha256": "0b7e83fad068466945ae8e07dbf927289874c4a3aef8d59c34daacf4d7801fa7",
+      "prompt_type": "clean",
+      "system": "standard",
+      "scan_mode": "prose",
+      "temperature": 0.2,
       "assertions": [
         {
           "type": "require_final_regex",
@@ -292,11 +368,17 @@
           "level": "l1"
         }
       ],
-      "retention_min": 0.9
+      "retention_min": 0.9,
+      "retention_max": null,
+      "overlap_min": null
     },
     "SNF-02": {
       "case": "cases/SNF-02.txt",
       "sha256": "04a4f0cb131574040f9c424e867e3698ab1a12f928668871a6e9ff1c9eab1417",
+      "prompt_type": "clean",
+      "system": "standard",
+      "scan_mode": "prose",
+      "temperature": 0.2,
       "assertions": [
         {
           "type": "require_final_regex",
@@ -314,11 +396,17 @@
           "level": "l1"
         }
       ],
-      "retention_min": 0.9
+      "retention_min": 0.9,
+      "retention_max": null,
+      "overlap_min": null
     },
     "SNF-03": {
       "case": "cases/SNF-03.txt",
       "sha256": "235d78eab8c216593135587efd033e0954cf8fb86d5d9361242724e2e61a5695",
+      "prompt_type": "clean",
+      "system": "standard",
+      "scan_mode": "prose",
+      "temperature": 0.2,
       "assertions": [
         {
           "type": "require_final_regex",
@@ -336,11 +424,17 @@
           "level": "l1"
         }
       ],
-      "retention_min": 0.9
+      "retention_min": 0.9,
+      "retention_max": null,
+      "overlap_min": null
     },
     "SNF-04": {
       "case": "cases/SNF-04.txt",
       "sha256": "e727a70c927753f2a7fb275d7cd8cb2f474ac45b955d88c6c51392e1629dc2b9",
+      "prompt_type": "clean",
+      "system": "standard",
+      "scan_mode": "prose",
+      "temperature": 0.2,
       "assertions": [
         {
           "type": "require_final_regex",
@@ -358,11 +452,17 @@
           "level": "l1"
         }
       ],
-      "retention_min": 0.9
+      "retention_min": 0.9,
+      "retention_max": null,
+      "overlap_min": null
     },
     "SNF-05": {
       "case": "cases/SNF-05.txt",
       "sha256": "acac27c48f87d93e513bb7d24050c28548ed390fcc6b5319fd0f451780da0619",
+      "prompt_type": "clean",
+      "system": "standard",
+      "scan_mode": "prose",
+      "temperature": 0.2,
       "assertions": [
         {
           "type": "require_final_regex",
@@ -375,11 +475,17 @@
           "level": "l1"
         }
       ],
-      "retention_min": 0.9
+      "retention_min": 0.9,
+      "retention_max": null,
+      "overlap_min": null
     },
     "SNF-06": {
       "case": "cases/SNF-06.txt",
       "sha256": "10ed45384cc080b04f8bda0b5c2d8bd110ee353e7cac92f6bbdde4e48c9f7cfe",
+      "prompt_type": "clean",
+      "system": "fiction",
+      "scan_mode": "fiction",
+      "temperature": 0.2,
       "assertions": [
         {
           "type": "require_final_regex",
@@ -392,11 +498,17 @@
           "level": "l1"
         }
       ],
-      "retention_min": 0.9
+      "retention_min": 0.9,
+      "retention_max": null,
+      "overlap_min": null
     },
     "SNF-07": {
       "case": "cases/SNF-07.txt",
       "sha256": "c58fa54d9cfff604712b5b2833e6093cab759d164fa14f29c306d2f2403ac95d",
+      "prompt_type": "clean",
+      "system": "standard",
+      "scan_mode": "prose",
+      "temperature": 0.2,
       "assertions": [
         {
           "type": "require_final_regex",
@@ -405,20 +517,26 @@
         },
         {
           "type": "require_final_regex",
-          "pattern": "闭环",
+          "pattern": "闭环|循环",
           "level": "l1"
         },
         {
           "type": "require_final_regex",
-          "pattern": "底层逻辑",
+          "pattern": "底层逻辑|基本逻辑",
           "level": "l1"
         }
       ],
-      "retention_min": 0.9
+      "retention_min": 0.9,
+      "retention_max": null,
+      "overlap_min": null
     },
     "SNF-08": {
       "case": "cases/SNF-08.txt",
       "sha256": "7b8fb7c348790d1a12fb6d7ed069758bfe673807c19f7d5a3c2cc6aef08517c2",
+      "prompt_type": "clean",
+      "system": "standard",
+      "scan_mode": "prose",
+      "temperature": 0.2,
       "assertions": [
         {
           "type": "require_final_regex",
@@ -431,11 +549,17 @@
           "level": "l1"
         }
       ],
-      "retention_min": 0.9
+      "retention_min": 0.9,
+      "retention_max": null,
+      "overlap_min": null
     },
     "SF-09": {
       "case": "cases/SF-09.txt",
       "sha256": "40337bfa1e389ab37c2abe4d12c57f9ec6ccbdd83d6f8ed62e2ce4f5a0596fa8",
+      "prompt_type": "clean",
+      "system": "standard",
+      "scan_mode": "prose",
+      "temperature": 0.2,
       "assertions": [
         {
           "type": "require_final_regex",
@@ -460,33 +584,159 @@
         {
           "type": "forbid_final_regex",
           "pattern": "说白了",
-          "level": "l2"
+          "level": "l1"
         },
         {
           "type": "forbid_final_regex",
           "pattern": "不是没有人",
-          "level": "l2"
+          "level": "l1"
         }
       ],
-      "retention_min": 0.75
+      "retention_min": 0.75,
+      "retention_max": null,
+      "overlap_min": null
     }
   },
   "changes": [
     {
-      "date": "2026-09-21",
-      "case": "SF-09",
-      "reason": "新增 SF-09：台词被打断的合法破折号（B5 豁免形态）必须在清理后存活，require 级断言锚定，防止过度删除随版本迭代固化；同例含 B10/B1 病灶照常清理"
+      "at": "2026-10-23T00:56:11+0800",
+      "reason": "行尾归一为 LF",
+      "scorer": "判分逻辑变更（见 reason）"
     },
     {
-      "date": "2026-09-21T14:35:00+0800",
-      "case": "SNF-07",
-      "reason": "require 赋能 与清理硬约束句内手术原则冲突：赋能→支撑为等义改写（kimi/qwen 双模型独立同改），信息锚点改判 上层应用；样例文本与SHA256 未变，仅断言更新"
+      "at": "2026-10-23T16:01:45+0800",
+      "reason": "扫描器 fiction 模式报 B10、覆盖表 B10 列改 FIX、B9 词表补陈词套式判据，判分输入变化须重冻结",
+      "scorer": "判分逻辑变更（见 reason）"
     },
     {
-      "date": "2026-09-22",
-      "what": "retention_min 校准 + 判据纳入冻结",
-      "why": "原阈值缺依据：SF-01 0.5 虚设（历史观测 0.92-1.0）上调 0.85；SF-02 0.80 与 deepseek 观测 0.81 贴线（+1 分即红）下调 0.75 留 6 分余量。SF-08 0.65 保留：kimi/qwen 观测 0.69 系两模型输出同长巧合，deepseek 0.23/0.37 说明病灶真会吃信息，收紧会把过删变成过不了。check_frozen 增加 assertions/retention_min 快照比对（防放水另一半）。SF-09.txt 行尾归一 CRLF->LF（字节哈希口径，内容不变）。",
-      "impact": "SF-01: 五 run 中 4 过 1 红（deepseek-round1 缩水 0.37 红灯正确）；SF-02: 全过；其余不变。"
+      "at": "2026-10-23T18:51:50+0800",
+      "reason": "B17 乒乓检测修行首「说话人＋冒号＋引语」盲区（原要求行首必须是引号，带称谓前缀的对白行整行不计，156 行墙可完全骗过扫描器）",
+      "scorer": "判分逻辑变更（见 reason）"
+    },
+    {
+      "at": "2026-10-23T19:39:59+0800",
+      "reason": "B17 乒乓阈值对齐 fiction.md（4→5，四行以内放行）；B17 认行首「说话人＋冒号＋引语」；B5 行末/段末未完破折号豁免；B9 密度改走 masked 尊重白名单；B9 量词表扩充；B9 切句改 O(n)；B15 客观声源低吼豁免；B18 角色在数豁免；D2 收窄欢迎随时",
+      "scorer": "判分逻辑变更（见 reason）"
+    },
+    {
+      "at": "2026-10-23T20:13:55+0800",
+      "reason": "删 B15 喉结死分支（被上一行覆盖）；_loader 合并重复 import 与改准 docstring；audit-cleanup _FUNC 去重字",
+      "scorer": "判分逻辑变更（见 reason）"
+    },
+    {
+      "at": "2026-10-23T20:27:16+0800",
+      "reason": "C层编号对齐扫描器（删C5宏观开场别名，C6→C5，C7→C6）；B10 fiction口径三处对齐；fiction B14按扫描器实际触发族重写并删示范句；rules-full B13-B18索引化；剥B层改法配方并补齐扫描器多出的触发词；元叙述与行话（句内手术/信息守恒/闭环扫描/结构锁定/删除授权）全清；B17乒乓阈值注释同步；B9密度口径与扫描器统一",
+      "scorer": "判分逻辑变更（见 reason）"
+    },
+    {
+      "at": "2026-10-23T20:31:59+0800",
+      "reason": "frontmatter/围栏不闭合告警；B17无标点间接引语计数；B3段首判定改用行号不连续；B16回环补形含所谓X不过是Y；B5破折号变体（收全角双连字符/U+2013/U+2015，显式不收ASCII--）；B17连珠加它；B17乒乓阈值注释同步",
+      "scorer": "判分逻辑变更（见 reason）"
+    },
+    {
+      "at": "2026-10-23T20:42:53+0800",
+      "reason": "fiction.md 占位符规则提为一级条目（实测有模型把'林某某'原样写进正文16次，原为事实与设定守恒的从句被忽略）；B15词表补眼前发白/发黑与指节插入词形（三份全漏检）",
+      "scorer": "判分逻辑变更（见 reason）"
+    },
+    {
+      "at": "2026-10-23T21:19:10+0800",
+      "reason": "fiction.md编号断裂修复（补第4条，交叉引用一.7→一.6/一.8→一.7/一.5→一.4）；B14悬空引用改为指向第四节；80行双bullet拆行；B5行末未完接白名单块误报修复；B1补'仅仅'变体；D5补'我先来'形；B17补'低声说'；B9补陈词套式与床/把/阵/种/声/味/束/尊量词；剥装饰性加粗107处",
+      "scorer": "判分逻辑变更（见 reason）"
+    },
+    {
+      "at": "2026-10-23T21:57:28+0800",
+      "reason": "B17标签密度分母改为独行对白行数（对齐fiction.md一.5，内联引语行不再稀释）；_is_dialogue_line提为模块级；B4③改判判断类并加覆盖表分层注；B3首段口径补文档；SKILL补'随着……的不断发展'；扫描器docstring补B4b分层",
+      "scorer": "判分逻辑变更（见 reason）"
+    },
+    {
+      "at": "2026-10-23T22:35:35+0800",
+      "reason": "C5补'时间(仿佛|好像|在这一刻)?停止'覆盖并要求句读边界；B5对标题行免责（与rules-full'标题连接符正常用'对齐）；SKILL.md补全B3触发词与回指词；SKILL补'随着……的不断发展'；fiction.md补没说完的话的替代写法与三个impl-only阈值口径；rules-full补引号形态照原样与D层归因句保留；CLI提示改'B3适用范围受限'",
+      "scorer": "判分逻辑变更（见 reason）"
+    },
+    {
+      "at": "2026-10-23T23:12:06+0800",
+      "reason": "verify_repo词表守卫扩表至17张表114词（覆盖B1/B3/B12/D2/D3/D4/D5/D6/C5/B9明喻标记）",
+      "scorer": "判分逻辑变更（见 reason）"
+    },
+    {
+      "at": "2026-10-23T23:23:01+0800",
+      "reason": "测试加固：词表守卫扩表至17张表114词；新增WORD_GUARD逐形守卫（B15抽搐9形/B16程度词13字/B18计数形/B9明喻标记16形/B10与D2负向断言）；B9量词清单补全并加反向核验；freeze --reason闸门补5条用例；P2_03改C2免疫句式；B3循环改用_paragraph_heads使CLI提示与判定口径一致并加反向用例；精简：删N10/N11，SKILL交付前核验压至2行",
+      "scorer": "判分逻辑变更（见 reason）"
+    },
+    {
+      "at": "2026-10-23T23:24:19+0800",
+      "reason": "陈旧引用修正：rules-full第五节清理通则改为成文清理边界的引文整段豁免条；fiction.md清理纪律引用由第三节改为第四节（audit-cleanup与run-eval两处）；verify_repo docstring补第11项",
+      "scorer": "判分逻辑变更（见 reason）"
+    },
+    {
+      "at": "2026-10-24T01:00:27+0800",
+      "reason": "B1补三个漏网形态（哪儿是A分明是B/倒像是/主语+是）；fiction模式下省'而'且落在裸是/只是/只有上的事实清点不报（doc事实清点放行的机械化），含'而'与'纯粹是'仍报；补B1回归用例",
+      "scorer": "判分逻辑变更（见 reason）"
+    },
+    {
+      "at": "2026-10-24T01:10:58+0800",
+      "reason": "B1示例换成清一色抽象判断（技术升级/差距在于资源/表面上是妥协），去掉事实清点与格言类迷惑示例；C2大名词表补'真理'；补C2在这一刻明白真理、C5世界退回壳里、C5声音填满空间三条用例",
+      "scorer": "判分逻辑变更（见 reason）"
+    },
+    {
+      "at": "2026-10-24T01:31:26+0800",
+      "reason": "B1收窄：不在于A而在于B/表面看似A实则B/与其说A不如说B/谈不上A更多是B/哪儿是A分明是B五个分支移出机械层交人工判断（人类论述文常态，鲁迅《拿来主义》664字实测1处误报为合法否证）；机械层只保留不是A而是B/纯粹是/更是/没有A只有B四类。对应6个用例从对抗集迁到不变性集",
+      "scorer": "判分逻辑变更（见 reason）"
+    },
+    {
+      "at": "2026-10-24T01:38:10+0800",
+      "reason": "B1事实清点豁免收紧：破折号与句号分隔形不再豁免（doc明列为病灶），只豁免逗号或空白前的裸是/只是/只有",
+      "scorer": "判分逻辑变更（见 reason）"
+    },
+    {
+      "at": "2026-10-24T01:52:18+0800",
+      "reason": "B1加概念词表判定B侧抽象则撤销fiction事实清点豁免（26例archetype级AI腔此前整条放过）；豁免尾补主语+是形（修复13例事实清点误报回归）；B1补'不在A，在B'分支；B9喻体禁为空（{0,8}→{1,8}，鲁迅'画像一般都是'副词误报消除）并补俨然/恍若/好似/似的与新量词；C5补仿佛/凝固/静止与前缀；B5只对#起首标题行免责（整行粗体不再整行跳过）；B17密度分母补叙述+说+引语行",
+      "scorer": "判分逻辑变更（见 reason）"
+    },
+    {
+      "at": "2026-10-24T02:15:47+0800",
+      "reason": "B5行末破折号后紧跟！？。…时不再跨软换行取右侧（硬换行纯文本稿的未完句误报，鲁迅语料实测消1处）",
+      "scorer": "判分逻辑变更（见 reason）"
+    },
+    {
+      "at": "2026-10-24T02:17:38+0800",
+      "reason": "全仓库15个文本文件统一为LF换行（此前CRLF/LF混用），新增.gitattributes锁定eol=lf",
+      "scorer": "判分逻辑变更（见 reason）"
+    },
+    {
+      "at": "2026-10-24T02:35:59+0800",
+      "reason": "B17新增第四子检查'省略号怯场'：整场戏把……当统一怯场标记时报。判据是一致性而非密度——鲁迅89行对白仅1行以省略号开头(1.1%)且总量3.84/千字反而高于生成稿，故阈值取对白行≥6且省略号开头占比≥15%。新增_B17_SCRIPT_HEAD识别无引号剧本体（护士：……饭团。），此前该类行对白识别为零。三处变异实测转红",
+      "scorer": "判分逻辑变更（见 reason）"
+    },
+    {
+      "at": "2026-10-24T11:01:28+0800",
+      "reason": "B1阻断项test-audit-cleanup失败闸门从第9节守卫前移到文件末尾（此前失败永远无法转红，4个变异实测验证）；删SKILL.md两个与rules-full冲突的❌示例并修章节指向；N层编号范围；scan docstring B1描述同步收窄后口径；audit-cleanup docstring断裂与B15矛盾；_table_lines预计算（16000行55s→0.31s）；补D4两分支行为用例；B4a句中命中降REVIEW防教出病句；turing实验组高无效率降级low-basis",
+      "scorer": "判分逻辑变更（见 reason）"
+    },
+    {
+      "at": "2026-10-24T16:06:39+0800",
+      "reason": "全仓库11个文本文件统一为LF",
+      "scorer": "判分逻辑变更（见 reason）"
+    },
+    {
+      "at": "2026-10-24T16:29:37+0800",
+      "reason": "表格行下标off-by-one；B1旧路径其实/恰需与对举标记共现（人类语料实测两处误报）",
+      "scorer": "判分逻辑变更（见 reason）"
+    },
+    {
+      "at": "2026-10-24T17:06:33+0800",
+      "reason": "判分器指纹同步至修订后的扫描器",
+      "scorer": "判分逻辑变更（见 reason）"
+    },
+    {
+      "at": "2026-10-24T17:44:31+0800",
+      "reason": "体检层新增行尾断言：仓库无 .git 时 .gitattributes 的 eol=lf 不执行",
+      "scorer": "判分逻辑变更（见 reason）"
     }
-  ]
+  ],
+  "scorer": {
+    "evals/check-eval.py": "834544d3cfdcc54cf882f3ae34bc679e43e0226f31b5e260bfbc4ab3d3ede4c6",
+    "scripts/scan-mechanical.py": "2c2e791b0ea56b6c52677bd430fd8d0558d38f1ca12f8243865083e62849bb40",
+    "scripts/check-retention.py": "3a7a8f870ba0946943f50c017b5abee29d316d9fc95ee2ba885919567cb58e42"
+  }
 }

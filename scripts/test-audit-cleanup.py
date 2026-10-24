@@ -14,14 +14,9 @@
 import importlib.util
 import sys
 from pathlib import Path
+import _loader
 
-# Ensure UTF-8 output on Windows
-if sys.platform == "win32":
-    try:
-        sys.stdout.reconfigure(encoding="utf-8")
-        sys.stderr.reconfigure(encoding="utf-8")
-    except Exception:
-        pass
+_loader.ensure_utf8()
 
 SCRIPTS = Path(__file__).resolve().parent
 
@@ -98,24 +93,24 @@ check("标点-B5归属在场", any("B5" in "".join(h["rules"]) for h in r7["hunk
 
 # ---------- 8. 幅度超出归属（实测漏网：借行内一个 B1 候选洗白整段压缩） ----------
 # a) 命中句被整句删除（SNF-04 形态：改法是"删否定留肯定"，不是删句；
-#    逗号分句各算骨架单元——后半分句"真正难办的是权限模型"被删）
-r8a = audit("这个方案被质疑得最多的一点是扩展性，但真正难办的其实是权限模型。\n后续一句。\n",
+#    逗号分句各算骨架单元——后半分句"不是性能，是权限模型"被整段删掉）
+r8a = audit("这个方案被质疑得最多的一点是扩展性，但真正难办的不是性能，是权限模型。\n后续一句。\n",
             "这个方案被质疑得最多的一点是扩展性。\n后续一句。\n")
 check("幅度-整句蒸发必报", "幅度超出归属" in kinds(r8a), f"实际 {kinds(r8a)}")
 # b) 命中句肯定面蒸发（SF-08 形态："不是技术，而是耐心"两句全删）
 r8b = audit("真正的瓶颈不是技术，而是耐心。\n用户要的不是更多的功能，而是更稳定的服务。\n",
             "用户要的是更稳定的服务。\n")
 check("幅度-肯定面蒸发必报", "幅度超出归属" in kinds(r8b), f"实际 {kinds(r8b)}")
-# c) 合法句内手术不误报：B1 删否定留肯定，肯定面保留
+# c) 合法改写不误报：B1 删否定留肯定，肯定面保留
 r8c = audit("真正的瓶颈不是技术，而是耐心。\n",
             "真正的瓶颈是耐心。\n")
 check("幅度-合法删否定不报", "幅度超出归属" not in kinds(r8c), f"实际 {r8c['violations']}")
-# e) 主张句蒸发必报（deepseek SF-08 形态：删"上一版评审认为瓶颈出在
+# e) 主张句蒸发必报（SF-08 形态：删"上一版评审认为瓶颈出在
 #    数据库"，否定悬空成翻案腔；肯定面还在但合法性前提没了）
 r8e = audit("上一版评审认为瓶颈出在数据库，这次压测证明瓶颈不是数据库，而是连接池的锁竞争。\n",
             "压测证明瓶颈在连接池的锁竞争，不在数据库。\n")
 check("幅度-主张句蒸发必报", "幅度超出归属" in kinds(r8e), f"实际 {kinds(r8e)}")
-# f) 主张句保留时不误报（kimi/qwen/glm 的正确形态）
+# f) 主张句保留时不误报（正确形态）
 r8f = audit("上一版评审认为瓶颈出在数据库，这次压测证明瓶颈不是数据库，而是连接池的锁竞争。\n",
             "上一版评审认为瓶颈出在数据库，压测证明瓶颈在连接池的锁竞争，不在数据库。\n")
 check("幅度-主张句保留不报", "幅度超出归属" not in kinds(r8f), f"实际 {r8f['violations']}")
@@ -145,9 +140,41 @@ check("内容字-字母数字必计", audit_mod.content_chars("CPU x86") == {
 out = audit_mod.render(r2)
 check("render-违规可见", "无依据删除" in out, out)
 
+
+# a) 短语预算：B10 命中行的触发词删除走短语预算，不走 50% 骨架线。
+#    把 B10 从 _PHRASE_BUDGET_RULES 删掉后，本例落入骨架核查被判塌缩——
+#    即"合法删除被误报"，反向也说明该常量没有用例守。
+#    触发词须选内容字 >2 的起手式（"说白了"的"了"是功能字，整分句会被
+#    最小豁免跳过，两个方向都测不出）
+r9a = audit("归根结底，这是权限模型的问题。\n", "这是权限模型的问题。\n")
+check("短语预算-B10触发词删除0违规", r9a["violations"] == [],
+      f"实际 {r9a['violations']}")
+# b) 分句豁免：B9 命中分句整条重写是授权改法（删装饰比喻），不得报幅度
+r9b = audit("它就像一位智慧的导师，不仅传授结论，更传授信任。\n后续一句。\n",
+            "它传授结论与信任。\n后续一句。\n")
+check("分句豁免-B9命中分句重写不报", "幅度超出归属" not in kinds(r9b),
+      f"实际 {kinds(r9b)}")
+# c) 分句豁免：B17 命中分句（句内主语复现）承前省删后一个主语不得报。
+#    B17 只在 fiction/gen 报，prose 模式下该删除掉进无依据删除通道，断言被绕开
+r9c = audit("她知道这件事，她也明白为什么。\n后续一句。\n",
+            "她知道这件事，也明白为什么。\n后续一句。\n", mode="fiction")
+check("分句豁免-B17复现删主语不报", "幅度超出归属" not in kinds(r9c),
+      f"实际 {kinds(r9c)}")
+# d) 规则替换词：B17 装饰标签"命令道"改"说"是换词不是越权新增
+r9d = audit("“坐。”她命令道。\n", "“坐。”她说。\n", mode="fiction")
+check("替换词-B17命令道改说0违规", r9d["violations"] == [],
+      f"实际 {r9d['violations']}")
+# e) 否定触发词：含主张动词的分句只要同句带"不是"就属否定侧，豁免回溯不中断。
+#    把"不是"从 _NEG_TRIGGER 删掉后，本例的否定侧分句不再豁免，删否定侧被误报
+r9e = audit("他认为不是内存的问题，而是连接池的问题。\n", "问题出在连接池。\n")
+check("否定触发-含主张动词的否定侧可删", "幅度超出归属" not in kinds(r9e),
+      f"实际 {kinds(r9e)}")
+
+
+print("audit-cleanup 测试通过：归属、无依据删除、越权新增、移位放行、"
+      "数字变动、模式感知、纯标点改写全部符合预期")
+
 if failures:
     print("audit-cleanup 测试未通过：")
     print("\n".join(failures))
     sys.exit(1)
-print("audit-cleanup 测试通过：归属、无依据删除、越权新增、移位放行、"
-      "数字变动、模式感知、纯标点改写全部符合预期")

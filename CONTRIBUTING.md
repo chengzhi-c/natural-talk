@@ -25,18 +25,17 @@
 **规则修改流程**：
 
 1. 按规则归属改对应权威源：日常对话与生成核心规则改 `SKILL.md`；编号规范（D/B/C/N 层）改 `references/rules-full.md`；叙事工法（B13–B18）改 `references/fiction.md`。改动跨层时各层同步
-2. 动了扫描器的判定（词表常量，或 `FIX_RULES`/`REVIEW_RULES` 模式报告集）→ 同步 `references/rules-full.md` 的对应内容。词表由 `verify_repo.py` 第 7 层把守，覆盖表由防漂移测试把守，不一致直接失败
+2. 动了扫描器的判定（词表常量，或 `FIX_RULES`/`REVIEW_RULES` 模式报告集）→ 同步 `references/rules-full.md` 的对应内容。词表由 `verify_repo.py` 第 5 层把守，覆盖表由防漂移测试把守，不一致直接失败
 3. 新增或修改 ✅ 示例 → 必须能从 ❌ 按该规则改法机械推出，不得引入 ❌ 里没有的实体。示例自身干净度由 `test-positive-examples.py` 查（翻案腔、破折号、起手式、fiction 词表），推不出关系靠人工核对
 4. 规则容易被过度执行时，在权威源补一条「什么不该改」；机械层不设候选的判断类规则，标题标注「判断类规则」并补自检做法
-5. 跑全量体检 `python -B scripts/verify_repo.py` 全绿，再拿改后的规则实际生成一段人工读；日常对话类改动补 `scripts/test-daily-gen.py` 用例；判分口径有变（FIX/REVIEW 层级、模式报告集）时，用 `evals/check-eval.py` 对现有产出重判并同步 README 效果节数字（静态判分，不花端点）
+5. 跑全量体检 `python -B scripts/verify_repo.py` 全绿，再拿改后的规则实际生成一段人工读；判分口径有变（FIX/REVIEW 层级、模式报告集）时，先用 `evals/run-eval.py` 产出 run 目录，再用 `evals/check-eval.py <run 目录>` 重判，把结论记到仓库外的项目文档里（判分是静态断言，不花端点）
 
-> 已知坑，改动时对号入座：规则说报而扫描器不报（曾发生在 B9 缺 prose、B14 缺 fiction）；✅ 示例自带病灶（"极慢"曾混进正解示例）；✅ 引入 ❌ 中没有的实体、换说法伪装成机械改写。前两者已有机器把守，第三者只能人工核对。
+> 已知坑，改动时对号入座：规则说报而扫描器不报（曾发生在 B9 缺 prose、B14 缺 fiction）；✅ 示例自带病灶（“极慢”曾混进正解示例）；✅ 引入 ❌ 中没有的实体、换说法伪装成机械改写。前两者已有机器把守，第三者只能人工核对。
 
 ### 4. 翻译
 
 - Fork 仓库
-- 创建 `README.[language-code].md`
-- 翻译 README 与核心规则说明
+- 翻译 `SKILL.md` 与 `references/` 下的规则说明
 - 提交 Pull Request
 
 ## 提交前检查
@@ -44,7 +43,7 @@
 - [ ] 改动已同步到对应权威层与扫描器侧
 - [ ] `python -B scripts/verify_repo.py` 全部通过（含覆盖表、示例、词表校验）
 - [ ] 新增 ✅ 示例已人工核对能从 ❌ 机械推出
-- [ ] 判分口径有变时，已用现有产出重跑 `evals/check-eval.py` 并更新 README 效果节
+- [ ] 判分口径有变时，已用 `evals/run-eval.py` 产出新 run 并重跑 `evals/check-eval.py`，结论记到仓库外项目文档
 - [ ] 拿改后的规则实际生成一段，人工读：是否生效、有无误伤
 - [ ] 新增规则有实际案例支撑
 - [ ] 文档正文无破折号（`——` 只允许出现在 ❌ 病灶示例与变体名中）
@@ -59,6 +58,8 @@
 | `scripts/` | 扫描器、diff 审计、离线回归与全量体检套件 | 零依赖标准库，供提交前自查 |
 | `evals/` | 冻结评测环、清理基准与判分（维护者侧） | 静态判分断言，跨版本稳定比较 |
 | `assets/` | 品牌资源 | 保持文件名与相对路径 |
+
+分发包 `natural-talk.zip` 只含 `SKILL.md` 与 `references/`（零脚本、零测试、零 README），在仓库外构建；README 是项目文档，不进分发包。
 
 ## 不接受的贡献
 
