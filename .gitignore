@@ -1,0 +1,48 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Backup files
+*.bak
+*.tmp
+*-old.*
+*-backup.*
+
+# Project-specific
+PROJECT-STRUCTURE.md
+corpus/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.ruff_cache/
+.pytest_cache/
+
+# 运行日志
+*.log
+
+# 编辑器/工具写入时生成的伴生锁文件
+*.lock
+
+# 凭据与本地发布物
+.env
+.env.*
+credentials*
+*.pem
+*.key
+*.zip

@@ -1,0 +1,363 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>效果对照 · natural-talk</title>
+<style>
+  :root {
+    --ink: #23202a;
+    --ink-soft: #5d5763;
+    --ink-faint: #8b8494;
+    --line: #e4dfe8;
+    --paper: #fbf9f6;
+    --card: #ffffff;
+    --accent: #8c4a26;
+    --accent-soft: #f2e6de;
+    --down: #1f7a55;
+    --up: #ac4f28;
+    --radius: 10px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --ink: #eceaf1;
+      --ink-soft: #b3aebd;
+      --ink-faint: #857f92;
+      --line: #33303c;
+      --paper: #14131a;
+      --card: #1b1a23;
+      --accent: #d79a6e;
+      --accent-soft: #2a2229;
+      --down: #5fc79b;
+      --up: #e5916a;
+    }
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font: 400 16px/1.72 "PingFang SC", "MiSans", "HarmonyOS Sans SC",
+          "Source Han Sans SC", "Microsoft YaHei UI", "Microsoft YaHei",
+          system-ui, sans-serif;
+    font-feature-settings: "tnum" 1;
+  }
+  .page { max-width: 1080px; margin: 0 auto; padding: 56px 28px 96px; }
+  header.masthead { border-bottom: 1px solid var(--line); padding-bottom: 28px; }
+  .eyebrow {
+    margin: 0 0 10px; font-size: 12px; letter-spacing: .14em;
+    text-transform: uppercase; color: var(--ink-faint);
+  }
+  h1 { margin: 0 0 12px; font-size: 31px; font-weight: 600; letter-spacing: -.01em; line-height: 1.32; }
+  .lead { margin: 0; max-width: 60ch; color: var(--ink-soft); }
+  .kpis {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px; margin: 26px 0 0; padding: 0; list-style: none;
+  }
+  .kpis li { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 15px 18px; }
+  .kpi-label { display: block; font-size: 13px; color: var(--ink-faint); margin-bottom: 6px; }
+  .kpi-value { font-size: 23px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .kpi-value small { font-size: 14px; font-weight: 400; color: var(--ink-soft); }
+  .kpi-value .was { color: var(--ink-faint); font-weight: 400; }
+  .kpi-value .arrow { color: var(--ink-faint); margin: 0 7px; font-weight: 400; }
+
+  nav.toc {
+    position: sticky; top: 0; z-index: 5; margin: 22px 0 0;
+    display: flex; flex-wrap: wrap; gap: 5px 18px;
+    padding: 12px 0; background: var(--paper);
+    border-bottom: 1px solid var(--line);
+  }
+  nav.toc a { color: var(--ink-soft); text-decoration: none; font-size: 14px; }
+  nav.toc a:hover, nav.toc a:focus-visible { color: var(--accent); }
+
+  section { margin-top: 52px; scroll-margin-top: 56px; }
+  h2 {
+    margin: 0 0 4px; font-size: 14px; font-weight: 600; letter-spacing: .1em;
+    text-transform: uppercase; color: var(--ink-faint);
+  }
+  .section-body { margin-top: 16px; }
+  p { margin: 0 0 14px; }
+  .note { color: var(--ink-soft); font-size: 14px; margin-top: 14px; }
+  .footnote + .footnote { margin-top: 10px; }
+  .footnote {
+    margin-top: 18px; padding: 14px 17px; color: var(--ink-soft);
+    font-size: 13.5px; line-height: 1.72; border-radius: 9px;
+    background: color-mix(in srgb, var(--accent-soft) 62%, transparent);
+    border: 1px solid color-mix(in srgb, var(--line) 70%, transparent);
+  }
+  code { font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; font-size: .92em; }
+
+  blockquote {
+    margin: 0; padding: 24px 26px;
+    background: color-mix(in srgb, var(--accent-soft) 38%, var(--card));
+    border: 1px solid var(--line); border-radius: var(--radius);
+  }
+  blockquote p { margin: 0 0 14px; }
+  blockquote p:last-child { margin: 0; }
+
+  .scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius); background: var(--card); }
+  table { width: 100%; border-collapse: collapse; font-size: 15px; }
+  caption {
+    position: absolute; width: 1px; height: 1px; overflow: hidden;
+    clip-path: inset(50%); white-space: nowrap;
+  }
+  thead th {
+    background: var(--card); text-align: right; font-weight: 600; font-size: 13px;
+    color: var(--ink-faint); padding: 12px 13px; white-space: nowrap;
+    border-bottom: 1px solid var(--line);
+  }
+  tbody th, tbody td { padding: 10px 13px; border-bottom: 1px solid var(--line); text-align: right; white-space: nowrap; }
+  thead th:first-child, tbody th { text-align: left; }
+  tbody th { font-weight: 500; }
+  tbody tr:last-child th, tbody tr:last-child td { border-bottom: 0; }
+  tbody tr:hover th, tbody tr:hover td { background: color-mix(in srgb, var(--accent-soft) 40%, transparent); }
+  .num { font-variant-numeric: tabular-nums; }
+  .soft { color: var(--ink-faint); }
+  .sep { color: var(--ink-faint); }
+
+  .pair .was { color: var(--ink-faint); }
+  .pair .arrow { color: var(--ink-faint); margin: 0 5px; font-size: .88em; }
+  .pair .now { font-weight: 600; }
+  .pair.down .now { color: var(--down); }
+  .pair.up .now { color: var(--up); }
+  .delta.down { color: var(--down); }
+  .delta.up { color: var(--up); }
+  .delta.flat { color: var(--ink-faint); }
+
+  td.rate { min-width: 118px; }
+  .bar { display: block; height: 3px; margin-top: 3px; border-radius: 2px; background: color-mix(in srgb, var(--line) 55%, transparent); }
+  .bar:first-of-type { margin-top: 7px; }
+  .bar-fill { display: block; height: 100%; border-radius: 2px; }
+  .bar-fill.base { background: var(--ink-faint); }
+  .bar-fill.skill { background: var(--down); }
+
+  table.split-table { font-size: 13.5px; }
+  table.split-table thead th { padding: 10px 9px; font-size: 12px; }
+  table.split-table tbody th, table.split-table tbody td { padding: 9px; }
+  table.split-table tbody th { font-size: 13px; }
+  .split .was { color: var(--ink-faint); }
+  .split .sep { margin: 0 2px; }
+  .split .now { font-weight: 600; }
+  .split.down .now { color: var(--down); }
+  .split.up .now { color: var(--up); }
+  .split.flat .now { color: var(--ink-faint); }
+
+  table.rules td, table.rules th { white-space: normal; text-align: left; vertical-align: top; }
+  table.rules th { width: 76px; color: var(--ink-faint); font-variant-numeric: tabular-nums; font-weight: 500; }
+  table.rules td { color: var(--ink-soft); font-size: 14.5px; line-height: 1.66; }
+
+  ul.plain { margin: 0; padding-left: 1.1em; color: var(--ink-soft); }
+  ul.plain li { margin-bottom: 8px; }
+  ul.plain li::marker { color: var(--ink-faint); }
+
+  dl.facts {
+    margin: 0; display: grid; grid-template-columns: minmax(120px, 200px) 1fr;
+    border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; background: var(--card);
+  }
+  dl.facts dt, dl.facts dd { margin: 0; padding: 11px 16px; border-bottom: 1px solid var(--line); }
+  dl.facts dt { color: var(--ink-faint); font-size: 14px; }
+  dl.facts dd { font-variant-numeric: tabular-nums; }
+  dl.facts dt:nth-last-of-type(1), dl.facts dd:nth-last-of-type(1) { border-bottom: 0; }
+
+  footer { margin-top: 60px; padding-top: 20px; border-top: 1px solid var(--line); color: var(--ink-faint); font-size: 14px; }
+  footer p { margin: 0; }
+  footer a { color: var(--accent); text-decoration: none; }
+  footer a:hover { text-decoration: underline; }
+
+  @media (max-width: 640px) {
+    .page { padding: 36px 18px 72px; }
+    h1 { font-size: 25px; }
+    dl.facts { grid-template-columns: 1fr; }
+    dl.facts dt { padding-bottom: 0; border-bottom: 0; }
+    dl.facts dd { padding-top: 2px; }
+  }
+  @media print {
+    nav.toc, .kpis { display: none; }
+    body { background: #fff; }
+    .scroll { border: 0; }
+    section, .kpis li { break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="masthead">
+    <p class="eyebrow">natural-talk · fiction</p>
+    <h1>同一提示下的规则启用对照</h1>
+    <p class="lead">同一条提示、16 个模型，各写两篇：一篇不启用规则，一篇启用 <code>SKILL.md</code> 与 <code>references/fiction.md</code>。命中数随提示与样本变动，不用于评价模型能力。</p>
+    <ul class="kpis">
+      <li><span class="kpi-label">命中合计</span><span class="kpi-value"><span class="was">314</span><span class="arrow">→</span>92</span></li>
+      <li><span class="kpi-label">每千字命中下降的模型</span><span class="kpi-value">16<small> / 16</small></span></li>
+      <li><span class="kpi-label">每千字命中最高值</span><span class="kpi-value"><span class="was">11.1</span><span class="arrow">→</span>7.3</span></li>
+    </ul>
+  </header>
+
+  <nav class="toc" aria-label="目录">
+    <a href="#prompt">提示词</a>
+    <a href="#setup">条件</a>
+    <a href="#total">合计</a>
+    <a href="#split">分项</a>
+    <a href="#rules">计数口径</a>
+    <a href="#excluded">未计入</a>
+    <a href="#env">测试设定</a>
+  </nav>
+
+  <section id="prompt">
+    <h2>提示词</h2>
+    <div class="section-body">
+      <blockquote>
+        <p>写一个短篇小说，两千到三千字。</p>
+        <p>江澄和许曼在高架桥底下的一家二十四小时药店上夜班。江澄在柜台，许曼在后面配药。她们在一起八个月，谁也没跟家里说过。凌晨两点店里最安静，只有冰柜的压缩机在响。靠墙支着一张折叠床，是夜班的人打盹用的。</p>
+        <p>许曼的母亲从外地来，要在店里住三天，等一张转院的单子。许曼把折叠床让给母亲，自己睡柜台里面垫着纸箱的地上。江澄照常来上班。第三天凌晨，母亲坐在折叠床上，问江澄：你们两个，是不是有事。</p>
+        <p>可以不只限于团圆结局，自由发挥。</p>
+      </blockquote>
+    </div>
+  </section>
+
+  <section id="setup">
+    <h2>条件</h2>
+    <div class="section-body">
+      <dl class="facts">
+        <dt>不启用规则</dt><dd>系统提示一句：你是一个中文写作与代码沟通助手。直接完成用户的要求。</dd>
+        <dt>启用规则</dt><dd><code>SKILL.md</code> 全文与 <code>references/fiction.md</code> 全文</dd>
+        <dt>用户提示末尾</dt><dd>两个条件均追加：直接输出结果，不要解释过程。</dd>
+        <dt>样本</dt><dd>每个模型每个条件一篇</dd>
+      </dl>
+    </div>
+  </section>
+
+  <section id="total">
+    <h2>合计</h2>
+    <div class="section-body">
+      <div class="scroll">
+        <table>
+          <caption>各模型在不启用与启用规则下的命中合计、字数与每千字命中</caption>
+          <thead>
+            <tr>
+              <th scope="col">模型</th>
+              <th scope="col">命中</th>
+              <th scope="col">每千字变化</th>
+              <th scope="col">每千字</th>
+              <th scope="col">字数</th>
+            </tr>
+          </thead>
+          <tbody>
+      <tr><th scope="row">deepseek-v4-flash-0731</th><td class="num"><span class="pair down"><span class="was">12</span><span class="arrow">→</span><span class="now">6</span></span></td><td class="num delta down">-28%</td><td class="num rate"><span class="pair down"><span class="was">4.6</span><span class="arrow">→</span><span class="now">3.3</span></span><span class="bar"><span class="bar-fill base" style="width:41.4%"></span></span><span class="bar"><span class="bar-fill skill" style="width:29.7%"></span></span></td><td class="num soft">2587<span class="sep"> / </span>1843</td></tr>
+      <tr><th scope="row">deepseek-v4-pro-0813</th><td class="num"><span class="pair down"><span class="was">21</span><span class="arrow">→</span><span class="now">4</span></span></td><td class="num delta down">-68%</td><td class="num rate"><span class="pair down"><span class="was">7.5</span><span class="arrow">→</span><span class="now">2.4</span></span><span class="bar"><span class="bar-fill base" style="width:67.6%"></span></span><span class="bar"><span class="bar-fill skill" style="width:21.6%"></span></span></td><td class="num soft">2797<span class="sep"> / </span>1679</td></tr>
+      <tr><th scope="row">deepseek-v4.1-flash</th><td class="num"><span class="pair down"><span class="was">11</span><span class="arrow">→</span><span class="now">3</span></span></td><td class="num delta down">-67%</td><td class="num rate"><span class="pair down"><span class="was">4.8</span><span class="arrow">→</span><span class="now">1.6</span></span><span class="bar"><span class="bar-fill base" style="width:43.2%"></span></span><span class="bar"><span class="bar-fill skill" style="width:14.4%"></span></span></td><td class="num soft">2282<span class="sep"> / </span>1824</td></tr>
+      <tr><th scope="row">gemini-3.8-flash</th><td class="num"><span class="pair down"><span class="was">32</span><span class="arrow">→</span><span class="now">9</span></span></td><td class="num delta down">-67%</td><td class="num rate"><span class="pair down"><span class="was">6.9</span><span class="arrow">→</span><span class="now">2.3</span></span><span class="bar"><span class="bar-fill base" style="width:62.2%"></span></span><span class="bar"><span class="bar-fill skill" style="width:20.7%"></span></span></td><td class="num soft">4638<span class="sep"> / </span>3842</td></tr>
+      <tr><th scope="row">gemini-4-argon</th><td class="num"><span class="pair down"><span class="was">32</span><span class="arrow">→</span><span class="now">0</span></span></td><td class="num delta down">-100%</td><td class="num rate"><span class="pair down"><span class="was">6.5</span><span class="arrow">→</span><span class="now">0.0</span></span><span class="bar"><span class="bar-fill base" style="width:58.6%"></span></span><span class="bar"><span class="bar-fill skill" style="width:0.0%"></span></span></td><td class="num soft">4887<span class="sep"> / </span>2698</td></tr>
+      <tr><th scope="row">glm-5.3</th><td class="num"><span class="pair down"><span class="was">7</span><span class="arrow">→</span><span class="now">2</span></span></td><td class="num delta down">-71%</td><td class="num rate"><span class="pair down"><span class="was">3.4</span><span class="arrow">→</span><span class="now">1.0</span></span><span class="bar"><span class="bar-fill base" style="width:30.6%"></span></span><span class="bar"><span class="bar-fill skill" style="width:9.0%"></span></span></td><td class="num soft">2069<span class="sep"> / </span>1941</td></tr>
+      <tr><th scope="row">glm-5.3-flash</th><td class="num"><span class="pair down"><span class="was">17</span><span class="arrow">→</span><span class="now">2</span></span></td><td class="num delta down">-79%</td><td class="num rate"><span class="pair down"><span class="was">7.1</span><span class="arrow">→</span><span class="now">1.5</span></span><span class="bar"><span class="bar-fill base" style="width:64.0%"></span></span><span class="bar"><span class="bar-fill skill" style="width:13.5%"></span></span></td><td class="num soft">2388<span class="sep"> / </span>1372</td></tr>
+      <tr><th scope="row">gpt-6.1-sol</th><td class="num"><span class="pair down"><span class="was">24</span><span class="arrow">→</span><span class="now">3</span></span></td><td class="num delta down">-82%</td><td class="num rate"><span class="pair down"><span class="was">8.0</span><span class="arrow">→</span><span class="now">1.4</span></span><span class="bar"><span class="bar-fill base" style="width:72.1%"></span></span><span class="bar"><span class="bar-fill skill" style="width:12.6%"></span></span></td><td class="num soft">2989<span class="sep"> / </span>2174</td></tr>
+      <tr><th scope="row">grok-4.7</th><td class="num"><span class="pair down"><span class="was">8</span><span class="arrow">→</span><span class="now">2</span></span></td><td class="num delta down">-71%</td><td class="num rate"><span class="pair down"><span class="was">3.8</span><span class="arrow">→</span><span class="now">1.1</span></span><span class="bar"><span class="bar-fill base" style="width:34.2%"></span></span><span class="bar"><span class="bar-fill skill" style="width:9.9%"></span></span></td><td class="num soft">2131<span class="sep"> / </span>1773</td></tr>
+      <tr><th scope="row">kimi-k2.6</th><td class="num"><span class="pair down"><span class="was">22</span><span class="arrow">→</span><span class="now">8</span></span></td><td class="num delta down">-58%</td><td class="num rate"><span class="pair down"><span class="was">8.3</span><span class="arrow">→</span><span class="now">3.5</span></span><span class="bar"><span class="bar-fill base" style="width:74.8%"></span></span><span class="bar"><span class="bar-fill skill" style="width:31.5%"></span></span></td><td class="num soft">2657<span class="sep"> / </span>2316</td></tr>
+      <tr><th scope="row">kimi-k3</th><td class="num"><span class="pair down"><span class="was">12</span><span class="arrow">→</span><span class="now">0</span></span></td><td class="num delta down">-100%</td><td class="num rate"><span class="pair down"><span class="was">4.7</span><span class="arrow">→</span><span class="now">0.0</span></span><span class="bar"><span class="bar-fill base" style="width:42.3%"></span></span><span class="bar"><span class="bar-fill skill" style="width:0.0%"></span></span></td><td class="num soft">2542<span class="sep"> / </span>1773</td></tr>
+      <tr><th scope="row">mimo-v2.6-pro</th><td class="num"><span class="pair down"><span class="was">24</span><span class="arrow">→</span><span class="now">11</span></span></td><td class="num delta down">-10%</td><td class="num rate"><span class="pair down"><span class="was">5.0</span><span class="arrow">→</span><span class="now">4.5</span></span><span class="bar"><span class="bar-fill base" style="width:45.0%"></span></span><span class="bar"><span class="bar-fill skill" style="width:40.5%"></span></span></td><td class="num soft">4801<span class="sep"> / </span>2463</td></tr>
+      <tr><th scope="row">minimax-m3</th><td class="num"><span class="pair down"><span class="was">21</span><span class="arrow">→</span><span class="now">6</span></span></td><td class="num delta down">-56%</td><td class="num rate"><span class="pair down"><span class="was">6.3</span><span class="arrow">→</span><span class="now">2.8</span></span><span class="bar"><span class="bar-fill base" style="width:56.8%"></span></span><span class="bar"><span class="bar-fill skill" style="width:25.2%"></span></span></td><td class="num soft">3308<span class="sep"> / </span>2115</td></tr>
+      <tr><th scope="row">minimax-m3.1-flash</th><td class="num"><span class="pair down"><span class="was">25</span><span class="arrow">→</span><span class="now">16</span></span></td><td class="num delta down">-19%</td><td class="num rate"><span class="pair down"><span class="was">7.3</span><span class="arrow">→</span><span class="now">5.9</span></span><span class="bar"><span class="bar-fill base" style="width:65.8%"></span></span><span class="bar"><span class="bar-fill skill" style="width:53.2%"></span></span></td><td class="num soft">3419<span class="sep"> / </span>2722</td></tr>
+      <tr><th scope="row">qwen3.8-flash</th><td class="num"><span class="pair down"><span class="was">14</span><span class="arrow">→</span><span class="now">2</span></span></td><td class="num delta down">-78%</td><td class="num rate"><span class="pair down"><span class="was">4.5</span><span class="arrow">→</span><span class="now">1.0</span></span><span class="bar"><span class="bar-fill base" style="width:40.5%"></span></span><span class="bar"><span class="bar-fill skill" style="width:9.0%"></span></span></td><td class="num soft">3087<span class="sep"> / </span>2031</td></tr>
+      <tr><th scope="row">step-5-preview</th><td class="num"><span class="pair down"><span class="was">32</span><span class="arrow">→</span><span class="now">18</span></span></td><td class="num delta down">-34%</td><td class="num rate"><span class="pair down"><span class="was">11.1</span><span class="arrow">→</span><span class="now">7.3</span></span><span class="bar"><span class="bar-fill base" style="width:100.0%"></span></span><span class="bar"><span class="bar-fill skill" style="width:65.8%"></span></span></td><td class="num soft">2873<span class="sep"> / </span>2458</td></tr>
+          </tbody>
+        </table>
+      </div>
+            <p class="footnote">命中与每千字单元格格式为「不启用 → 启用」，字数单元格为「不启用 / 启用」；每千字下方的两条短线是同一比例尺下的命中量（灰＝不启用，绿＝启用）。「每千字变化」列与 README 效果表的「降幅」同为每千字口径：绿为下降，橙为上升。</p>
+      <p class="footnote">字数只计汉字；每千字为命中数折算至一千字的结果，保留一位小数。非严谨测试，命中数随提示与样本变动，不用于评价模型能力。启用规则组的 16 篇中有 7 篇低于提示要求的两千字，对照组均不低于两千字，其中 6 篇超过三千字上限。</p>
+    </div>
+  </section>
+
+  <section id="split">
+    <h2>分项</h2>
+    <div class="section-body">
+      <div class="scroll">
+        <table class="split-table">
+          <caption>各模型按 B1–B9 与视点分列的命中数</caption>
+          <thead>
+            <tr><th scope="col">模型</th><th scope="col">B1</th><th scope="col">B2</th><th scope="col">B3</th><th scope="col">B4</th><th scope="col">B5</th><th scope="col">B6</th><th scope="col">B7</th><th scope="col">B8</th><th scope="col">B9</th><th scope="col">视点</th></tr>
+          </thead>
+          <tbody>
+      <tr><th scope="row">deepseek-v4-flash-0731</th><td class="split up"><span class="was">0</span><span class="sep">/</span><span class="now">1</span></td><td class="split down"><span class="was">2</span><span class="sep">/</span><span class="now">0</span></td><td class="split down"><span class="was">6</span><span class="sep">/</span><span class="now">4</span></td><td class="split flat"><span class="was">1</span><span class="sep">/</span><span class="now">1</span></td><td class="split flat"><span class="was">0</span><span class="sep">/</span><span class="now">0</span></td><td class="split flat"><span class="was">0</span><span class="sep">/</span><span class="now">0</span></td><td class="split flat"><span class="was">0</span><span class="sep">/</span><span class="now">0</span></td><td class="split down"><span class="was">1</span><span class="sep">/</span><span class="now">0</span></td><td class="split flat"><span class="was">0</span><span class="sep">/</span><span class="now">0</span></td><td class="split down"><span class="was">2</span><span class="sep">/</span><span class="now">0</span></td></tr>
+      <tr><th scope="row">deepseek-v4-pro-0813</th><td class="split down"><span class="was">1</span><span class="sep">/</span><span class="now">0</span></td><td class="split up"><span class="was">0</span><span class="sep">/</span><span class="now">1</span></td><td class="split down"><span class="was">15</span><span class="sep">/</span><span class="now">3</span></td><td class="split down"><span class="was">2</span><span class="sep">/</span><span class="now">0</span></td><td class="split flat"><span class="was">0</span><span class="sep">/</span><span class="now">0</span></td><td class="split flat"><span class="was">0</span><span class="sep">/</span><span class="now">0</span></td><td class="split flat"><span class="was">0</span><span class="sep">/</span><span class="now">0</span></td><td class="split down"><span class="was">1</span><span class="sep">/</span><span class="now">0</span></td><td class="split flat"><span class="was">0</span><span class="sep">/</span><span class="now">0</span></td><td class="split down"><span class="was">2</span><span class="sep">/</span><span class="now">0</span></td></tr>
+      <tr><th scope="row">deepseek-v4.1-flash</th><td class="split flat"><span class="was">0</span><span class="sep">/</span><span class="now">0</span></td><td class="split flat"><span class="was">0</span><span class="sep">/</span><span class="now">0</span></td><td class="split down"><span class="was">3</span><span class="sep">/</span><span class="now">0</span></td><td class="split up"><span class="was">0</span><span class="sep">/</span><span class="now">1</span></td><td class="split down"><span class="was">2</span><span class="sep">/</span><span class="now">1</span></td><td class="split flat"><span class="was">0</span><span class="sep">/</span><span class="now">0</span></td><td class="split flat"><span class="was">0</span><span class="sep">/</span><span class="now">0</span></td><td class="split down"><span class="was">2</span><span class="sep">/</span><span class="now">1</span></td><td class="split flat"><span class="was">0</span><span class="sep">/</span><span class="now">0</span></td><td class="split down"><span class="was">4</span><span class="sep">/</span><span class="now">0</span></td></tr>
+      <tr><th scope="row">gemini-3.8-flash</th><td class="split down"><span class="was">2</span><span class="sep">/</span><span class="now">1</span></td><td class="split flat"><span class="was">0</span><span class="sep">/</span><span class="now">0</span></td><td class="split down"><span class="was">15</span><span class="sep">/</span><span class="now">5</span></td><td class="split down"><span class="was">3</span><span class="sep">/</span><span class="now">0</span></td><td class="split down"><span class="was">3</span><span class="sep">/</span><span class="now">1</span></td><td class="split down"><span class="was">3</span><span class="sep">/</span><span class="now">1</span></td><td class="split down"><span class="was">1</span><span class="sep">/</span><span class="now">0</span></td><td class="split flat"><span class="was">1</span><span class="sep">/</span><span class="now">1</span></td><td class="split flat"><span class="was">0</span><span class="sep">/</span><span class="now">0</span></td><td class="split down"><span class="was">4</span><span class="sep">/</span><span class="now">0</span></td></tr>
+      <tr><th scope="row">gemini-4-argon</th><td class="split flat"><span class="was">0</span><span class="sep">/</span><span class="now">0</span></td><td class="split down"><span class="was">3</span><span class="sep">/</span><span class="now">0</span></td><td class="split down"><span class="was">6</span><span class="sep">/</span><span class="now">0</span></td><td class="split down"><span class="was">5</span><span class="sep">/</span><span class="now">0</span></td><td class="split down"><span class="was">3</span><span class="sep">/</span><span class="now">0</span></td><td class="split down"><span class="was">6</span><span class="sep">/</span><span class="now">0</span></td><td class="split down"><span class="was">2</span><span class="sep">/</span><span class="now">0</span></td><td class="split flat"><span class="was">0</span><span class="sep">/</span><span class="now">0</span></td><td class="split down"><span class="was">1</span><span class="sep">/</span><span class="now">0</span></td><td class="split down"><span class="was">6</span><span class="sep">/</span><span class="now">0</span></td></tr>
+      <tr><th scope="row">glm-5.3</th><td class="split flat"><span class="was">0</span><span class="sep">/</span><span class="now">0</span></td><td class="split down"><span class="was">1</span><span class="sep">/</span><span class="now">0</span></td><td class="split down"><span class="was">3</span><span class="sep">/</span><span class="now">1</span></td><td class="split down"><span class="was">1</span><span class="sep">/</span><span class="now">0</span></td><td class="split flat"><span class="was">0</span><span class="sep">/</span><span class="now">0</span></td><td class="split flat"><span class="was">0</span><span class="sep">/</span><span class="now">0</span></td><td class="split flat"><span class="was">1</span><span class="sep">/</span><span class="now">1</span></td><td class="split flat"><span class="was">0</span><span class="sep">/</span><span class="now">0</span></td><td class="split flat"><span class="was">0</span><span class="sep">/</span><span class="now">0</span></td><td class="split down"><span class="was">1</span><span class="sep">/</span><span class="now">0</span></td></tr>
+      <tr><th scope="row">glm-5.3-flash</th><td class="split flat"><span class="was">0</span><span class="sep">/</span><span class="now">0</span></td><td class="split down"><span class="was">3</span><span class="sep">/</span><span class="now">0</span></td><td class="split down"><span class="was">6</span><span class="sep">/</span><span class="now">0</span></td><td class="split flat"><span class="was">1</span><span class="sep">/</span><span class="now">1</span></td><td class="split flat"><span class="was">0</span><span class="sep">/</span><span class="now">0</span></td><td class="split flat"><span class="was">0</span><span class="sep">/</span><span class="now">0</span></td><td class="split down"><span class="was">2</span><span class="sep">/</span><span class="now">0</span></td><td class="split up"><span class="was">0</span><span class="sep">/</span><span class="now">1</span></td><td class="split flat"><span class="was">0</span><span class="sep">/</span><span class="now">0</span></td><td class="split down"><span class="was">5</span><span class="sep">/</span><span class="now">0</span></td></tr>
+      <tr><th scope="row">gpt-6.1-sol</th><td class="split down"><span class="was">1</span><span class="sep">/</span><span class="now">0</span></td><td class="split flat"><span class="was">0</span><span class="sep">/</span><span class="now">0</span></td><td class="split down"><span class="was">10</span><span class="sep">/</span><span class="now">0</span></td><td class="split down"><span class="was">2</span><span class="sep">/</span><span class="now">0</span></td><td class="split up"><span class="was">0</span><span class="sep">/</span><span class="now">1</span></td><td class="split down"><span class="was">1</span><span class="sep">/</span><span class="now">0</span></td><td class="split down"><span class="was">2</span><span class="sep">/</span><span class="now">0</span></td><td class="split down"><span class="was">4</span><span class="sep">/</span><span class="now">0</span></td><td class="split flat"><span class="was">0</span><span class="sep">/</span><span class="now">0</span></td><td class="split down"><span class="was">4</span><span class="sep">/</span><span class="now">2</span></td></tr>
+      <tr><th scope="row">grok-4.7</th><td class="split flat"><span class="was">0</span><span class="sep">/</span><span class="now">0</span></td><td class="split flat"><span class="was">0</span><span class="sep">/</span><span class="now">0</span></td><td class="split flat"><span class="was">1</span><span class="sep">/</span><span class="now">1</span></td><td class="split down"><span class="was">2</span><span class="sep">/</span><span class="now">0</span></td><td class="split flat"><span class="was">0</span><span class="sep">/</span><span class="now">0</span></td><td class="split flat"><span class="was">0</span><span class="sep">/</span><span class="now">0</span></td><td class="split down"><span class="was">3</span><span class="sep">/</span><span class="now">0</span></td><td class="split up"><span class="was">0</span><span class="sep">/</span><span class="now">1</span></td><td class="split flat"><span class="was">0</span><span class="sep">/</span><span class="now">0</span></td><td class="split down"><span class="was">2</span><span class="sep">/</span><span class="now">0</span></td></tr>
+      <tr><th scope="row">kimi-k2.6</th><td class="split flat"><span class="was">0</span><span class="sep">/</span><span class="now">0</span></td><td class="split down"><span class="was">3</span><span class="sep">/</span><span class="now">0</span></td><td class="split down"><span class="was">8</span><span class="sep">/</span><span class="now">2</span></td><td class="split flat"><span class="was">0</span><span class="sep">/</span><span class="now">0</span></td><td class="split flat"><span class="was">1</span><span class="sep">/</span><span class="now">1</span></td><td class="split down"><span class="was">1</span><span class="sep">/</span><span class="now">0</span></td><td class="split down"><span class="was">2</span><span class="sep">/</span><span class="now">0</span></td><td class="split up"><span class="was">0</span><span class="sep">/</span><span class="now">1</span></td><td class="split flat"><span class="was">1</span><span class="sep">/</span><span class="now">1</span></td><td class="split down"><span class="was">6</span><span class="sep">/</span><span class="now">3</span></td></tr>
+      <tr><th scope="row">kimi-k3</th><td class="split flat"><span class="was">0</span><span class="sep">/</span><span class="now">0</span></td><td class="split flat"><span class="was">0</span><span class="sep">/</span><span class="now">0</span></td><td class="split down"><span class="was">5</span><span class="sep">/</span><span class="now">0</span></td><td class="split down"><span class="was">1</span><span class="sep">/</span><span class="now">0</span></td><td class="split flat"><span class="was">0</span><span class="sep">/</span><span class="now">0</span></td><td class="split flat"><span class="was">0</span><span class="sep">/</span><span class="now">0</span></td><td class="split down"><span class="was">2</span><span class="sep">/</span><span class="now">0</span></td><td class="split down"><span class="was">1</span><span class="sep">/</span><span class="now">0</span></td><td class="split flat"><span class="was">0</span><span class="sep">/</span><span class="now">0</span></td><td class="split down"><span class="was">3</span><span class="sep">/</span><span class="now">0</span></td></tr>
+      <tr><th scope="row">mimo-v2.6-pro</th><td class="split down"><span class="was">2</span><span class="sep">/</span><span class="now">1</span></td><td class="split down"><span class="was">3</span><span class="sep">/</span><span class="now">0</span></td><td class="split down"><span class="was">9</span><span class="sep">/</span><span class="now">2</span></td><td class="split flat"><span class="was">0</span><span class="sep">/</span><span class="now">0</span></td><td class="split up"><span class="was">0</span><span class="sep">/</span><span class="now">2</span></td><td class="split flat"><span class="was">1</span><span class="sep">/</span><span class="now">1</span></td><td class="split down"><span class="was">2</span><span class="sep">/</span><span class="now">0</span></td><td class="split down"><span class="was">3</span><span class="sep">/</span><span class="now">0</span></td><td class="split up"><span class="was">0</span><span class="sep">/</span><span class="now">2</span></td><td class="split down"><span class="was">4</span><span class="sep">/</span><span class="now">3</span></td></tr>
+      <tr><th scope="row">minimax-m3</th><td class="split down"><span class="was">2</span><span class="sep">/</span><span class="now">0</span></td><td class="split flat"><span class="was">0</span><span class="sep">/</span><span class="now">0</span></td><td class="split down"><span class="was">3</span><span class="sep">/</span><span class="now">1</span></td><td class="split down"><span class="was">1</span><span class="sep">/</span><span class="now">0</span></td><td class="split flat"><span class="was">0</span><span class="sep">/</span><span class="now">0</span></td><td class="split flat"><span class="was">0</span><span class="sep">/</span><span class="now">0</span></td><td class="split down"><span class="was">1</span><span class="sep">/</span><span class="now">0</span></td><td class="split down"><span class="was">10</span><span class="sep">/</span><span class="now">4</span></td><td class="split flat"><span class="was">0</span><span class="sep">/</span><span class="now">0</span></td><td class="split down"><span class="was">4</span><span class="sep">/</span><span class="now">1</span></td></tr>
+      <tr><th scope="row">minimax-m3.1-flash</th><td class="split up"><span class="was">1</span><span class="sep">/</span><span class="now">2</span></td><td class="split flat"><span class="was">0</span><span class="sep">/</span><span class="now">0</span></td><td class="split flat"><span class="was">3</span><span class="sep">/</span><span class="now">3</span></td><td class="split flat"><span class="was">1</span><span class="sep">/</span><span class="now">1</span></td><td class="split up"><span class="was">0</span><span class="sep">/</span><span class="now">1</span></td><td class="split down"><span class="was">1</span><span class="sep">/</span><span class="now">0</span></td><td class="split up"><span class="was">1</span><span class="sep">/</span><span class="now">2</span></td><td class="split down"><span class="was">15</span><span class="sep">/</span><span class="now">4</span></td><td class="split up"><span class="was">0</span><span class="sep">/</span><span class="now">1</span></td><td class="split down"><span class="was">3</span><span class="sep">/</span><span class="now">2</span></td></tr>
+      <tr><th scope="row">qwen3.8-flash</th><td class="split down"><span class="was">1</span><span class="sep">/</span><span class="now">0</span></td><td class="split flat"><span class="was">0</span><span class="sep">/</span><span class="now">0</span></td><td class="split down"><span class="was">8</span><span class="sep">/</span><span class="now">0</span></td><td class="split down"><span class="was">1</span><span class="sep">/</span><span class="now">0</span></td><td class="split down"><span class="was">1</span><span class="sep">/</span><span class="now">0</span></td><td class="split down"><span class="was">1</span><span class="sep">/</span><span class="now">0</span></td><td class="split down"><span class="was">2</span><span class="sep">/</span><span class="now">1</span></td><td class="split flat"><span class="was">0</span><span class="sep">/</span><span class="now">0</span></td><td class="split flat"><span class="was">0</span><span class="sep">/</span><span class="now">0</span></td><td class="split up"><span class="was">0</span><span class="sep">/</span><span class="now">1</span></td></tr>
+      <tr><th scope="row">step-5-preview</th><td class="split down"><span class="was">2</span><span class="sep">/</span><span class="now">0</span></td><td class="split down"><span class="was">2</span><span class="sep">/</span><span class="now">0</span></td><td class="split down"><span class="was">13</span><span class="sep">/</span><span class="now">10</span></td><td class="split down"><span class="was">5</span><span class="sep">/</span><span class="now">1</span></td><td class="split down"><span class="was">3</span><span class="sep">/</span><span class="now">2</span></td><td class="split up"><span class="was">1</span><span class="sep">/</span><span class="now">2</span></td><td class="split down"><span class="was">2</span><span class="sep">/</span><span class="now">0</span></td><td class="split up"><span class="was">0</span><span class="sep">/</span><span class="now">1</span></td><td class="split down"><span class="was">2</span><span class="sep">/</span><span class="now">1</span></td><td class="split down"><span class="was">2</span><span class="sep">/</span><span class="now">1</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="footnote">单元格格式为「不启用 / 启用」；绿色表示启用后减少，橙色表示增加。合计 = B1–B9 分项和 + 视点，视点计入合计。</p>
+    </div>
+  </section>
+
+  <section id="rules">
+    <h2>计数口径</h2>
+    <div class="section-body">
+      <p class="note">编号对应 <code>references/fiction.md</code> 的 B1–B9；计数以本表口径为准，与规则文字有出入之处见本节末注。同一规则的多处按处数计。</p>
+      <div class="scroll">
+        <table class="rules">
+          <caption>各编号的计入范围</caption>
+          <tbody>
+      <tr><th scope="row">B1</th><td>翻案句：把两个抽象词对举的「不是……而是」「没有……只有」。主语是动作或具体物件时不计；否定侧排除的是一种具体可能时不计</td></tr>
+      <tr><th scope="row">B2</th><td>叙述层（引号外）破折号，右侧在同一段内还有文字，且承担解释、列举、同位、因果、补充、揭晓，一处计一处。拟声与节拍的延长（「嗡——嗡」「嗡——嗒」）、台词里的、右侧悬空或被打断的、时间与场景硬切的不计</td></tr>
+      <tr><th scope="row">B3</th><td>比喻。句末短比喻（「像铁皮」「像雨水」）一处计一处，不要求同一段达到两处。拟人化模板和用滥的比喻同样计入。喻体有可核对质地的明喻（铁管掉漆、指甲缝里的泥）不计</td></tr>
+      <tr><th scope="row">B4</th><td>「极其 / 微微 / 极轻 / 极慢 / 极细 / 轻轻 / 缓缓」等程度、速度副词修饰动作（「格外」「渐渐」「很慢」一类按同一判断计入）。修饰声音、光和客观状态的不计</td></tr>
+      <tr><th scope="row">B5</th><td>直接为情绪下判断的套语、生理套语，以及未落到实物的氛围套语</td></tr>
+      <tr><th scope="row">B6</th><td>抽搐用词、剧变副词、发声套语。词表中的「死死」「指节发白」出现即计</td></tr>
+      <tr><th scope="row">B7</th><td>点题、空泛判断、预告式收束。后面没有具体的人、事、结果，才计。同词回环（「过了很久，久到……」）后半句只是重复同一个词才计，写成客观物理变化的不计</td></tr>
+      <tr><th scope="row">B8</th><td>连续四行以上、行间只有短拍动作或沉默的独行对白，每串计一处；一段中三句以上的短句连用同一代词起头；装饰性对白标签（沉声道、低吼道一类，普通的「说」不计）。三项分别数完再相加</td></tr>
+      <tr><th scope="row">B9</th><td>叙述者为呼吸、动作计数。角色自己在数、价格和钟点不计</td></tr>
+      <tr><th scope="row">视点</th><td>叙述把提示词中的「她们」写成「他」，或直接交代角色的心理、动机与判断。按两条机械规则数：叙述层出现「他」指代两位女性之一，按篇计一处；引号外的句子含下列词之一即计一处，余词不计：知道、明白、懂得、听懂、觉得、感到、意识到、以为、记得、想起、心想、看出、察觉、猜、相信、害怕、担心、希望、后悔、心疼、委屈、舍不得、慌。带「说」「问」「喊」「答」「道」的句子不计</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="footnote">本表口径与 <code>references/fiction.md</code> 的判据有出入的三处。B3 按单处计入（规则要求同段两处或连段收句才处理）；B4 把「格外」「渐渐」「很慢」一类也按同一判断计入（规则只列七个词）；这两项因此高于按规则判定的结果。B8 的问答乒乓按段落计行、不设行长方限，一个短段也算一行，比规则宽；但整段以对白为主才算一行（引号内文字占全段六成以上，或整段以引号开头的短段），对白前后另有动作或旁白的段落另起一串，这一点比规则严。</p>
+    </div>
+  </section>
+
+  <section id="excluded">
+    <h2>未计入的内容</h2>
+    <div class="section-body">
+      <ul class="plain">
+        <li>比喻是否具有可核对的质地、否定是否没有具体内容。边界句的计数可以有出入。</li>
+        <li>节奏是否均匀、信息是否充分、情节是否成立。命中数少不等同于文本质量高。</li>
+        <li>篇幅不同时，每千字命中与绝对处数的比较结果可以不同。绝对处数见合计表前两列。</li>
+        <li>未达到提示词要求的两千字，或超过三千字上限。此项差额不单列为命中。启用组普遍更早收束，15 篇里有 7 篇低于两千字，对照组没有低于两千字的，读效果表时与上一条一起看。</li>
+        <li>正文原样保留模型输出，个别篇目带模型自加的标题、分隔线或「完」字，不属正文措辞，不单列为命中。</li>
+      </ul>
+    </div>
+  </section>
+
+  <section id="env">
+    <h2>测试设定</h2>
+    <div class="section-body">
+      <dl class="facts">
+        <dt>temperature</dt><dd>1.0</dd>
+        <dt>reasoning_effort</dt><dd>high</dd>
+        <dt>max_tokens</dt><dd>32000</dd>
+        <dt>stream</dt><dd>true</dd>
+        <dt>样本</dt><dd>每个模型每个条件一篇</dd>
+        <dt>启用规则</dt><dd><code>SKILL.md</code> + <code>references/fiction.md</code></dd>
+        <dt>不启用规则</dt><dd>一句系统提示，不含规则</dd>
+      </dl>
+    </div>
+  </section>
+
+  <footer>
+    <p>同表见 <a href="README.md">README.md</a>。正文在 <code>texts</code> 目录，每个模型两篇，后缀 <code>-base</code> 为不启用规则，<code>-skill</code> 为启用规则。</p>
+  </footer>
+
+</div>
+</body>
+</html>
