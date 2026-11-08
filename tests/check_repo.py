@@ -21,7 +21,6 @@ DOCS = [
     "CONTRIBUTING.md",
     "references/fiction.md",
     "references/rules-full.md",
-    "examples/README.md",
 ]
 REQUIRED = DOCS + ["LICENSE", ".github/workflows/checks.yml"]
 
@@ -157,8 +156,7 @@ for pattern in (".ruff_cache", "__pycache__", "*.pyc", "*.log"):
     check(not found, f"无过程文件残留：{pattern}")
 
 # Whitespace noise hides real diffs in review; the docs stay byte-clean.
-WHITESPACE = DOCS + [str(p.relative_to(ROOT)).replace("\\", "/")
-                     for p in sorted((ROOT / "examples" / "texts").glob("*.md"))]
+WHITESPACE = DOCS[:]
 for relative in WHITESPACE:
     path = ROOT / relative
     if not path.is_file():
@@ -184,79 +182,6 @@ for prefix, source in (("R", "references/rules-full.md"), ("B", "references/fict
     cited = {int(match.group(1)) for text in texts.values()
              for match in re.finditer(rf"\b{prefix}(\d+)\b", text)}
     check(not cited - defined, f"{prefix} 层引用的编号都有定义：{sorted(cited - defined)}")
-
-# Published example figures must be recomputable from the shipped texts.
-EXAMPLES = ROOT / "examples"
-if (EXAMPLES / "README.md").is_file():
-    section, totals, splits = "", {}, {}
-    for line in (EXAMPLES / "README.md").read_text(encoding="utf-8").split("\n"):
-        if line.startswith("## "):
-            section = line[3:].strip()
-            continue
-        if not line.startswith("|"):
-            continue
-        cells = [cell.strip() for cell in line.strip().strip("|").split("|")]
-        if not cells or cells[0] in {"模型", "编号"} or set("".join(cells)) <= set("-: "):
-            continue
-        if section == "合计" and len(cells) == 7:
-            totals[cells[0]] = cells[1:]
-        elif section == "分项" and len(cells) == 11:
-            splits[cells[0]] = cells[1:]
-
-    check(bool(totals) and set(totals) == set(splits), "examples 合计与分项表覆盖同一批模型")
-    for model, row in totals.items():
-        pair = splits.get(model, [])
-        if len(pair) != 10:
-            continue
-        for index, label in ((0, "不启用"), (1, "启用")):
-            counted = [cell.split("/")[index] for cell in pair]
-            check(int(row[index]) == sum(int(value) for value in counted[:9]) + int(counted[9]),
-                  f"examples {model} {label}：合计 = B1–B9 分项和 + 视点")
-            text_path = EXAMPLES / "texts" / f"{model}-{'base' if index == 0 else 'skill'}.md"
-            check(text_path.is_file(), f"examples 正文存在：{text_path.name}")
-            if not text_path.is_file():
-                continue
-            words = len(re.findall(r"[\u4e00-\u9fff]", text_path.read_text(encoding="utf-8")))
-            check(int(row[index + 2]) == words, f"examples {model} {label}：字数与正文一致")
-            rate = round(int(row[index]) / words * 1000, 1) if words else 0
-            check(abs(float(row[index + 4]) - rate) < 0.06,
-                  f"examples {model} {label}：每千字可由合计与字数折算")
-
-    # The front-page effect table is what readers see first; keep it tied to the same numbers.
-    means = [sum(float(row[i + 4]) for row in totals.values()) / len(totals) for i in (0, 1)]
-    for name, page in (("README.md", readme), ("README.en.md", readme_en)):
-        effects = {}
-        mean_cells = None
-        for line in page.split("\n"):
-            cells = [cell.strip().strip("*") for cell in line.strip().strip("|").split("|")]
-            if len(cells) != 4:
-                continue
-            if cells[0] in totals:
-                effects[cells[0]] = cells[1:]
-            elif cells[0] in ("均值", "Mean"):
-                mean_cells = cells[1:]
-        check(set(effects) == set(totals), f"{name} 效果表覆盖同一批模型")
-        for model, cells in effects.items():
-            base_rate, skill_rate = (float(totals[model][i]) for i in (4, 5))
-            check(cells[0] == f"{base_rate:.1f}" and cells[1] == f"{skill_rate:.1f}",
-                  f"{name} {model}：每千字与 examples 一致")
-            drop = (skill_rate - base_rate) / base_rate * 100 if base_rate else 0
-            check(cells[2] == ("持平" if round(drop) == 0 else f"{drop:+.0f}%"),
-                  f"{name} {model}：降幅由每千字算出")
-        check(mean_cells is not None, f"{name} 有效果表均值行")
-        if mean_cells:
-            check(abs(float(mean_cells[0]) - means[0]) <= 0.006
-                  and abs(float(mean_cells[1]) - means[1]) <= 0.006,
-                  f"{name} 均值等于各模型每千字率的算术平均"
-                  f"（{mean_cells[0]}/{mean_cells[1]} vs {means[0]:.4f}/{means[1]:.4f}）")
-    if not globals().get("_page_checked"):
-        globals()["_page_checked"] = True
-        built = subprocess.run(
-            [sys.executable, "-B", str(ROOT / "tests" / "build_page.py"), str(ROOT), "--check"],
-            capture_output=True, text=True, encoding="utf-8")
-        detail = (built.stdout or built.stderr).strip().splitlines()
-        check(built.returncode == 0,
-              "examples/对照.html 与 README 一致：" + (detail[0] if detail else "生成脚本无输出"))
 
 print(f"通过 {len(passes)} 项检查")
 if failures:

@@ -16,99 +16,57 @@
 
 完整规则与判定边界见 [SKILL.md](SKILL.md) 与 [references/](references/)。
 
-| 场景 | 规则要点 |
+| 规则 | 说明与示例 |
 | --- | --- |
-| 对话 | 首句直给；问 A 答 A，结尾不升华；字数与数量照办；删"好问题/希望这对你有帮助"式开场收尾与"先说结论"提示语；跨轮用对方的说法，一句话的问题给短回答。 |
-| 论述 | 删提示语壳与宏观开场；没人主张过 A 不写翻案句；翻译腔只认五式，"这意味着"生成不写、清理不动；顿号罗列不过密；序数小标题有内容就可以编号，清理不改已有编号；只用来引出列表的冒号句不改；破折号右侧承担解释、列举、同位、因果、补充、揭晓的不用；模糊归因与概括词在清理模式原样保留。 |
-| 叙事 | 视点在场、动作与道具落地；装饰副词、生理套话、计数癖与装饰性对白标签先作候选，承载信息则保留；比喻要带感官增量；不写连续 ≥4 行独行对白。 |
-| 清理 | 句内改写为主，删除限规则明示项；信息守恒，每处改动须能指认规则编号；拿不准不动；整句删除需用户同意。B5/B6/B7 的纯套话经确认无其他信息者、B8 问答乒乓里第 4 行起删掉不改变局势与可观察事实的轮次，不在此限。 |
+| **首句直给** | 问什么答什么，第一句就给结论。不加“好问题 / 感谢提问 / 希望对你有帮助”等客套，结尾不强行升华。 |
+| **翻案腔** | 没人主张过就不写“不是 A 而是 B”（如“这不是普通的更新，而是一次蜕变”直接改为“这是一次蜕变”）。 |
+| **叙述破折号** | 叙述中不用破折号来解释原因、列举事物或引出结论，直接换成逗号或断句。 |
+| **修饰副词** | 删掉动作前多余的修饰词（如“微微点头”→“点头”，“轻轻推开”→“推开”，“极轻地说”→“说”）。 |
+| **烂俗比喻** | 不用机械套路比喻（如“像永不疲倦的引擎”、“像受惊的小兽”），比喻必须有真实的感官细节。 |
+| **翻译腔** | 规避“当……时”、“对于……来说”、“这意味着”、“然而/此外/与此同时”等刻板连接词。 |
+| **对白与视点** | 避免短句来回乒乓对白，多写具体动作推进；沉浸在视点角色的观察中，不凭空解说心理。 |
+| **清理原则** | 修改稿件时以句内优化为主，只删毫无意义的纯套话，保留全部有效信息。 |
 
-## 效果
+## 安装与使用
 
-同一条小说提示词、16 个模型，各写两篇：一篇不启用规则，一篇启用 `SKILL.md` 与 `references/fiction.md`。AI 腔密度（每千字命中数）变化：
-
-| 模型 | 对照组 | 挂 skill | 降幅 |
-| --- | ---: | ---: | ---: |
-| deepseek-v4-flash-0731 | 4.6 | 3.3 | -28% |
-| deepseek-v4-pro-0813 | 7.5 | 2.4 | -68% |
-| deepseek-v4.1-flash | 4.8 | 1.6 | -67% |
-| gemini-3.8-flash | 6.9 | 2.3 | -67% |
-| gemini-4-argon | 6.5 | 0.0 | -100% |
-| glm-5.3 | 3.4 | 1.0 | -71% |
-| glm-5.3-flash | 7.1 | 1.5 | -79% |
-| gpt-6.1-sol | 8.0 | 1.4 | -82% |
-| grok-4.7 | 3.8 | 1.1 | -71% |
-| kimi-k2.6 | 8.3 | 3.5 | -58% |
-| kimi-k3 | 4.7 | 0.0 | -100% |
-| mimo-v2.6-pro | 5.0 | 4.5 | -10% |
-| minimax-m3 | 6.3 | 2.8 | -56% |
-| minimax-m3.1-flash | 7.3 | 5.9 | -19% |
-| qwen3.8-flash | 4.5 | 1.0 | -78% |
-| step-5-preview | 11.1 | 7.3 | -34% |
-| **均值** | **6.24** | **2.48** | **-60%** |
-
-非严谨测试，命中数随提示与样本变动，不用于评价模型能力。启用规则组的 16 篇中有 7 篇低于提示要求的两千字；对照组均不低于两千字，其中 6 篇超过三千字上限，启用规则组另有 1 篇超过。
-
-<details>
-<summary>测量条件</summary>
-
-| 项 | 值 |
-| --- | --- |
-| 提示词 | 一条小说创作提示（高架桥下的二十四小时药店，2000–3000 字），全文见 [examples/README.md](examples/README.md) |
-| 样本 | 每个模型每个条件一篇，共 32 篇 |
-| 不启用规则 | 系统提示一句：你是一个中文写作与代码沟通助手。直接完成用户的要求。 |
-| 启用规则 | `SKILL.md` 全文与 `references/fiction.md` 全文 |
-| 采样 | temperature 1.0、reasoning_effort high、max_tokens 32000 |
-| 计数 | 每千字 = 命中合计（B1–B9 ＋ 视点）÷ 汉字数 × 1000，保留一位小数；均值 = 16 个模型每千字率的算术平均，降幅 = 每千字率的变化 |
-
-</details>
-
-分项命中、逐篇字数与 32 篇原文见 [examples/README.md](examples/README.md)。命中只统计规则表内列名的形态，不评价文本质量。
-
-## 使用
-
-**一键安装：**
+**一键安装（Skills CLI）：**
 
 ```bash
 npx skills add chengzhi-c/natural-talk
 ```
 
-**clone 至技能目录（以 Claude Code 为例）：**
+**克隆到本地目录（以 Claude Code 为例）：**
 
 ```bash
 git clone https://github.com/chengzhi-c/natural-talk.git ~/.claude/skills/natural-talk
 ```
 
-**RikkaHub：** 设置 → 扩展 → Skills → `+`，选择 [Releases](https://github.com/chengzhi-c/natural-talk/releases) 里的 `natural-talk.zip`；安装后启用。主包：`SKILL.md`、`references/`、`LICENSE`。
+**常见客户端集成：**
 
-**SillyTavern：** 把 `SKILL.md` 作为 system prompt 使用；小说或清理场景再按下表追加对应 references。
+- **RikkaHub**：设置 → 扩展 → Skills → `+`，选择 [Releases](https://github.com/chengzhi-c/natural-talk/releases) 里的 `natural-talk.zip` 安装启用。
+- **SillyTavern**：直接将 `SKILL.md` 内容填入 System Prompt。
 
-**自行打包：** 发行包里只有 `SKILL.md`、`references/fiction.md`、`references/rules-full.md` 与 `LICENSE` 四个文件，压成 zip 即为 `natural-talk.zip`；Releases 未挂包时按这个方式自取。
-
-**卸载：** 删除 `~/.claude/skills/natural-talk`；RikkaHub 在 Skills 列表停用或删除；SillyTavern 从 system prompt 里移除对应段落。
-
----
-
-## API / 规则使用：
-
-- 读 `SKILL.md` 作 system prompt，按场景追加 references：
-
-| 场景 | 追加 |
-| --- | --- |
-| 日常对话 / 一般生成 / 一般代码讨论 | `SKILL.md`（D 层作用于对话与一般生成。） |
-| 代码评审 / PR 描述 / commit message / 技术长文 | `SKILL.md`；成稿后按 `references/rules-full.md`（R1–R10）过一遍 |
-| 小说创作、续写、故事与扮演、同人、角色卡 | `SKILL.md` + `references/fiction.md` |
-| 翻译 | `SKILL.md`（忠实原文优先，翻译腔 R6 不用于译文） |
-| 论述类成文清理 | `SKILL.md` + `references/rules-full.md` |
-| 小说成稿清理 | `SKILL.md` + `references/rules-full.md` 的带入 R 条与"清理边界"一节；`references/fiction.md` 取基本原则与 B1–B9 |
-| 只要求指出问题、不要求改写（文章/文稿，明确只要诊断） | 按清理模式读取对应文体页，交付"命中处＋编号＋一句理由"；诊断用清理口径（只报不改，连续对白按 ≥4 行计）；代码调试/评审不按本条 |
-| 清理后要求逐条说明改动 | 清理场景加 `references/rules-full.md` 全量 |
-
-system 同时含用户设定时，规则放前部，设定放后部。
+**卸载：** 删除对应目录，或在客户端扩展列表中移除。
 
 ---
 
-## 目录
+## 场景搭配
+
+直接将 `SKILL.md` 作为基础提示词（System Prompt）。不同场景可按需搭配 `references/` 中的规则：
+
+| 场景 | 推荐搭配 | 说明 |
+| --- | --- | --- |
+| 日常对话 / 代码交流 | `SKILL.md` | D 层规则约束，确保首句直给，无冗余话术 |
+| 技术文档 / 代码评审 | `SKILL.md` + `references/rules-full.md` | 依 R1–R10 复查合规性 |
+| 小说创作 / 角色扮演 | `SKILL.md` + `references/fiction.md` | 强调感官细节，以动作推进情节 |
+| 文章 / 稿件清理修改 | `SKILL.md` + `references/rules-full.md` | 句内优化，保留原信息 |
+| 只诊断不改写 | 搭配对应场景规则 | 输出“位置+编号+理由”，不进行改写 |
+
+如果系统提示词中同时包含角色设定或业务背景，建议将本规则放在前面，设定放在后面。
+
+---
+
+## 目录结构
 
 ```
 natural-talk/
@@ -116,16 +74,19 @@ natural-talk/
 ├── README.md           # 中文说明
 ├── README.en.md        # 英文说明
 ├── CONTRIBUTING.md     # 贡献指南
-├── LICENSE             # MIT
-├── references/         # 规则全文
-├── tests/              # 仓库结构与契约自检
-├── examples/           # 小说生成对照与正文
-└── assets/
+├── LICENSE             # 开源许可证
+├── references/         # 场景详细规则
+├── tests/              # 格式与契约检查
+└── assets/             # 资源文件
 ```
 
 ## 验证
 
-`python -B tests/check_repo.py` 检查结构、链接、frontmatter、换行与规则编号引用，并复算 `examples/` 的字数与每千字折算、校验合计与分项自洽。扫描器、清理审计和模型评测不在本仓库。
+运行自检脚本，检查文档链接、格式与规则引用的完整性：
+
+```bash
+python -B tests/check_repo.py
+```
 
 ## 叙事工法范例来源
 
