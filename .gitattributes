@@ -1,0 +1,4 @@
+# 统一换行符为 LF；Windows 上检出时禁用 autocrlf。
+* text=auto eol=lf
+
+*.png binary
